@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "FitMate AI",
+    "slug": "fitmate-ai",
+    "scheme": "fitmate",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0F1113",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kaveticharan.fitmate"
+    },
+    "android": {
+      "package": "com.kaveticharan.fitmate",
+      "versionCode": 1,
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#0F1113",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "FitMate uses Face ID to unlock your private health data."
+        }
+      ],
+      "expo-sharing",
+      "expo-localization",
+      "expo-font",
+      "./plugins/withReleaseSigning"
+    ]
+  }
+}

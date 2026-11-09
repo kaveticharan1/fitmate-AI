@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Type check, lint and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+
+  android:
+    name: Build Android APK
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      HAS_SIGNING_KEY: ${{ secrets.FITMATE_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - run: npm ci
+
+      - name: Generate native Android project
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform android --no-install
+        env:
+          CI: 1
+
+      - name: Restore release signing key
+        if: env.HAS_SIGNING_KEY == 'true'
+        run: |
+          echo "${{ secrets.FITMATE_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/fitmate-release.keystore"
+          echo "FITMATE_KEYSTORE_PATH=$RUNNER_TEMP/fitmate-release.keystore" >> "$GITHUB_ENV"
+
+      - name: Build release APK
+        working-directory: apps/mobile/android
+        env:
+          FITMATE_KEYSTORE_PASSWORD: ${{ secrets.FITMATE_KEYSTORE_PASSWORD }}
+          FITMATE_KEY_ALIAS: ${{ secrets.FITMATE_KEY_ALIAS }}
+          FITMATE_KEY_PASSWORD: ${{ secrets.FITMATE_KEY_PASSWORD }}
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Verify signature and name the APK
+        run: |
+          APK=apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+          VERSION=$(node -p "require('./apps/mobile/app.json').expo.version")
+          SHORT=${GITHUB_SHA::7}
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" | tee signature.txt
+          if [ "$HAS_SIGNING_KEY" = "true" ]; then
+            NAME="FitMate-${VERSION}-${SHORT}.apk"
+          else
+            NAME="FitMate-${VERSION}-${SHORT}-TEST-BUILD-debug-signed.apk"
+            echo "::warning::No release key configured. This APK is for testing only — updates signed with the real key will not install over it."
+          fi
+          mkdir -p out && cp "$APK" "out/$NAME" && cp signature.txt out/
+          echo "APK_NAME=$NAME" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: out/
+          retention-days: 30

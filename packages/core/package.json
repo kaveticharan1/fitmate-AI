@@ -1,0 +1,20 @@
+{
+  "name": "@fitmate/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure fitness and nutrition calculations shared by the FitMate apps",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vitest": "^3.2.0"
+  },
+  "dependencies": {
+    "@noble/ciphers": "^2.4.0",
+    "@noble/hashes": "^2.4.0"
+  }
+}

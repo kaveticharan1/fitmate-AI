@@ -1,0 +1,14 @@
+# Known issues and limitations
+
+| # | Issue | Impact | Plan |
+| --- | --- | --- | --- |
+| 1 | **Not yet tested on a real phone.** All checks so far are automated (unit, database, screen tests, bundle and native project generation). | Device-specific problems may exist (Keystore, biometrics, SQLCipher, fonts). | Install the first CI APK on the Poco X5 and walk through every screen. |
+| 2 | Release signing secrets must be added to GitHub manually. | Without them, CI produces test-only APKs. | Owner adds 4 secrets (SETUP_GUIDE §C). |
+| 3 | Telugu translation written by the developer, not yet reviewed by a native speaker. | Some wording may sound unnatural. | Review in Phase 3 together with coach replies. |
+| 4 | scrypt speed on mid-range phones is unmeasured (PIN unlock N=2^14, backups N=2^15). | Unlock may take ~0.5–2 s; backups slightly longer. | Measure on the Poco X5; tune parameters if needed (stored per blob, so changeable). |
+| 5 | PIN brute force on a rooted phone: an attacker who extracts the Keystore-protected blob could try PINs offline (scrypt slows each guess). | Short PINs are weaker against such an attacker. | 6+ digit PINs recommended in the UI; weak PINs rejected. Rooted phones are out of scope (documented). |
+| 6 | Biometric unlock copy is invalidated by Android when fingerprints change. | User must unlock with PIN and re-enable biometrics. | Expected Android behaviour; PIN always works. |
+| 7 | The dashboard "start weight" for the progress bar is the oldest of the last 30 weigh-ins. | Progress bar resets after 30 entries. | Phase 5 stores an explicit start weight per goal. |
+| 8 | `newArchEnabled=true` and React Native 0.88 with several native modules not yet exercised on device. | Possible native crash. | Covered by issue 1. |
+| 9 | iPhone not supported in Stage 1 (APK only). | Friends with iPhones can't install. | Stage 2 with an Apple developer account. |
+| 10 | Repository is public. | Code (not data) is visible to anyone; no secrets are in it. | Make it private in GitHub settings if preferred. |

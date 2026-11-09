@@ -1,0 +1,65 @@
+# Development status
+
+_Last updated: 9 November 2026_
+
+## Plan
+
+Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public launch). Full plan: the "FitMate AI — Implementation Plan" document.
+
+| Phase | Scope | Status |
+| --- | --- | --- |
+| 1 | Foundation: encrypted storage, app lock, consent, onboarding, calculations, dashboard, backup | **Code complete, automated tests passing; awaiting first on-device test** |
+| 2 | Nutrition: Indian food database, food diary, oil/family-pot logging, meal planner, grocery list | Not started |
+| 3 | AI coach: chat, personalities, memory, Telugu, voice | Not started |
+| 4 | Workouts: exercise library, plans, timers | Not started |
+| 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | Not started (weight logging already exists) |
+| 6 | Health: step counter, Activity Recognition, Health Connect, step validation | Not started |
+| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | Not started |
+
+## Phase 1 report
+
+### 1. Completed features
+- Monorepo with npm workspaces: `apps/mobile`, `packages/core`, `packages/validation`.
+- Encrypted SQLite database (SQLCipher); app refuses to run if encryption is missing (e.g. in Expo Go).
+- Random 256-bit database key, wrapped with a scrypt-derived PIN key (AES-256-GCM) and stored in SecureStore (Android Keystore). Optional biometric unlock via a second Keystore-bound copy.
+- Lock screen with custom PIN pad, wrong-PIN delays (30 s → 30 min), optional auto-wipe after 10 wrong PINs, auto-lock (immediately / 1 min / 5 min), screenshot blocking (on by default), Android auto-backup disabled.
+- Welcome + privacy notice + 18+ check; consent records with notice version.
+- 5-step onboarding wizard and profile editing (shared component), with Zod validation and translated error messages.
+- Calculation engine: BMI (Asian-Indian and WHO categories), BMR, maintenance, target, macros, water, weekly change, weeks to target, safety flags.
+- Dashboard with targets, macros, weight card with daily weight logging, BMI card, safety banners.
+- Encrypted backup/restore (`.fmbak`, scrypt + AES-256-GCM), readable JSON export, delete all data.
+- Dark/light/system theme; English and Telugu UI with bundled Noto Sans Telugu.
+- CI workflow: checks + release APK build with signature verification.
+
+### 2. Files created
+See `git show --stat` for the first commit. Main areas: `packages/core/src/*`, `packages/validation/src/*`, `apps/mobile/src/{app,components,db,features,i18n,lib,security,theme}`, `apps/mobile/plugins/withReleaseSigning.js`, `.github/workflows/ci.yml`, docs.
+
+### 3. Files modified
+Expo template files: `apps/mobile/app.json`, `package.json`, `tsconfig.json` (template `App.tsx`/`index.ts` removed in favour of Expo Router).
+
+### 4. Database changes
+Migration v1: `profile`, `consents`, `weight_logs`, `body_measurements`, `app_settings`. See [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md).
+
+### 5. APIs implemented
+No network APIs (Stage 1 has no server). Internal module APIs: [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
+
+### 6. Tests executed
+60 automated tests, all passing (25 core, 13 validation, 22 app). Details: [docs/TESTING_REPORT.md](docs/TESTING_REPORT.md).
+
+### 7. Bugs fixed during the phase
+- Two React versions installed (19.3.0 and 19.3.1) broke hooks → pinned one version with npm `overrides`.
+- Screens could unmount mid-setup when the session switched to "unlocked" → consent/biometric saving now runs before the switch (`setup(pin, beforeReady)`).
+- Pregnancy answer could stay on after switching sex to male → reset automatically.
+- Lint: impure `Date.now()` during render, ref written during render → fixed.
+
+### 8. Remaining issues
+See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md). Most important: not yet tested on a real phone; release key must be added to GitHub secrets; Telugu needs native review.
+
+### 9. Environment variables
+None for the app. CI secrets for signing: `FITMATE_KEYSTORE_BASE64`, `FITMATE_KEYSTORE_PASSWORD`, `FITMATE_KEY_ALIAS`, `FITMATE_KEY_PASSWORD`.
+
+### 10. Setup and run commands
+See [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md).
+
+### 11. Next phase
+Phase 2 — Nutrition (Indian food database from IFCT 2017, food diary, oil adjustment, family pot mode, one-tap logging, meal planner, grocery list).

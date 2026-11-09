@@ -1,0 +1,24 @@
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+*.log
+.DS_Store
+
+# Generated native projects (Continuous Native Generation)
+apps/mobile/android/
+apps/mobile/ios/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+credentials.json
+google-services.json
