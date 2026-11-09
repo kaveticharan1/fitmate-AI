@@ -242,6 +242,12 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
 - Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
 
+## Updates (v1.3.0)
+- Background step check: with "Live steps for reminders" allowed (Settings → Health, or asked when connecting Health Connect), Android runs a check about every 30 minutes that reads today's steps from Health Connect and keeps the evening check-in accurate — dropped once you catch up, or updated with the real steps left. FitMate's own database stays locked behind your PIN; steps are saved into it when the app opens.
+- Exercise how-to steps and safety notes in Telugu for all 33 exercises.
+- Food database: 67 regional dishes added (200 total) — Andhra/Telangana favourites (gongura, avakaya, bobbatlu, pootharekulu, ulava charu, haleem…), South and North Indian dishes, street food and sweets.
+- Telugu wording pass for consistent terms.
+
 ## New look (v1.2.0)
 Kept FitMate's dark, readable style and one green accent; borrowed layout ideas from the FitPilot concept.
 - Five tabs: Home, Food, Coach, Workout, You (active tab shown as a pill). Plan and Progress open from Home and Food.
