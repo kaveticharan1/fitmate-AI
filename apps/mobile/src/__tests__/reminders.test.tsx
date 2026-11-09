@@ -25,7 +25,21 @@ beforeEach(async () => {
   await i18n.changeLanguage('en');
 });
 
+jest.mock('../features/reminders/bridge', () => ({ readNotificationLog: () => [{ at: '2026-11-10T08:00:00.000Z', title: 'Lunch', body: 'What are you having?', action: 'opened' }] }));
+
 describe('Reminder settings', () => {
+  it('shows recent reminders and validates reminder times', async () => {
+    await render(<ThemeProvider><RemindersScreen /></ThemeProvider>);
+    expect(screen.getByText('What are you having?')).toBeTruthy();
+    await fireEvent(screen.getByTestId('smart-workout'), 'press');
+    await fireEvent.changeText(screen.getByTestId('smart-workoutTime'), '25:99');
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('reminders-save'));
+    });
+    expect(mockSync).not.toHaveBeenCalled();
+    expect(screen.getAllByText(i18n.t('reminders.badTime')).length).toBeGreaterThan(0);
+  });
+
   it('reads settings saved before smart reminders existed', async () => {
     mockSettings['reminders.v1'] = { water: { enabled: true, startHour: 8, endHour: 21, everyHours: 2 }, medicines: [] };
     await render(<ThemeProvider><RemindersScreen /></ThemeProvider>);
@@ -40,7 +54,7 @@ describe('Reminder settings', () => {
     await act(async () => {
       fireEvent.press(screen.getByTestId('reminders-save'));
     });
-    expect((mockSettings['reminders.v1'] as { smart: unknown }).smart).toEqual({ checkIn: true, checkInTime: '20:30', logNudge: false, morning: false, weighIn: true });
+    expect((mockSettings['reminders.v1'] as { smart: unknown }).smart).toMatchObject({ checkIn: true, checkInTime: '20:30', logNudge: false, morning: false, weighIn: true, quiet: { enabled: true } });
     expect(mockSync).toHaveBeenCalledWith(expect.any(Function), {}, {}, true);
     expect(screen.getByText(i18n.t('reminders.saved', { count: 2 }))).toBeTruthy();
   });

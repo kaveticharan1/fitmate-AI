@@ -9,7 +9,8 @@ import { Banner, Button, Card, ChoiceGroup, Screen, TextField, ToggleRow } from 
 import { getSetting, setSetting } from '../../db/repositories';
 import { applyReminders } from '../../features/reminders/notifications';
 import { parseTime, REMINDERS_KEY, withDefaults, type ReminderConfig } from '../../features/reminders/schedule';
-import type { SmartConfig } from '../../features/reminders/smart';
+import { readNotificationLog } from '../../features/reminders/bridge';
+import { DEFAULT_SMART, parseClock, type SmartConfig } from '../../features/reminders/smart';
 import { currentDayStatus, syncSmartReminders } from '../../features/reminders/smartSync';
 import { useTheme } from '../../theme/ThemeProvider';
 import { space, TOUCH } from '../../theme/tokens';
@@ -24,10 +25,23 @@ export default function RemindersScreen() {
   const [message, setMessage] = useState<{ tone: 'accent' | 'danger'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [badTimes, setBadTimes] = useState<Set<string>>(new Set());
+  const [tried, setTried] = useState(false);
 
   const water = config.water;
   const setWater = (patch: Partial<ReminderConfig['water']>) => setConfig({ ...config, water: { ...water, ...patch } });
-  const smart = config.smart!;
+  const smart = { ...DEFAULT_SMART, ...config.smart!, mealTimes: { ...DEFAULT_SMART.mealTimes, ...(config.smart?.mealTimes ?? {}) }, quiet: { ...DEFAULT_SMART.quiet, ...(config.smart?.quiet ?? {}) } };
+  const [history] = useState(() => readNotificationLog().slice(0, 10));
+  const smartTimes: [string, string][] = [
+    ['checkInTime', smart.checkInTime],
+    ...(smart.meals ? (Object.entries(smart.mealTimes).map(([k, v]) => [`meal-${k}`, v]) as [string, string][]) : []),
+    ...(smart.workout ? [['workoutTime', smart.workoutTime] as [string, string]] : []),
+    ...(smart.bedtime ? [['bedtimeTime', smart.bedtimeTime] as [string, string]] : []),
+    ...(smart.faceCheckIn ? [['faceTime', smart.faceTime] as [string, string]] : []),
+    ...(smart.skincareAm ? [['skincareAmTime', smart.skincareAmTime] as [string, string]] : []),
+    ...(smart.skincarePm ? [['skincarePmTime', smart.skincarePmTime] as [string, string]] : []),
+    ...(smart.quiet.enabled ? [['quietStart', smart.quiet.start] as [string, string], ['quietEnd', smart.quiet.end] as [string, string]] : []),
+  ];
+  const badSmart = new Set(smartTimes.filter(([, v]) => !parseClock(v)).map(([k]) => k));
   const customList = config.custom ?? [];
   const setSmart = (patch: Partial<SmartConfig>) => setConfig({ ...config, smart: { ...smart, ...patch } });
 
@@ -37,7 +51,8 @@ export default function RemindersScreen() {
       ...customList.filter((m) => !m.label.trim() || !parseTime(m.time)).map((m) => m.id),
     ]);
     setBadTimes(bad);
-    if (bad.size) return;
+    setTried(true);
+    if (bad.size || badSmart.size) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -200,6 +215,83 @@ export default function RemindersScreen() {
         <ToggleRow testID="smart-log" label={t('smart.logNudgeLabel')} description={t('smart.logNudgeHint')} value={smart.logNudge} onChange={(v) => setSmart({ logNudge: v })} />
         <ToggleRow testID="smart-morning" label={t('smart.morningLabel')} description={t('smart.morningHint')} value={smart.morning} onChange={(v) => setSmart({ morning: v })} />
         <ToggleRow testID="smart-weighin" label={t('smart.weighInLabel')} description={t('smart.weighInHint')} value={smart.weighIn} onChange={(v) => setSmart({ weighIn: v })} />
+        <ToggleRow testID="smart-meals" label={t('smart.mealsLabel')} description={t('smart.mealsHint')} value={smart.meals} onChange={(v) => setSmart({ meals: v })} />
+        {smart.meals ? (
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            {(['breakfast', 'lunch', 'dinner'] as const).map((m) => (
+              <View key={m} style={{ flex: 1 }}>
+                <TextField
+                  testID={`smart-meal-${m}`}
+                  label={t(`meals.${m}`)}
+                  value={smart.mealTimes[m]}
+                  onChangeText={(v) => setSmart({ mealTimes: { ...smart.mealTimes, [m]: v } })}
+                  keyboardType="numbers-and-punctuation"
+                  error={tried && badSmart.has(`meal-${m}`) ? t('reminders.badTime') : undefined}
+                />
+              </View>
+            ))}
+          </View>
+        ) : null}
+        {(
+          [
+            ['workout', 'workoutTime', 'smart.workoutLabel', 'smart.workoutHint'],
+            ['bedtime', 'bedtimeTime', 'smart.bedtimeLabel', 'smart.bedtimeHint'],
+            ['faceCheckIn', 'faceTime', 'smart.faceLabel', 'smart.faceHint'],
+            ['skincareAm', 'skincareAmTime', 'smart.skinAmLabel', 'smart.skinHint'],
+            ['skincarePm', 'skincarePmTime', 'smart.skinPmLabel', 'smart.skinHint'],
+          ] as const
+        ).map(([flag, timeKey, label, hint]) => (
+          <View key={flag} style={{ gap: space.sm }}>
+            <ToggleRow testID={`smart-${flag}`} label={t(label)} description={t(hint)} value={smart[flag]} onChange={(v) => setSmart({ [flag]: v } as Partial<SmartConfig>)} />
+            {smart[flag] ? (
+              <TextField
+                testID={`smart-${timeKey}`}
+                label={t('reminders.time')}
+                value={smart[timeKey]}
+                onChangeText={(v) => setSmart({ [timeKey]: v } as Partial<SmartConfig>)}
+                keyboardType="numbers-and-punctuation"
+                error={tried && badSmart.has(timeKey) ? t('reminders.badTime') : undefined}
+              />
+            ) : null}
+          </View>
+        ))}
+      </Card>
+
+      <Card testID="quiet-card">
+        <ToggleRow testID="quiet-toggle" label={t('smart.quietLabel')} description={t('smart.quietHint')} value={smart.quiet.enabled} onChange={(v) => setSmart({ quiet: { ...smart.quiet, enabled: v } })} />
+        {smart.quiet.enabled ? (
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <View style={{ flex: 1 }}>
+              <TextField testID="quiet-start" label={t('smart.quietFrom')} value={smart.quiet.start} onChangeText={(v) => setSmart({ quiet: { ...smart.quiet, start: v } })} keyboardType="numbers-and-punctuation" error={tried && badSmart.has('quietStart') ? t('reminders.badTime') : undefined} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextField testID="quiet-end" label={t('smart.quietTo')} value={smart.quiet.end} onChangeText={(v) => setSmart({ quiet: { ...smart.quiet, end: v } })} keyboardType="numbers-and-punctuation" error={tried && badSmart.has('quietEnd') ? t('reminders.badTime') : undefined} />
+            </View>
+          </View>
+        ) : null}
+        <ChoiceGroup<string>
+          testID="daily-limit"
+          label={t('smart.limitLabel')}
+          value={String(smart.dailyLimit)}
+          onChange={(v) => setSmart({ dailyLimit: Number(v) })}
+          options={['3', '6', '10'].map((v) => ({ value: v, label: v }))}
+        />
+        <AppText variant="caption" tone="secondary">
+          {t('smart.snoozeHint')}
+        </AppText>
+      </Card>
+
+      <Card testID="history-card">
+        <AppText variant="heading">{t('smart.historyTitle')}</AppText>
+        {history.length === 0 ? <AppText tone="muted">{t('smart.historyEmpty')}</AppText> : null}
+        {history.map((h, i) => (
+          <View key={i} style={{ gap: 2 }}>
+            <AppText variant="label">{h.body || h.title}</AppText>
+            <AppText variant="caption" tone="secondary">
+              {`${new Date(h.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${t(`smart.history.${h.action}`)}`}
+            </AppText>
+          </View>
+        ))}
       </Card>
 
       <AppText variant="caption" tone="muted">

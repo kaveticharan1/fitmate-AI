@@ -8,6 +8,7 @@ import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppText, TELUGU_FONT, TELUGU_FONT_BOLD } from '../components/AppText';
 import { Button, Screen } from '../components/ui';
+import { NotificationBridge } from '../features/reminders/bridge';
 import { loadSavedLanguage } from '../i18n';
 import { LockScreen } from '../security/LockScreen';
 import { SessionProvider, useSession } from '../security/SessionProvider';
@@ -102,6 +103,7 @@ function Root() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      {status === 'unlocked' && hasProfile ? <NotificationBridge /> : null}
       {body}
     </>
   );

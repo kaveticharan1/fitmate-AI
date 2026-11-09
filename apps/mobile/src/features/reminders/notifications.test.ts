@@ -19,10 +19,11 @@ jest.mock('expo-notifications', () => ({
   getAllScheduledNotificationsAsync: async () => mockScheduled,
   cancelScheduledNotificationAsync: async (id: string) => mockCancel(id),
   scheduleNotificationAsync: async (r: unknown) => mockSchedule(r),
+  setNotificationCategoryAsync: jest.fn(async () => null),
 }));
 jest.mock('../../db/repositories', () => ({ getSetting: (_k: string, d: unknown) => d }));
 
-const nudges: SmartNudge[] = [
+const nudges: [SmartNudge, SmartNudge, SmartNudge] = [
   { id: 'smart-checkin', kind: 'checkIn', when: { date: new Date(2026, 10, 10, 19, 30) }, gaps: ['protein', 'water'], generic: false, params: { proteinLeft: 78, waterLeft: 6, stepsLeft: 0 } },
   { id: 'smart-morning', kind: 'morning', when: { daily: { hour: 8, minute: 0 } } },
   { id: 'smart-weighin', kind: 'weighIn', when: { weekly: { weekday: 1, hour: 7, minute: 30 } } },
@@ -58,10 +59,15 @@ describe('smart notifications', () => {
     expect(mockCancel).toHaveBeenCalledWith('smart-checkin');
   });
 
-  it('water and medicine changes keep the smart ones', async () => {
-    await applyReminders({ ...DEFAULT_REMINDERS, water: { enabled: true, startHour: 8, endHour: 9, everyHours: 1 } }, { title: 'FitMate', water: 'Drink', medicine: (n) => n });
+  it('medicine changes keep smart and snoozed ones; water is left to the smart scheduler', async () => {
+    mockScheduled.push({ identifier: 'snooze-123' });
+    await applyReminders(
+      { ...DEFAULT_REMINDERS, water: { enabled: true, startHour: 8, endHour: 9, everyHours: 1 }, medicines: [{ id: 'm', name: 'Vitamin D', time: '09:00' }] },
+      { title: 'FitMate', water: 'Drink', medicine: (n) => n },
+    );
     expect(mockCancel.mock.calls.map((c) => c[0])).toEqual(['water-8', 'med-1']);
-    expect(mockSchedule).toHaveBeenCalledTimes(2);
+    expect(mockSchedule).toHaveBeenCalledTimes(1);
+    expect(mockSchedule.mock.calls[0][0]).toMatchObject({ identifier: 'med-m', content: { categoryIdentifier: 'fitmate', body: 'Vitamin D' } });
   });
 
   it('write helpful text, and keep it gentle when needed', () => {

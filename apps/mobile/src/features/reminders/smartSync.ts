@@ -24,7 +24,7 @@ export function smartText(t: TFunction, n: SmartNudge, targets: { proteinG: numb
     case 'checkIn':
       return {
         title: t('smart.checkInTitle'),
-        body: n.generic ? t('smart.generic') : n.gaps.map((g) => t(`smart.gap.${g}`, n.params)).join(' '),
+        body: n.generic ? t('smart.generic') : (n.gaps ?? []).map((g) => t(`smart.gap.${g}`, n.params ?? {})).join(' '),
       };
     case 'logNudge':
       return { title: 'FitMate', body: t('smart.logNudge') };
@@ -37,13 +37,27 @@ export function smartText(t: TFunction, n: SmartNudge, targets: { proteinG: numb
       };
     case 'weighIn':
       return { title: t('smart.weighInTitle'), body: t('smart.weighIn') };
+    case 'meal':
+      return { title: t(`meals.${String(n.params?.meal ?? 'lunch')}`), body: t('smart.mealBody') };
+    case 'workout':
+      return { title: t('smart.workoutTitle'), body: t('smart.workoutBody') };
+    case 'bedtime':
+      return { title: t('smart.bedtimeTitle'), body: t('smart.bedtimeBody') };
+    case 'face':
+      return { title: t('smart.faceTitle'), body: t('smart.faceBody') };
+    case 'skincareAm':
+      return { title: t('smart.skinAmTitle'), body: t('smart.skinAmBody') };
+    case 'skincarePm':
+      return { title: t('smart.skinPmTitle'), body: t('smart.skinPmBody') };
+    case 'water':
+      return { title: 'FitMate', body: t('reminders.waterBody') };
   }
 }
 
 /** Schedules (or clears) the smart reminders for a given day's status. */
 export async function syncSmartReminders(t: TFunction, status: DayStatus, targets: Parameters<typeof smartText>[2], askPermission = false) {
   const config: ReminderConfig = withDefaults(getSetting<Partial<ReminderConfig> | null>(REMINDERS_KEY, null));
-  const nudges = buildSmartNudges(config.smart!, status);
+  const nudges = buildSmartNudges(config.smart!, status, config.water);
   return applySmart(nudges, (n) => smartText(t, n, targets), { askPermission });
 }
 
@@ -61,6 +75,7 @@ export function currentDayStatus(now: Date = new Date()): { status: DayStatus; t
     status: {
       now,
       foodEntries: entries.length,
+      mealsLogged: [...new Set(entries.map((e) => e.meal))],
       proteinG: Math.round(entries.reduce((sum, e) => sum + e.proteinG, 0)),
       proteinTarget: t.proteinG,
       waterMl: waterToday(today),
@@ -90,6 +105,7 @@ export function useSmartReminderSync() {
   const stepGoal = useStepGoal(health);
 
   const proteinG = Math.round(entries.reduce((s, e) => s + e.proteinG, 0));
+  const meals = [...new Set(entries.map((e) => e.meal))].sort().join(',');
   const stepsToday = steps.find((d) => d.day === today)?.steps ?? (health?.enabled ? 0 : null);
   const workoutToday = workouts.some((w) => w.doneOn === today);
   const ready = !!profile;
@@ -100,6 +116,7 @@ export function useSmartReminderSync() {
     const status: DayStatus = {
       now: new Date(),
       foodEntries: entries.length,
+      mealsLogged: meals.split(',').filter(Boolean),
       proteinG,
       proteinTarget: targets.proteinG,
       waterMl: water,
@@ -114,5 +131,5 @@ export function useSmartReminderSync() {
     });
     // Recalculate only when the numbers that matter change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, today, entries.length, proteinG, water, stepsToday, stepGoal, workoutToday]);
+  }, [ready, today, entries.length, meals, proteinG, water, stepsToday, stepGoal, workoutToday]);
 }

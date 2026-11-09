@@ -8,6 +8,7 @@ import { Banner, Button, Card, ProgressBar, Screen, TextField, useErrorText } fr
 import { router } from 'expo-router';
 import { totalsOf } from '../../db/foodRepo';
 import { useDiary } from '../../features/food/hooks';
+import { DayCard } from '../../features/agent/DayCard';
 import { StepsCard } from '../../features/health/StepsCards';
 import { useSmartReminderSync } from '../../features/reminders/smartSync';
 import { NutrientBar } from '../../features/food/ui';
@@ -36,6 +37,7 @@ export default function Dashboard() {
         <AppText variant="title">{t('dashboard.hello', { name: profile.name })}</AppText>
       </View>
 
+      <DayCard />
       <CoachCard />
       <TodayCard targets={targets} />
       <WaterCard targetMl={targets.waterMl} />

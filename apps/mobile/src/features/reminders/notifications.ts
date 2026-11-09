@@ -10,6 +10,20 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
 });
 
+export const CATEGORY = 'fitmate';
+export const SNOOZE_MINUTES = 30;
+
+/** Adds the "Snooze 30 min" button to FitMate notifications. */
+export async function setupCategories(snoozeLabel: string) {
+  try {
+    await Notifications.setNotificationCategoryAsync(CATEGORY, [
+      { identifier: 'snooze', buttonTitle: snoozeLabel, options: { opensAppToForeground: false } },
+    ]);
+  } catch {
+    /* not supported: notifications still work without the button */
+  }
+}
+
 export async function ensurePermission(): Promise<boolean> {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL, {
@@ -38,14 +52,17 @@ export async function applyReminders(
   config: ReminderConfig,
   text: { water: string; medicine: (name: string) => string; custom?: (label: string) => string; title: string },
 ): Promise<number> {
-  await cancelWhere((id) => !isSmart(id));
-  const list = buildSchedule(config);
+  await cancelWhere((id) => !isSmart(id) && !id.startsWith('snooze-'));
+  // Water reminders are smart (they stop once you reach your target), so they're scheduled with the smart ones.
+  const list = buildSchedule(config).filter((n) => n.kind !== 'water');
   if (list.length === 0) return 0;
   if (!(await ensurePermission())) throw new Error('permission');
   for (const n of list) {
     await Notifications.scheduleNotificationAsync({
       identifier: n.id,
       content: {
+        categoryIdentifier: CATEGORY,
+        data: { kind: n.kind },
         title: text.title,
         body: n.kind === 'water' ? text.water : n.kind === 'custom' ? (text.custom ?? text.medicine)(n.label ?? '') : text.medicine(n.label ?? ''),
       },
@@ -78,7 +95,20 @@ export async function applySmart(
         : 'daily' in n.when
           ? { type: Notifications.SchedulableTriggerInputTypes.DAILY, ...n.when.daily, channelId: CHANNEL }
           : { type: Notifications.SchedulableTriggerInputTypes.WEEKLY, ...n.when.weekly, channelId: CHANNEL };
-    await Notifications.scheduleNotificationAsync({ identifier: n.id, content: text(n), trigger: trigger as Notifications.NotificationTriggerInput });
+    await Notifications.scheduleNotificationAsync({
+      identifier: n.id,
+      content: { ...text(n), categoryIdentifier: CATEGORY, data: { kind: n.kind } },
+      trigger: trigger as Notifications.NotificationTriggerInput,
+    });
   }
   return nudges.length;
+}
+
+/** Shows the same notification again in 30 minutes. */
+export async function snooze(content: { title?: string | null; body?: string | null; data?: Record<string, unknown> }, now = Date.now()) {
+  await Notifications.scheduleNotificationAsync({
+    identifier: `snooze-${now}`,
+    content: { title: content.title ?? 'FitMate', body: content.body ?? '', categoryIdentifier: CATEGORY, data: { ...(content.data ?? {}), snoozed: true } },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(now + SNOOZE_MINUTES * 60000), channelId: CHANNEL } as Notifications.NotificationTriggerInput,
+  });
 }

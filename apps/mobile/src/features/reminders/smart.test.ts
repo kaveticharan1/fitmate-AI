@@ -1,4 +1,4 @@
-import { buildSmartNudges, DEFAULT_SMART, findGaps, type DayStatus } from './smart';
+import { buildSmartNudges, DEFAULT_SMART, findGaps, inQuietHours, type DayStatus } from './smart';
 
 const base: DayStatus = {
   now: new Date(2026, 10, 10, 12, 0),
@@ -71,5 +71,54 @@ describe('smart reminders', () => {
   it('fall back to 19:30 for a broken time', () => {
     const [n] = buildSmartNudges({ ...DEFAULT_SMART, checkIn: true, checkInTime: '99:99' }, base);
     expect(n!.when).toEqual({ date: new Date(2026, 10, 10, 19, 30) });
+  });
+});
+
+describe('smart reminders (agent)', () => {
+  const now = new Date(2026, 10, 10, 9, 0);
+  const ids = (ns: { id: string }[]) => ns.map((n) => n.id);
+
+  it('skip a meal reminder once that meal is logged', () => {
+    const cfg = { ...DEFAULT_SMART, meals: true, quiet: { enabled: false, start: '22:00', end: '07:00' } };
+    const r = buildSmartNudges(cfg, { ...base, now, mealsLogged: ['breakfast'] });
+    expect(ids(r)).not.toContain('smart-meal-breakfast-today');
+    expect(ids(r)).toContain('smart-meal-lunch-today');
+    expect(ids(r)).toContain('smart-meal-breakfast-d1');
+  });
+
+  it('skip the workout reminder after a workout', () => {
+    const cfg = { ...DEFAULT_SMART, workout: true };
+    expect(ids(buildSmartNudges(cfg, { ...base, now, workoutToday: false }))).toContain('smart-workout-today');
+    expect(ids(buildSmartNudges(cfg, { ...base, now, workoutToday: true }))).not.toContain('smart-workout-today');
+  });
+
+  it('stop today’s water reminders once the target is reached', () => {
+    const water = { enabled: true, startHour: 8, endHour: 12, everyHours: 1 as const };
+    const cfg = { ...DEFAULT_SMART, dailyLimit: 10 };
+    const below = buildSmartNudges(cfg, { ...base, now, waterMl: 500 }, water);
+    expect(ids(below)).toEqual(expect.arrayContaining(['smart-water-d0-10', 'smart-water-d0-12', 'smart-water-d1-8']));
+    expect(ids(below)).not.toContain('smart-water-d0-8'); // already past
+    const reached = buildSmartNudges(cfg, { ...base, now, waterMl: 3200 }, water);
+    expect(ids(reached).some((i) => i.startsWith('smart-water-d0'))).toBe(false);
+    expect(ids(reached)).toContain('smart-water-d1-8');
+  });
+
+  it('respect quiet hours, including windows that cross midnight', () => {
+    expect(inQuietHours(23, 0, { enabled: true, start: '22:45', end: '07:00' })).toBe(true);
+    expect(inQuietHours(6, 59, { enabled: true, start: '22:45', end: '07:00' })).toBe(true);
+    expect(inQuietHours(7, 0, { enabled: true, start: '22:45', end: '07:00' })).toBe(false);
+    expect(inQuietHours(13, 0, { enabled: true, start: '13:00', end: '15:00' })).toBe(true);
+    expect(inQuietHours(23, 0, { enabled: false, start: '22:45', end: '07:00' })).toBe(false);
+    const cfg = { ...DEFAULT_SMART, bedtime: true, bedtimeTime: '23:30' };
+    expect(ids(buildSmartNudges(cfg, { ...base, now }))).not.toContain('smart-bedtime');
+  });
+
+  it('cap reminders per day, counting water as one', () => {
+    const cfg = { ...DEFAULT_SMART, dailyLimit: 3, meals: true, workout: true, faceCheckIn: true, quiet: { enabled: false, start: '22:00', end: '07:00' } };
+    const water = { enabled: true, startHour: 10, endHour: 20, everyHours: 1 as const };
+    const r = buildSmartNudges(cfg, { ...base, now, waterMl: 0 }, water);
+    const today = r.filter((n) => 'date' in n.when && n.when.date.getDate() === 10);
+    const nonWater = today.filter((n) => n.kind !== 'water');
+    expect(nonWater.length + (today.some((n) => n.kind === 'water') ? 1 : 0)).toBeLessThanOrEqual(3);
   });
 });
