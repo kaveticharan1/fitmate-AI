@@ -172,6 +172,11 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE UNIQUE INDEX habit_logs_habit_day_idx ON habit_logs (habit_id, done_on);
   `,
+  // v5 — optional chest and arm measurements
+  `
+  ALTER TABLE body_measurements ADD COLUMN chest_cm REAL CHECK (chest_cm IS NULL OR chest_cm BETWEEN 40 AND 250);
+  ALTER TABLE body_measurements ADD COLUMN arm_cm REAL CHECK (arm_cm IS NULL OR arm_cm BETWEEN 10 AND 80);
+  `,
 ];
 
 export interface MigratableDb {

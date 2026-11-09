@@ -1,6 +1,7 @@
 import { addHabit, deleteHabit, listHabits, logSleep, setHabitDone, sleepHistory } from '../../db/habitsRepo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addWater, dailyFoodTotals, dailyWater, logWaist, undoWater, waistHistory, waterToday, weightHistory } from '../../db/progressRepo';
+import { addWater, dailyFoodTotals, dailyWater, logMeasurements, measurementHistory, undoWater, waistHistory, waterToday, weightHistory } from '../../db/progressRepo';
+import type { MeasurementInput } from '../../db/progressRepo';
 import { addDays, localDate } from '../../lib/time';
 
 export const progressKeys = {
@@ -30,10 +31,13 @@ export function useWaterActions() {
   };
 }
 
-export function useLogWaist() {
+export const useMeasurementHistory = (days: number) =>
+  useQuery({ queryKey: ['progress', 'measurements', days], queryFn: () => measurementHistory(addDays(localDate(), -days)) });
+
+export function useLogMeasurements() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (cm: number) => logWaist(cm),
+    mutationFn: async (m: MeasurementInput) => logMeasurements(m),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['progress'] });
       qc.invalidateQueries({ queryKey: ['profile'] });

@@ -10,7 +10,8 @@ jest.mock('../features/progress/hooks', () => ({
   useWeightHistory: () => ({ data: mockWeights }),
   useWaistHistory: () => ({ data: [{ date: '2026-11-01', value: 96 }, { date: '2026-11-08', value: 94.5 }] }),
   useWeekFood: () => ({ data: [{ date: '2026-11-08', kcal: 1750, protein: 115 }, { date: '2026-11-09', kcal: 2300, protein: 70 }] }),
-  useLogWaist: () => ({ mutateAsync: async (v: number) => mockLogWaist(v), isPending: false, isError: false }),
+  useLogMeasurements: () => ({ mutateAsync: async (v: unknown) => mockLogWaist(v), isPending: false, isError: false }),
+  useMeasurementHistory: () => ({ data: [{ date: '2026-11-01', waist: 96, hip: 104, chest: null, arm: null }, { date: '2026-11-08', waist: 94.5, hip: 103, chest: 101, arm: null }] }),
   useSleepHistory: () => ({ data: [{ wokeOn: '2026-11-08', minutes: 400, bedTime: '23:00', wakeTime: '05:40' }, { wokeOn: '2026-11-09', minutes: 440, bedTime: '23:00', wakeTime: '06:20' }] }),
   useLogSleep: () => ({ mutateAsync: async (v: unknown) => mockLogSleep(v), isPending: false }),
   useHabits: () => ({ data: mockHabits }),
@@ -54,15 +55,19 @@ describe('Progress', () => {
     expect(screen.getByText(/Calories on target 1 days, protein met 1 days/)).toBeTruthy();
   });
 
-  it('shows waist change and validates a new waist entry', async () => {
+  it('shows measurement changes and saves any combination', async () => {
     await wrap();
-    expect(screen.getByText('96 → 94.5 cm (-1.5 cm)')).toBeTruthy();
-    await fireEvent.changeText(screen.getByTestId('waist-input'), '20');
-    await fireEvent.press(screen.getByTestId('waist-save'));
-    expect(screen.getByText('Must be at least 40')).toBeTruthy();
-    await fireEvent.changeText(screen.getByTestId('waist-input'), '93.5');
-    await fireEvent.press(screen.getByTestId('waist-save'));
-    await waitFor(() => expect(mockLogWaist).toHaveBeenCalledWith(93.5));
+    expect(screen.getByTestId('change-waist')).toHaveTextContent('Waist: 96 → 94.5 cm (-1.5 cm)');
+    expect(screen.getByTestId('change-chest')).toHaveTextContent('Chest: 101 cm');
+    await fireEvent.press(screen.getByTestId('measure-save'));
+    expect(screen.getByText('Enter at least one measurement')).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('measure-arm'), '5');
+    await fireEvent.press(screen.getByTestId('measure-save'));
+    expect(screen.getByText('Must be at least 10')).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('measure-arm'), '33');
+    await fireEvent.changeText(screen.getByTestId('measure-waist'), '93.5');
+    await fireEvent.press(screen.getByTestId('measure-save'));
+    await waitFor(() => expect(mockLogWaist).toHaveBeenCalledWith({ waistCm: 93.5, armCm: 33 }));
   });
 
   it('validates and saves last night’s sleep', async () => {

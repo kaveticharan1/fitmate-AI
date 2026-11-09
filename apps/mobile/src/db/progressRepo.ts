@@ -24,13 +24,36 @@ export function waistHistory(sinceDate: string) {
     .filter((r): r is { date: string; value: number } => r.value != null);
 }
 
-/** Logs today's waist; keeps the profile's latest value in step. */
-export function logWaist(cm: number, day: string = localDate()): void {
+export interface MeasurementInput {
+  waistCm?: number;
+  hipCm?: number;
+  chestCm?: number;
+  armCm?: number;
+}
+
+/** Saves today's body measurements (any combination); keeps the profile's latest waist and hip in step. */
+export function logMeasurements(m: MeasurementInput, day: string = localDate()): void {
+  if (m.waistCm == null && m.hipCm == null && m.chestCm == null && m.armCm == null) throw new RangeError('Nothing to save');
   const now = nowIso();
   getDb().transaction((tx) => {
-    tx.insert(bodyMeasurements).values({ id: randomUUID(), measuredOn: day, waistCm: cm, hipCm: null, createdAt: now, updatedAt: now }).run();
-    tx.update(profile).set({ waistCm: cm, updatedAt: now }).where(eq(profile.id, PROFILE_ID)).run();
+    tx.insert(bodyMeasurements)
+      .values({ id: randomUUID(), measuredOn: day, waistCm: m.waistCm ?? null, hipCm: m.hipCm ?? null, chestCm: m.chestCm ?? null, armCm: m.armCm ?? null, createdAt: now, updatedAt: now })
+      .run();
+    const patch: { waistCm?: number; hipCm?: number; updatedAt: string } = { updatedAt: now };
+    if (m.waistCm != null) patch.waistCm = m.waistCm;
+    if (m.hipCm != null) patch.hipCm = m.hipCm;
+    tx.update(profile).set(patch).where(eq(profile.id, PROFILE_ID)).run();
   });
+}
+
+/** Every measurement row since a date, oldest first. */
+export function measurementHistory(sinceDate: string) {
+  return getDb()
+    .select({ date: bodyMeasurements.measuredOn, waist: bodyMeasurements.waistCm, hip: bodyMeasurements.hipCm, chest: bodyMeasurements.chestCm, arm: bodyMeasurements.armCm })
+    .from(bodyMeasurements)
+    .where(and(isNull(bodyMeasurements.deletedAt), gte(bodyMeasurements.measuredOn, sinceDate)))
+    .orderBy(asc(bodyMeasurements.measuredOn), asc(bodyMeasurements.createdAt))
+    .all();
 }
 
 /** Calories and protein per day, for days that have food logged. */

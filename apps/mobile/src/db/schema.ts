@@ -71,6 +71,8 @@ export const bodyMeasurements = sqliteTable(
     waistCm: real('waist_cm'),
     hipCm: real('hip_cm'),
     ...syncColumns,
+    chestCm: real('chest_cm'),
+    armCm: real('arm_cm'),
   },
   (t) => [index('body_measurements_measured_on_idx').on(t.measuredOn)],
 );

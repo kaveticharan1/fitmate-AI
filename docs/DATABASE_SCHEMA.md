@@ -1,7 +1,7 @@
 # Database schema
 
 Engine: SQLite 3 with SQLCipher 4 (AES-256), one encrypted file `fitmate.db` in the app's private storage.
-Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **4**.
+Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **5**.
 ORM definitions: `apps/mobile/src/db/schema.ts`. A test checks that the migration SQL and the Drizzle schema have identical columns.
 
 Conventions: UUID text primary keys (except the single profile row `id = 'me'`); `created_at`, `updated_at`, `deleted_at` as ISO-8601 UTC text; calendar dates (`measured_on`) as the user's local `YYYY-MM-DD`; booleans as 0/1; lists as JSON text.
@@ -66,6 +66,8 @@ Index: `weight_logs_measured_on_idx (measured_on)`.
 | id | TEXT PK | UUID |
 | measured_on | TEXT | local date |
 | waist_cm, hip_cm | REAL NULL | |
+| chest_cm (v5) | REAL NULL | 40–250 |
+| arm_cm (v5) | REAL NULL | 10–80 |
 | created_at, updated_at, deleted_at | TEXT | |
 
 Index: `body_measurements_measured_on_idx (measured_on)`.

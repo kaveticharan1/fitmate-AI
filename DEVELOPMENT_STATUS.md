@@ -107,4 +107,4 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Report screen (last 7 or 30 days): weight change (period average vs previous period), food days, average calories/protein vs targets, average water and sleep, habit completion %.
 - DB migration v4: `sleep_logs`, `habit_definitions`, `habit_logs` (cascade delete; in backups).
 - Tests: 126 passing (46 app, 37 core, 30 food data, 13 validation). Not yet tested on a phone.
-- Not included (optional, later): hip/chest/arm measurements.
+- Body measurements card: waist, hip, chest and upper arm (any combination), with change over the selected period. DB migration v5 adds `chest_cm`, `arm_cm`.

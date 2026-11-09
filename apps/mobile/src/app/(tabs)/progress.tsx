@@ -10,10 +10,15 @@ import { useProfile } from '../../features/profile/hooks';
 import { HabitsCard, SleepCard } from '../../features/progress/SleepHabits';
 import { TrendChart } from '../../features/progress/TrendChart';
 import { router } from 'expo-router';
-import { useLogWaist, useWaistHistory, useWeekFood, useWeightHistory } from '../../features/progress/hooks';
+import { useLogMeasurements, useMeasurementHistory, useWaistHistory, useWeekFood, useWeightHistory } from '../../features/progress/hooks';
 import { space } from '../../theme/tokens';
 
-const waistField = optionalNumber(40, 250);
+const FIELDS = [
+  { key: 'waistCm', col: 'waist', label: 'onboarding.body.waist', range: [40, 250] },
+  { key: 'hipCm', col: 'hip', label: 'onboarding.body.hip', range: [40, 250] },
+  { key: 'chestCm', col: 'chest', label: 'progress.chest', range: [40, 250] },
+  { key: 'armCm', col: 'arm', label: 'progress.arm', range: [10, 80] },
+] as const;
 
 export default function Progress() {
   const { t } = useTranslation();
@@ -62,7 +67,7 @@ export default function Progress() {
 
       <Button testID="open-report" label={t('report.open')} onPress={() => router.push('/report')} />
 
-      <WaistCard points={waist} />
+      <MeasurementsCard waist={waist} days={Number(range)} />
       <SleepCard />
       <HabitsCard />
 
@@ -85,44 +90,71 @@ export default function Progress() {
   );
 }
 
-function WaistCard({ points }: { points: { date: string; value: number }[] }) {
+function MeasurementsCard({ waist, days }: { waist: { date: string; value: number }[]; days: number }) {
   const { t } = useTranslation();
-  const logWaist = useLogWaist();
-  const [text, setText] = useState('');
-  const [error, setError] = useState<string>();
-  const save = async () => {
-    const r = waistField.safeParse(text);
-    if (!r.success || r.data == null) {
-      setError(r.success ? t('errors.required') : t(r.error.issues[0]!.message, { min: 40, max: 250 }));
-      return;
+  const save = useLogMeasurements();
+  const { data: rows = [] } = useMeasurementHistory(days);
+  const [text, setText] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const submit = async () => {
+    const out: Record<string, number> = {};
+    const errs: Record<string, string> = {};
+    for (const f of FIELDS) {
+      const r = optionalNumber(f.range[0], f.range[1]).safeParse(text[f.key] ?? '');
+      if (!r.success) errs[f.key] = t(r.error.issues[0]!.message, { min: f.range[0], max: f.range[1] });
+      else if (r.data != null) out[f.key] = r.data;
     }
-    await logWaist.mutateAsync(r.data);
-    setText('');
-    setError(undefined);
+    if (!Object.keys(errs).length && !Object.keys(out).length) errs.waistCm = t('progress.measureOne');
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+    await save.mutateAsync(out);
+    setText({});
   };
-  const first = points[0];
-  const last = points[points.length - 1];
+
+  // First and latest value of each measurement in the selected period.
+  const changes = FIELDS.map((f) => {
+    const vals = rows.map((r) => r[f.col]).filter((v): v is number => v != null);
+    return { f, first: vals[0], last: vals[vals.length - 1], n: vals.length };
+  }).filter((c) => c.n > 0);
+
   return (
-    <Card testID="waist-trend">
-      <AppText variant="heading">{t('onboarding.body.waist')}</AppText>
-      {points.length >= 2 ? <TrendChart points={points} trend={rollingAverage(points, 14)} /> : null}
-      {first && last && points.length >= 2 ? (
-        <AppText variant="label">{t('progress.waistChange', { from: first.value, to: last.value, diff: Math.round((last.value - first.value) * 10) / 10 })}</AppText>
+    <Card testID="measurements-card">
+      <AppText variant="heading">{t('progress.measurements')}</AppText>
+      {waist.length >= 2 ? <TrendChart points={waist} trend={rollingAverage(waist, 14)} /> : null}
+      {changes.length ? (
+        changes.map(({ f, first, last, n }) => (
+          <AppText key={f.key} variant="label" testID={`change-${f.col}`}>
+            {t(f.label)}: {n >= 2 ? t('progress.waistChange', { from: first, to: last, diff: Math.round((last! - first!) * 10) / 10 }) : `${last} cm`}
+          </AppText>
+        ))
       ) : (
         <AppText tone="secondary">{t('progress.waistEmpty')}</AppText>
       )}
-      <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'flex-end' }}>
-        <View style={{ flex: 1 }}>
-          <TextField testID="waist-input" label={t('progress.logWaist')} value={text} onChangeText={(v) => { setText(v); setError(undefined); }} keyboardType="decimal-pad" unit="cm" error={error} />
-        </View>
-        <View style={{ width: 100, paddingBottom: error ? 22 : 0 }}>
-          <Button testID="waist-save" label={t('common.save')} onPress={save} loading={logWaist.isPending} />
-        </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+        {FIELDS.map((f) => (
+          <View key={f.key} style={{ flexBasis: '47%', flexGrow: 1 }}>
+            <TextField
+              testID={`measure-${f.col}`}
+              label={t(f.label)}
+              value={text[f.key] ?? ''}
+              onChangeText={(v) => {
+                setText({ ...text, [f.key]: v });
+                setErrors({});
+              }}
+              keyboardType="decimal-pad"
+              unit="cm"
+              optional={f.key !== 'waistCm'}
+              error={errors[f.key]}
+            />
+          </View>
+        ))}
       </View>
+      <Button testID="measure-save" label={t('common.save')} onPress={submit} loading={save.isPending} />
       <AppText variant="caption" tone="muted">
-        {t('onboarding.body.waistHint')}
+        {t('progress.measureHint')}
       </AppText>
-      {logWaist.isError ? <Banner tone="danger" text={t('errors.generic')} /> : null}
+      {save.isError ? <Banner tone="danger" text={t('errors.generic')} /> : null}
     </Card>
   );
 }
