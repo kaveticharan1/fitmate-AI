@@ -2,7 +2,7 @@
 
 A personal AI fitness and nutrition coach for Android (iPhone later), built for Indian food habits, with English and Telugu from day one.
 
-**Status:** Phase 1 (foundation) complete — see [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md).
+**Status:** Phases 1 (foundation) and 2 (food) complete — see [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md).
 
 ## What works today
 
@@ -12,6 +12,7 @@ A personal AI fitness and nutrition coach for Android (iPhone later), built for 
 - 5-step onboarding (about you, body, goal and routine, food, health and language) with validation; every optional question can be left empty.
 - Dashboard: calorie target, maintenance, BMR, protein/carbs/fat, water, BMI (Indian cut-offs), weight progress, safety notices, daily weight logging.
 - Profile editing, encrypted backup and restore (password-protected file you can save to Google Drive), readable data export, delete-all-data.
+- **Food (Phase 2):** 133 Indian-first foods with Telugu names, food diary with eaten vs target, oil adjustment, favourites, "same as yesterday", family-pot home recipes, a 7-day meal plan that follows your diet/allergies/dislikes/budget, and a shareable grocery list.
 - Dark (default), light or follow-phone theme. App language English or Telugu.
 
 ## How it is built
@@ -22,6 +23,7 @@ A personal AI fitness and nutrition coach for Android (iPhone later), built for 
 | Data on phone | SQLite + SQLCipher via `expo-sqlite`, Drizzle ORM, versioned migrations |
 | Forms and validation | React Hook Form + Zod (shared schemas in `packages/validation`) |
 | Calculations | Pure TypeScript in `packages/core` (Mifflin-St Jeor BMR, safety floors) |
+| Food data and planner | `packages/food-data` (IFCT 2017 / USDA-based values, rule-based planner) |
 | Crypto | `@noble/ciphers` (AES-256-GCM), `@noble/hashes` (scrypt), Android Keystore via `expo-secure-store` |
 | Tests | Vitest (packages), Jest + React Native Testing Library (app) |
 | Builds | GitHub Actions → signed release APK |
@@ -30,6 +32,7 @@ A personal AI fitness and nutrition coach for Android (iPhone later), built for 
 fitmate-ai/
   apps/mobile/           Expo app (src/app = screens, src/db, src/security, src/features, src/i18n)
   packages/core/         Nutrition calculations + encrypted backup format
+  packages/food-data/    Food database, portions, recipes, meal planner, grocery list
   packages/validation/   Zod schemas shared by the app and the future backend
   docs/                  Architecture, database, testing, setup, known issues
   .github/workflows/     CI: checks + APK build

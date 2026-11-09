@@ -13,3 +13,8 @@
 | 9 | iPhone not supported in Stage 1 (APK only). | Friends with iPhones can't install. | Stage 2 with an Apple developer account. |
 | 10 | Repository is public. | Code (not data) is visible to anyone; no secrets are in it. | Make it private in GitHub settings if preferred. |
 | 11 | APKs are built for 64-bit ARM (`arm64-v8a`) only, to cut build time roughly 4×. | Rare 32-bit-only or x86 phones can't install it. | Add `armeabi-v7a` to the Gradle flag in `ci.yml` if ever needed. |
+| 12 | Food values for home-cooked dishes are typical recipes, not measurements of your kitchen. | Logged calories can be off by 10–25 %, mostly from oil. | Oil choice, home recipes for your own dishes, weekly weight trend as the real check. |
+| 13 | Food database has 133 items; many regional dishes are missing. | Some foods can't be found. | Add as a home recipe; database grows in later updates. |
+| 14 | The planner's protein top-up may still fall short for high-protein targets on vegan diets. | Plan below protein target. | Shown honestly on the plan's protein bar; AI coach (Phase 3) will suggest alternatives. |
+| 15 | Grocery ticks are not saved after leaving the screen. | Ticks reset. | Acceptable for now; persist if useful. |
+| 16 | Food repository functions are covered through screen tests and pure-logic tests, not direct database tests. | A database-only bug could slip through. | Covered by the on-device test. |

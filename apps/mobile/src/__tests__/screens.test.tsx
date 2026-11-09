@@ -8,7 +8,7 @@ import { EMPTY_PROFILE, ProfileWizard } from '../features/profile/ProfileWizard'
 import { LockScreen } from '../security/LockScreen';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
-const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true };
+const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), navigate: jest.fn(), canGoBack: () => true };
 // A getter, because jest.mock factories run before this file's constants are initialised.
 jest.mock('expo-router', () => ({
   get router() {
@@ -64,11 +64,17 @@ jest.mock('../features/profile/hooks', () => ({
   useLogWeight: () => ({ mutateAsync: mockLogWeight, isPending: false }),
 }));
 
+let mockDiary: { kcal: number; proteinG: number; carbsG: number; fatG: number; fiberG: number }[] = [];
+jest.mock('../features/food/hooks', () => ({
+  useDiary: () => ({ data: mockDiary }),
+}));
+
 const wrap = (ui: ReactNode) => render(<ThemeProvider>{ui}</ThemeProvider>);
 
 beforeEach(async () => {
   jest.clearAllMocks();
   mockProfile = baseProfile;
+  mockDiary = [];
   await i18n.changeLanguage('en');
 });
 
@@ -168,6 +174,18 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('target-kcal')).toHaveTextContent(/1,800/);
     expect(screen.getByText(/safe minimum/)).toBeTruthy();
     expect(screen.getByText(/10 kg to go/)).toBeTruthy();
+  });
+
+  it("shows today's eaten calories and protein against the targets", async () => {
+    mockDiary = [
+      { kcal: 400, proteinG: 12, carbsG: 60, fatG: 10, fiberG: 3 },
+      { kcal: 250, proteinG: 20, carbsG: 5, fatG: 15, fiberG: 1 },
+    ];
+    await wrap(<Dashboard />);
+    expect(screen.getByText('650 of 1,800 kcal')).toBeTruthy();
+    expect(screen.getByText('32 / 120 g')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('open-diary'));
+    expect(mockRouter.navigate).toHaveBeenCalledWith('/food');
   });
 
   it('validates and saves a weight entry', async () => {

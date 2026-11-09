@@ -75,6 +75,63 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE UNIQUE INDEX app_settings_key_idx ON app_settings (key);
   `,
+  // v2 — Phase 2: food diary, favourites, family recipes, meal-plan choices
+  `
+  CREATE TABLE food_log_entries (
+    id TEXT PRIMARY KEY NOT NULL,
+    logged_on TEXT NOT NULL,
+    meal TEXT NOT NULL CHECK (meal IN ('breakfast','lunch','snack','dinner')),
+    food_id TEXT,
+    recipe_id TEXT,
+    name TEXT NOT NULL,
+    quantity_g REAL NOT NULL CHECK (quantity_g > 0 AND quantity_g <= 5000),
+    measure_key TEXT NOT NULL,
+    measure_count REAL NOT NULL,
+    oil_level TEXT NOT NULL DEFAULT 'normal' CHECK (oil_level IN ('less','normal','more')),
+    kcal REAL NOT NULL CHECK (kcal >= 0),
+    protein_g REAL NOT NULL,
+    carbs_g REAL NOT NULL,
+    fat_g REAL NOT NULL,
+    fiber_g REAL NOT NULL,
+    source TEXT NOT NULL CHECK (source IN ('manual','plan','repeat','recipe')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    CHECK (food_id IS NOT NULL OR recipe_id IS NOT NULL)
+  );
+  CREATE INDEX food_log_entries_logged_on_idx ON food_log_entries (logged_on);
+  CREATE TABLE favourite_foods (
+    food_id TEXT PRIMARY KEY NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE TABLE recipes (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    servings REAL NOT NULL CHECK (servings > 0),
+    total_cooked_g REAL CHECK (total_cooked_g IS NULL OR total_cooked_g > 0),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE TABLE recipe_ingredients (
+    id TEXT PRIMARY KEY NOT NULL,
+    recipe_id TEXT NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
+    food_id TEXT NOT NULL,
+    grams REAL NOT NULL CHECK (grams > 0),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE INDEX recipe_ingredients_recipe_idx ON recipe_ingredients (recipe_id);
+  CREATE TABLE meal_plan_choices (
+    plan_date TEXT NOT NULL,
+    meal TEXT NOT NULL CHECK (meal IN ('breakfast','lunch','snack','dinner')),
+    swap_index INTEGER NOT NULL DEFAULT 0,
+    eaten_at TEXT,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (plan_date, meal)
+  );
+  `,
 ];
 
 export interface MigratableDb {

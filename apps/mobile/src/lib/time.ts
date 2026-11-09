@@ -14,3 +14,9 @@ export function isoToDisplayDate(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   return m ? `${m[3]}-${m[2]}-${m[1]}` : iso;
 }
+
+/** Adds days to a YYYY-MM-DD date (calendar arithmetic, no time zones involved). */
+export function addDays(iso: string, days: number): string {
+  const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}

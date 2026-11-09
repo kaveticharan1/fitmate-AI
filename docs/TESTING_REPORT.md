@@ -1,6 +1,6 @@
 # Testing report
 
-_Run on 9 November 2026, Node 22, in the development workspace._
+_Last run: 9 November 2026 (Phase 2), Node 22, in the development workspace and on GitHub Actions._
 
 ## Summary
 
@@ -9,14 +9,15 @@ _Run on 9 November 2026, Node 22, in the development workspace._
 | Type check (all packages) | `npm run typecheck` | Pass, 0 errors |
 | Lint (app) | `npm run lint` | Pass, 0 errors, 0 warnings |
 | Core tests | `npm test -w @fitmate/core` | 25 / 25 pass |
+| Food data tests | `npm test -w @fitmate/food-data` | 30 / 30 pass |
 | Validation tests | `npm test -w @fitmate/validation` | 13 / 13 pass |
-| App tests | `npm test -w @fitmate/mobile` | 22 / 22 pass |
+| App tests | `npm test -w @fitmate/mobile` | 34 / 34 pass |
 | Android JS bundle | `npx expo export --platform android` | Pass (4.8 MB Hermes bytecode) |
 | Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true` and `android:allowBackup="false"` |
-| Release APK build | GitHub Actions `android` job | Configured; first run happens on the first push |
-| On-device testing | Poco X5 (Android 14), flagship phone | **Not yet done** |
+| Release APK build | GitHub Actions `android` job | Pass; signed with the release key (verified) |
+| On-device testing | Poco X5 (Android 14) | v0.1.x installed by the owner; Phase 2 not yet tried on device |
 
-**Total automated tests: 60, all passing.**
+**Total automated tests: 102, all passing.**
 
 ## What the tests cover
 
@@ -38,9 +39,23 @@ _Run on 9 November 2026, Node 22, in the development workspace._
 - Backup snapshot/restore on real SQLite: Telugu and JSON columns, replace-not-merge, unknown/unsafe column names ignored, invalid backup leaves data untouched, wrong app/newer version rejected.
 - Screens (React Native Testing Library): consent required on Welcome; Telugu switch; full onboarding wizard with per-step validation (missing fields, minor, non-number, out of range) and correctly parsed output; dashboard targets and safety banners; weight entry validation; lock screen minimum length and wait-time message.
 
+### packages/food-data (30)
+- Data integrity for all 133 foods: unique ids, calories consistent with protein/carbs/fat (4/4/9 rule within 15 %), sane values, oil ≤ fat, all ingredient and template links valid, allergens inherited from ingredients.
+- Search in English, Telugu script and Roman Telugu; cooked dishes ranked above raw ingredients.
+- Household measures, oil adjustment (only the oil part changes), rejection of negative amounts, readable quantities.
+- Family-pot recipes: totals, per serving, per 100 g, share by servings or grams.
+- Allergy words (English/Telugu/Hindi) and dislikes.
+- Planner: within 15 % of 1,400/1,800/2,400 kcal targets, deterministic, swaps, vegan/vegetarian/eggetarian respected for a week, allergies and dislikes never suggested for 14 days, budget and quick-meal rules, protein top-up, whole pieces only.
+- Grocery list: raw conversion, shop-order grouping, weekly totals and friendly units.
+
+### apps/mobile additions (Phase 2)
+- Migration v2: upgrade from v1 keeps data, cascade delete, entry must reference a food or recipe.
+- Screens: search → portion screen with live kcal, oil choice and save; plan with swap and "I ate this"; grocery tick-off; recipe editor validation, preview and save; dashboard "Today" card.
+- Date arithmetic across months, years and leap days.
+
 ## Not yet tested (needs a real phone)
 
-SQLCipher encryption on device, Keystore/biometric prompts, auto-lock timing, screenshot blocking, backup share sheet and file picker, Telugu font rendering, small/large screens and font scaling, performance of scrypt on mid-range phones (expected ~1–2 s for backups).
+Phase 2 screens on a phone, SQLCipher encryption on device, Keystore/biometric prompts, auto-lock timing, screenshot blocking, backup share sheet and file picker, Telugu font rendering, small/large screens and font scaling, performance of scrypt on mid-range phones (expected ~1–2 s for backups).
 
 ## Bugs found by testing and fixed
 

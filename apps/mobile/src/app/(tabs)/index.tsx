@@ -5,6 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AppText } from '../../components/AppText';
 import { Banner, Button, Card, ProgressBar, Screen, TextField, useErrorText } from '../../components/ui';
+import { router } from 'expo-router';
+import { totalsOf } from '../../db/foodRepo';
+import { useDiary } from '../../features/food/hooks';
+import { NutrientBar } from '../../features/food/ui';
 import { useLogWeight, useProfile, useRecentWeights } from '../../features/profile/hooks';
 import { targetsForProfile } from '../../features/profile/targets';
 import { isoToDisplayDate, localDate } from '../../lib/time';
@@ -28,6 +32,7 @@ export default function Dashboard() {
         <AppText variant="title">{t('dashboard.hello', { name: profile.name })}</AppText>
       </View>
 
+      <TodayCard targets={targets} />
       <CalorieCard targets={targets} />
       <MacroRow targets={targets} />
       {targets.flags.map((f) => (
@@ -39,12 +44,33 @@ export default function Dashboard() {
       <AppText variant="caption" tone="muted">
         {t('dashboard.estimatesNote')}
       </AppText>
-      <Card tone="accent">
-        <AppText variant="label" tone="accent">
-          {t('dashboard.comingNext')}
-        </AppText>
-      </Card>
     </Screen>
+  );
+}
+
+function TodayCard({ targets }: { targets: NutritionTargets }) {
+  const { t } = useTranslation();
+  const { data: entries = [] } = useDiary(localDate());
+  const eaten = totalsOf(entries);
+  return (
+    <Card testID="today-card">
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <AppText variant="heading">{t('diary.today')}</AppText>
+        <AppText variant="label" tone="secondary">
+          {t('dashboard.eatenOf', { eaten: eaten.kcal.toLocaleString('en-IN'), target: targets.targetKcal.toLocaleString('en-IN') })}
+        </AppText>
+      </View>
+      <NutrientBar label={t('dashboard.calorieTarget')} value={eaten.kcal} target={targets.targetKcal} unit="kcal" />
+      <NutrientBar label={t('dashboard.protein')} value={eaten.protein} target={targets.proteinG} unit="g" />
+      <View style={{ flexDirection: 'row', gap: space.sm }}>
+        <View style={{ flex: 1 }}>
+          <Button testID="open-diary" variant="secondary" label={t('dashboard.openDiary')} onPress={() => router.navigate('/food')} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button testID="open-plan" variant="secondary" label={t('dashboard.openPlan')} onPress={() => router.navigate('/plan')} />
+        </View>
+      </View>
+    </Card>
   );
 }
 

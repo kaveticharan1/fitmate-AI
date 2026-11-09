@@ -1,4 +1,4 @@
-import { integer, real, sqliteTable, text, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 /**
  * Every synced table carries a UUID primary key and created/updated/deleted
@@ -85,9 +85,90 @@ export const appSettings = sqliteTable(
   (t) => [uniqueIndex('app_settings_key_idx').on(t.key)],
 );
 
+export const MEALS = ['breakfast', 'lunch', 'snack', 'dinner'] as const;
+export type Meal = (typeof MEALS)[number];
+
+/** One food (or recipe share) eaten. Nutrition is stored as eaten, so later database updates never rewrite history. */
+export const foodLogEntries = sqliteTable(
+  'food_log_entries',
+  {
+    id: text('id').primaryKey(),
+    loggedOn: text('logged_on').notNull(),
+    meal: text('meal', { enum: MEALS }).notNull(),
+    foodId: text('food_id'),
+    recipeId: text('recipe_id'),
+    name: text('name').notNull(),
+    quantityG: real('quantity_g').notNull(),
+    measureKey: text('measure_key').notNull(),
+    measureCount: real('measure_count').notNull(),
+    oilLevel: text('oil_level', { enum: ['less', 'normal', 'more'] }).notNull(),
+    kcal: real('kcal').notNull(),
+    proteinG: real('protein_g').notNull(),
+    carbsG: real('carbs_g').notNull(),
+    fatG: real('fat_g').notNull(),
+    fiberG: real('fiber_g').notNull(),
+    source: text('source', { enum: ['manual', 'plan', 'repeat', 'recipe'] }).notNull(),
+    ...syncColumns,
+  },
+  (t) => [index('food_log_entries_logged_on_idx').on(t.loggedOn)],
+);
+
+export const favouriteFoods = sqliteTable('favourite_foods', {
+  foodId: text('food_id').primaryKey(),
+  createdAt: text('created_at').notNull(),
+});
+
+export const recipes = sqliteTable('recipes', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  servings: real('servings').notNull(),
+  totalCookedG: real('total_cooked_g'),
+  ...syncColumns,
+});
+
+export const recipeIngredients = sqliteTable(
+  'recipe_ingredients',
+  {
+    id: text('id').primaryKey(),
+    recipeId: text('recipe_id').notNull(),
+    foodId: text('food_id').notNull(),
+    grams: real('grams').notNull(),
+    ...syncColumns,
+  },
+  (t) => [index('recipe_ingredients_recipe_idx').on(t.recipeId)],
+);
+
+/** Swaps and "eaten" marks for the generated meal plan (the plan itself is recalculated). */
+export const mealPlanChoices = sqliteTable(
+  'meal_plan_choices',
+  {
+    planDate: text('plan_date').notNull(),
+    meal: text('meal', { enum: MEALS }).notNull(),
+    swapIndex: integer('swap_index').notNull(),
+    eatenAt: text('eaten_at'),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.planDate, t.meal] })],
+);
+
+export type FoodLogEntryRow = typeof foodLogEntries.$inferSelect;
+export type RecipeRow = typeof recipes.$inferSelect;
+export type RecipeIngredientRow = typeof recipeIngredients.$inferSelect;
+
 export type ProfileRow = typeof profile.$inferSelect;
 export type WeightLogRow = typeof weightLogs.$inferSelect;
 export type BodyMeasurementRow = typeof bodyMeasurements.$inferSelect;
 
 /** Tables included in backups, in restore order. */
-export const BACKUP_TABLES = ['profile', 'consents', 'weight_logs', 'body_measurements', 'app_settings'] as const;
+export const BACKUP_TABLES = [
+  'profile',
+  'consents',
+  'weight_logs',
+  'body_measurements',
+  'app_settings',
+  'food_log_entries',
+  'favourite_foods',
+  'recipes',
+  'recipe_ingredients',
+  'meal_plan_choices',
+] as const;

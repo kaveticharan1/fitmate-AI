@@ -24,6 +24,20 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="food"
+        options={{
+          title: t('tabs.food'),
+          tabBarIcon: ({ color, size }) => <Ionicons name="restaurant-outline" color={color as string} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="plan"
+        options={{
+          title: t('tabs.plan'),
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" color={color as string} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="you"
         options={{
           title: t('profile.title'),

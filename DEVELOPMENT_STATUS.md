@@ -8,8 +8,8 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 
 | Phase | Scope | Status |
 | --- | --- | --- |
-| 1 | Foundation: encrypted storage, app lock, consent, onboarding, calculations, dashboard, backup | **Code complete, automated tests passing; awaiting first on-device test** |
-| 2 | Nutrition: Indian food database, food diary, oil/family-pot logging, meal planner, grocery list | Not started |
+| 1 | Foundation: encrypted storage, app lock, consent, onboarding, calculations, dashboard, backup | **Done (v0.1.1), installed on device** |
+| 2 | Nutrition: Indian food database, food diary, oil/family-pot logging, meal planner, grocery list | **Done (v0.2.0), automated tests passing; awaiting on-device test** |
 | 3 | AI coach: chat, personalities, memory, Telugu, voice | Not started |
 | 4 | Workouts: exercise library, plans, timers | Not started |
 | 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | Not started (weight logging already exists) |
@@ -63,3 +63,27 @@ See [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md).
 
 ### 11. Next phase
 Phase 2 — Nutrition (Indian food database from IFCT 2017, food diary, oil adjustment, family pot mode, one-tap logging, meal planner, grocery list).
+
+## Phase 2 report (v0.2.0)
+
+### 1. Completed features
+- `@fitmate/food-data`: 133 foods (Indian-first: rice, idli, dosa, pesarattu, pappu, sambar, curries, biryani, eggs, dairy, fruits, snacks, raw staples) with per-100 g nutrition, household measures (piece, katori, cup, glass, tbsp, ladle…), Telugu names and Roman-Telugu aliases, diet and allergen tags, typical cooking oil, raw-ingredient breakdown.
+- Search in English, Telugu script and Roman Telugu (e.g. "annam", "kodi kura", "majjiga").
+- Food diary: date navigation, 4 meals, eaten/left calories, protein/carbs/fat bars against targets, add/edit/remove, "same as yesterday", favourites, recent and popular foods.
+- Portion screen: unit picker, quantity stepper, less/normal/more oil, live nutrition.
+- Home (family-pot) recipes: raw ingredients + servings (+ optional cooked weight) → log your share by servings or grams.
+- Meal plan (7 days): rule-based, respects diet type, allergies, dislikes, budget and cooking time; portions scaled to the calorie target; protein top-ups; swap a meal; "I ate this" logs it.
+- Grocery list for 7 days: raw amounts grouped by aisle, tick-off, share as text (WhatsApp etc.).
+- Home screen "Today" card with eaten vs target.
+
+### 2–3. Files
+New: `packages/food-data/*`, `apps/mobile/src/db/foodRepo.ts`, `src/features/food/*`, screens `(tabs)/food.tsx`, `(tabs)/plan.tsx`, `food/{add,item,recipes,recipe-edit,grocery}.tsx`, tests `src/__tests__/food.test.tsx`, `src/lib/time.test.ts`. Modified: schema, migrations, i18n, dashboard, tabs, root layout.
+
+### 4. Database changes
+Migration v2: `food_log_entries`, `favourite_foods`, `recipes`, `recipe_ingredients` (cascade delete), `meal_plan_choices`. All included in backups.
+
+### 6. Tests
+102 automated tests passing (34 app, 25 core, 30 food data, 13 validation) — see TESTING_REPORT.md.
+
+### 11. Next phase
+Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/medicine reminders first, as discussed.
