@@ -69,12 +69,20 @@ jest.mock('../features/food/hooks', () => ({
   useDiary: () => ({ data: mockDiary }),
 }));
 
+let mockWaterMl = 0;
+const mockAddWater = jest.fn();
+jest.mock('../features/progress/hooks', () => ({
+  useWaterToday: () => ({ data: mockWaterMl }),
+  useWaterActions: () => ({ add: { mutate: mockAddWater }, undo: { mutate: jest.fn() } }),
+}));
+
 const wrap = (ui: ReactNode) => render(<ThemeProvider>{ui}</ThemeProvider>);
 
 beforeEach(async () => {
   jest.clearAllMocks();
   mockProfile = baseProfile;
   mockDiary = [];
+  mockWaterMl = 0;
   await i18n.changeLanguage('en');
 });
 
@@ -186,6 +194,15 @@ describe('Dashboard', () => {
     expect(screen.getByText('32 / 120 g')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('open-diary'));
     expect(mockRouter.navigate).toHaveBeenCalledWith('/food');
+  });
+
+  it('counts glasses of water toward the target', async () => {
+    mockWaterMl = 750;
+    await wrap(<Dashboard />);
+    // 85 kg → 3.0 L target = 12 glasses.
+    expect(screen.getByTestId('water-count')).toHaveTextContent('3 of 12 glasses · 0.75 L');
+    await fireEvent.press(screen.getByTestId('water-add'));
+    expect(mockAddWater).toHaveBeenCalledWith(250);
   });
 
   it('validates and saves a weight entry', async () => {

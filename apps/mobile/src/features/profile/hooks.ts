@@ -18,6 +18,7 @@ export function useSaveProfile() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.profile });
       qc.invalidateQueries({ queryKey: keys.weights });
+      qc.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -29,6 +30,7 @@ export function useLogWeight() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.profile });
       qc.invalidateQueries({ queryKey: keys.weights });
+      qc.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }

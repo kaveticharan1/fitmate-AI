@@ -132,6 +132,18 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (plan_date, meal)
   );
   `,
+  // v3 — Phase 5: water intake
+  `
+  CREATE TABLE water_logs (
+    id TEXT PRIMARY KEY NOT NULL,
+    logged_on TEXT NOT NULL,
+    ml REAL NOT NULL CHECK (ml > 0 AND ml <= 3000),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE INDEX water_logs_logged_on_idx ON water_logs (logged_on);
+  `,
 ];
 
 export interface MigratableDb {

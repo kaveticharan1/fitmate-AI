@@ -44,6 +44,7 @@ function useInvalidateFood() {
     if (date) qc.invalidateQueries({ queryKey: foodKeys.diary(date) });
     else qc.invalidateQueries({ queryKey: ['diary'] });
     qc.invalidateQueries({ queryKey: foodKeys.recent });
+    qc.invalidateQueries({ queryKey: ['progress'] });
   };
 }
 
@@ -162,6 +163,7 @@ export function useLogPlannedMeal(date: string) {
       qc.invalidateQueries({ queryKey: foodKeys.plan(date) });
       qc.invalidateQueries({ queryKey: foodKeys.diary(date) });
       qc.invalidateQueries({ queryKey: foodKeys.recent });
+      qc.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }

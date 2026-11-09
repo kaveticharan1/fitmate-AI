@@ -12,7 +12,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | 2 | Nutrition: Indian food database, food diary, oil/family-pot logging, meal planner, grocery list | **Done (v0.2.0), automated tests passing; awaiting on-device test** |
 | 3 | AI coach: chat, personalities, memory, Telugu, voice | Not started |
 | 4 | Workouts: exercise library, plans, timers | Not started |
-| 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | Not started (weight logging already exists) |
+| 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Part 1 done (v0.4.0): weight/waist charts, water counter, weekly food summary.** Sleep, habits and reports later |
 | 6 | Health: step counter, Activity Recognition, Health Connect, step validation | Not started |
 | 7 | Advanced: food photos, kitchen assistant, barcode, notifications | Not started |
 
@@ -93,3 +93,10 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Android channel with lock-screen text hidden; settings stored in `app_settings` (`reminders.v1`), no migration needed.
 - FitMate never suggests medicine doses; it only reminds at the user's times.
 - Tests: schedule building and time parsing (4 new tests; 38 app tests total). Not yet tested on a phone.
+
+## Phase 5, part 1 (v0.4.0)
+- Progress tab: weight chart (daily dots, 7-day average line, target line) over 30 days / 3 months / 1 year, weekly rate from a least-squares trend (shown only after a week of data); waist chart with logging; last-7-days food summary (only logged days count — missing is not zero).
+- Home: water counter (+1 glass of 250 ml, undo) toward the daily water target.
+- DB migration v3: `water_logs` (included in backups).
+- `@fitmate/core/trends`: rolling average, weekly rate, week summary (6 new tests). App tests: 43.
+- Not yet tested on a phone.

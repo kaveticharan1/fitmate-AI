@@ -1,7 +1,7 @@
 # Database schema
 
 Engine: SQLite 3 with SQLCipher 4 (AES-256), one encrypted file `fitmate.db` in the app's private storage.
-Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **2**.
+Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **3**.
 ORM definitions: `apps/mobile/src/db/schema.ts`. A test checks that the migration SQL and the Drizzle schema have identical columns.
 
 Conventions: UUID text primary keys (except the single profile row `id = 'me'`); `created_at`, `updated_at`, `deleted_at` as ISO-8601 UTC text; calendar dates (`measured_on`) as the user's local `YYYY-MM-DD`; booleans as 0/1; lists as JSON text.
@@ -109,6 +109,10 @@ Index: `food_log_entries_logged_on_idx (logged_on)`.
 
 Primary key (plan_date, meal); `swap_index` (which suggestion is shown), `eaten_at` (set by "I ate this"), `updated_at`. The plan itself is recalculated from the profile, so it always follows profile changes.
 
+## water_logs (v3)
+
+id, logged_on (local date), ml (0 < ml ≤ 3000), timestamps; index on logged_on. Undo soft-deletes the latest entry.
+
 ## Food database
 
 Not stored in SQLite: the 133 foods ship with the app in `packages/food-data` (read-only), so updates arrive with app updates.
@@ -125,4 +129,4 @@ Not stored in SQLite: the 133 foods ship with the app in `packages/food-data` (r
 
 ## Planned tables (later phases)
 
-coach_conversations, coach_messages, coach_memory, ai_usage, training_modes, coach_preferences (Phase 3); exercises, workout_plans, workout_plan_exercises, workout_sessions, workout_logs (Phase 4); water_logs, sleep_logs, habit_definitions, habit_logs, weekly_reports (Phase 5); health_permissions, health_sync_records, step_samples, activity_segments (Phase 6); notification_preferences (Phase 7).
+coach_conversations, coach_messages, coach_memory, ai_usage, training_modes, coach_preferences (Phase 3); exercises, workout_plans, workout_plan_exercises, workout_sessions, workout_logs (Phase 4); sleep_logs, habit_definitions, habit_logs, weekly_reports (Phase 5); health_permissions, health_sync_records, step_samples, activity_segments (Phase 6); notification_preferences (Phase 7).

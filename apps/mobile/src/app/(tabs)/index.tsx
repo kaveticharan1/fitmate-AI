@@ -10,6 +10,7 @@ import { totalsOf } from '../../db/foodRepo';
 import { useDiary } from '../../features/food/hooks';
 import { NutrientBar } from '../../features/food/ui';
 import { useLogWeight, useProfile, useRecentWeights } from '../../features/profile/hooks';
+import { useWaterActions, useWaterToday } from '../../features/progress/hooks';
 import { targetsForProfile } from '../../features/profile/targets';
 import { isoToDisplayDate, localDate } from '../../lib/time';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -33,6 +34,7 @@ export default function Dashboard() {
       </View>
 
       <TodayCard targets={targets} />
+      <WaterCard targetMl={targets.waterMl} />
       <CalorieCard targets={targets} />
       <MacroRow targets={targets} />
       {targets.flags.map((f) => (
@@ -68,6 +70,35 @@ function TodayCard({ targets }: { targets: NutritionTargets }) {
         </View>
         <View style={{ flex: 1 }}>
           <Button testID="open-plan" variant="secondary" label={t('dashboard.openPlan')} onPress={() => router.navigate('/plan')} />
+        </View>
+      </View>
+    </Card>
+  );
+}
+
+const GLASS_ML = 250;
+
+function WaterCard({ targetMl }: { targetMl: number }) {
+  const { t } = useTranslation();
+  const { data: ml = 0 } = useWaterToday();
+  const { add, undo } = useWaterActions();
+  const glasses = Math.round(ml / GLASS_ML);
+  const targetGlasses = Math.round(targetMl / GLASS_ML);
+  return (
+    <Card testID="water-card">
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <AppText variant="heading">{t('dashboard.water')}</AppText>
+        <AppText variant="label" tone="secondary" testID="water-count">
+          {t('water.glasses', { count: glasses, target: targetGlasses })} · {(ml / 1000).toFixed(2)} {t('common.litres')}
+        </AppText>
+      </View>
+      <ProgressBar value={ml / targetMl} />
+      <View style={{ flexDirection: 'row', gap: space.sm }}>
+        <View style={{ flex: 1 }}>
+          <Button testID="water-undo" variant="secondary" label={t('water.undo')} onPress={() => undo.mutate()} disabled={ml === 0} />
+        </View>
+        <View style={{ flex: 2 }}>
+          <Button testID="water-add" label={t('water.add')} onPress={() => add.mutate(GLASS_ML)} />
         </View>
       </View>
     </Card>

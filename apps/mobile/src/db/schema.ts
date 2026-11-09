@@ -151,6 +151,17 @@ export const mealPlanChoices = sqliteTable(
   (t) => [primaryKey({ columns: [t.planDate, t.meal] })],
 );
 
+export const waterLogs = sqliteTable(
+  'water_logs',
+  {
+    id: text('id').primaryKey(),
+    loggedOn: text('logged_on').notNull(),
+    ml: real('ml').notNull(),
+    ...syncColumns,
+  },
+  (t) => [index('water_logs_logged_on_idx').on(t.loggedOn)],
+);
+
 export type FoodLogEntryRow = typeof foodLogEntries.$inferSelect;
 export type RecipeRow = typeof recipes.$inferSelect;
 export type RecipeIngredientRow = typeof recipeIngredients.$inferSelect;
@@ -171,4 +182,5 @@ export const BACKUP_TABLES = [
   'recipes',
   'recipe_ingredients',
   'meal_plan_choices',
+  'water_logs',
 ] as const;
