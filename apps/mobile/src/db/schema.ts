@@ -233,6 +233,16 @@ export const coachMemory = sqliteTable('coach_memory', {
   ...syncColumns,
 });
 
+/** One row per local day. Manual entries are never overwritten by Health Connect. */
+export const stepDays = sqliteTable('step_days', {
+  day: text('day').primaryKey(),
+  steps: integer('steps').notNull(),
+  source: text('source', { enum: ['health_connect', 'manual'] }).notNull(),
+  flags: text('flags').notNull().default('[]'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 export type CoachMessageRow = typeof coachMessages.$inferSelect;
 export type WorkoutSessionRow = typeof workoutSessions.$inferSelect;
 export type FoodLogEntryRow = typeof foodLogEntries.$inferSelect;
@@ -262,4 +272,5 @@ export const BACKUP_TABLES = [
   'workout_sessions',
   'coach_messages',
   'coach_memory',
+  'step_days',
 ] as const;

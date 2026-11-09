@@ -215,6 +215,17 @@ export const MIGRATIONS: readonly string[] = [
     deleted_at TEXT
   );
   `,
+  // v8 — Phase 6: daily steps (from Health Connect or typed in)
+  `
+  CREATE TABLE step_days (
+    day TEXT PRIMARY KEY NOT NULL,
+    steps INTEGER NOT NULL CHECK (steps BETWEEN 0 AND 200000),
+    source TEXT NOT NULL CHECK (source IN ('health_connect','manual')),
+    flags TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  `,
 ];
 
 export interface MigratableDb {

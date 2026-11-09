@@ -1,6 +1,6 @@
 # Testing report
 
-_Last run: 9 November 2026 (Phase 3), Node 22, in the development workspace and on GitHub Actions._
+_Last run: 10 November 2026 (Phase 6), Node 22, in the development workspace and on GitHub Actions._
 
 ## Summary
 
@@ -8,18 +8,18 @@ _Last run: 9 November 2026 (Phase 3), Node 22, in the development workspace and 
 | --- | --- | --- |
 | Type check (all packages) | `npm run typecheck` | Pass, 0 errors |
 | Lint (app) | `npm run lint` | Pass, 0 errors, 0 warnings |
-| Core tests | `npm test -w @fitmate/core` | 37 / 37 pass |
+| Core tests | `npm test -w @fitmate/core` | 43 / 43 pass |
 | Food data tests | `npm test -w @fitmate/food-data` | 30 / 30 pass |
 | Validation tests | `npm test -w @fitmate/validation` | 13 / 13 pass |
 | Workout tests | `npm test -w @fitmate/workouts` | 12 / 12 pass |
 | Coach tests | `npm test -w @fitmate/coach` | 14 / 14 pass |
-| App tests | `npm test -w @fitmate/mobile` | 74 / 74 pass |
-| Android JS bundle | `npx expo export --platform android` | Pass (5.5 MB Hermes bytecode) |
-| Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true`, `android:allowBackup="false"`, `RECORD_AUDIO` and the speech-recognition service query |
+| App tests | `npm test -w @fitmate/mobile` | 93 / 93 pass |
+| Android JS bundle | `npx expo export --platform android` | Pass (5.6 MB Hermes bytecode) |
+| Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true`, `android:allowBackup="false"`, `RECORD_AUDIO`, the speech-recognition service query, the Health Connect read permissions, rationale intent and permission-usage alias, and minSdk 26 |
 | Release APK build | GitHub Actions `android` job | Pass; signed with the release key (verified) |
 | On-device testing | Poco X5 (Android 14) | v0.1.x installed by the owner; Phase 2 not yet tried on device |
 
-**Total automated tests: 180, all passing.**
+**Total automated tests: 205, all passing.**
 
 ## What the tests cover
 
@@ -79,7 +79,30 @@ _Last run: 9 November 2026 (Phase 3), Node 22, in the development workspace and 
   - Settings: agreement before the key field, a hidden key field, failure reasons, memory and turning the coach off.
 - Migration v7 columns match the Drizzle schema.
 
+### Phase 6 (steps and Health Connect)
+- Core: step goals, the km and kcal estimates, validation (normal walking and running accepted; impossible cadence, bursts and huge days flagged), reading daily groups, averages over days with data.
+- Sync (Health Connect mocked):
+  - Daily totals and the 30-day window.
+  - Flags on recent records.
+  - Weight import: latest per day, skipping days already logged and FitMate's own data.
+  - Sleep import: naps skipped.
+  - Import switches and permissions.
+  - Off, throttled, unavailable and not-allowed states.
+  - Connect turns syncing on only if steps are allowed.
+- SQL on real SQLite:
+  - A typed-in day survives a sync.
+  - Imported sleep never replaces a logged night.
+  - Impossible step values are rejected.
+- Screens:
+  - Steps card: connect, typing in with validation, synced view with km/kcal/warning/"synced x min ago", back to the synced value.
+  - Week card: averages and days at goal.
+  - Settings: availability states, connect and denial, sync result, switches, goal validation, stop syncing.
+
 ## Not yet tested (needs a real phone)
+
+Phase 6: Health Connect permission screen and real data on the Poco X5 (whether HyperOS has native phone step counting, or a source app like Google Fit or Mi Fitness is needed), and sync speed with 30 days of data.
+
+
 
 Phase 3: a real Gemini key and real replies (the development workspace can't reach Google), the free-tier limits in practice, the Telugu quality of replies, Android speech recognition in Telugu (needs the Google app and the Telugu language pack), and the microphone permission prompt.
 

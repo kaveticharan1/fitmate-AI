@@ -1,4 +1,4 @@
-import { completionRate, summariseWeek } from '@fitmate/core';
+import { averageSteps, completionRate, summariseWeek } from '@fitmate/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -6,6 +6,7 @@ import { AppText } from '../components/AppText';
 import { Header } from '../components/Header';
 import { Card, ChoiceGroup, Screen } from '../components/ui';
 import { useTargets } from '../features/food/hooks';
+import { useStepHistory } from '../features/health/hooks';
 import { useFoodHistory, useHabits, useSleepHistory, useWaterHistory, useWeightHistory } from '../features/progress/hooks';
 import { hoursText } from '../features/progress/SleepHabits';
 import { addDays, localDate } from '../lib/time';
@@ -25,12 +26,14 @@ export default function Report() {
   const { data: water = [] } = useWaterHistory(days);
   const { data: sleep = [] } = useSleepHistory(days);
   const { data: habits = [] } = useHabits();
+  const { data: steps = [] } = useStepHistory(days);
 
   // Weight: average of this period vs the period before (averages hide daily water swings).
   const cur = avg(weights.filter((w) => w.date >= start).map((w) => w.value));
   const prev = avg(weights.filter((w) => w.date < start).map((w) => w.value));
   const food7 = targets ? summariseWeek(food, { kcal: targets.targetKcal, protein: targets.proteinG }) : null;
   const waterAvg = avg(water.map((w) => w.ml));
+  const stepsAvg = averageSteps(steps.filter((d) => d.day >= start));
   const sleepAvg = avg(sleep.filter((s) => s.wokeOn >= start).map((s) => s.minutes));
 
   const row = (label: string, value: string, testID?: string) => (
@@ -66,6 +69,7 @@ export default function Report() {
         {row(t('report.avgKcal'), food7?.avgKcal != null ? `${food7.avgKcal} / ${targets!.targetKcal} kcal` : none, 'report-kcal')}
         {row(t('report.avgProtein'), food7?.avgProtein != null ? `${food7.avgProtein} / ${targets!.proteinG} g` : none)}
         {row(t('report.water'), waterAvg != null ? `${(waterAvg / 1000).toFixed(1)} L / ${((targets?.waterMl ?? 0) / 1000).toFixed(1)} L` : none)}
+        {row(t('report.steps'), stepsAvg != null ? stepsAvg.toLocaleString('en-IN') : none, 'report-steps')}
         {row(t('report.sleep'), sleepAvg != null ? hoursText(Math.round(sleepAvg)) : none)}
       </Card>
       {habits.length ? (

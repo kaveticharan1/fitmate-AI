@@ -40,6 +40,7 @@ const mockRecordConsent = jest.fn();
 const mockWithdraw = jest.fn();
 jest.mock('../../db/repositories', () => ({
   getProfile: () => mockProfile,
+  getSetting: (_k: string, fallback: unknown) => fallback,
   hasConsent: () => mockConsent,
   recordConsent: (k: string) => mockRecordConsent(k),
   withdrawConsent: (k: string) => mockWithdraw(k),
@@ -49,6 +50,7 @@ jest.mock('../../db/progressRepo', () => ({
   waterToday: () => 1500,
   weightHistory: () => [],
 }));
+jest.mock('../../db/stepsRepo', () => ({ stepHistory: () => [{ day: '2026-11-09', steps: 5200, source: 'health_connect', flags: [] }] }));
 jest.mock('../../db/habitsRepo', () => ({ sleepHistory: () => [{ wokeOn: '2026-11-09', minutes: 420 }] }));
 jest.mock('../../db/workoutRepo', () => ({ workoutHistory: () => [{ workoutId: 'walk_30', doneOn: '2026-11-08' }] }));
 
@@ -83,6 +85,8 @@ describe('coach service', () => {
     expect(c.context.todayEaten).toEqual({ kcal: 900, proteinG: 42, logged: true });
     expect(c.context.sleepLastNightMin).toBe(420);
     expect(c.context.workoutsThisWeek).toBe(1);
+    expect(c.context.stepsToday).toBe(5200);
+    expect(c.context.stepGoal).toBe(8000);
     expect(c.context.lastWorkout).toBe('2026-11-08 30-minute brisk walk');
     expect(JSON.stringify(c)).not.toMatch(/Charan|private note|1997/);
   });

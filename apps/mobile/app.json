@@ -3,7 +3,7 @@
     "name": "FitMate AI",
     "slug": "fitmate-ai",
     "scheme": "fitmate",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.kaveticharan.fitmate",
-      "versionCode": 8,
+      "versionCode": 9,
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#0F1113",
@@ -27,6 +27,11 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
+      "permissions": [
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_WEIGHT",
+        "android.permission.health.READ_SLEEP"
       ]
     },
     "web": {
@@ -59,7 +64,17 @@
           "speechRecognitionPermission": "FitMate turns your voice into text for the coach chat."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "react-native-health-connect",
+      "expo-build-properties",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ]
   }
 }

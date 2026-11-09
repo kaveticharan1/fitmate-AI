@@ -13,7 +13,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | 3 | AI coach: chat, personalities, memory, Telugu, voice | **Done (v0.7.0)**, automated tests passing; committed locally, not pushed yet. Needs a real Gemini key test on the phone |
 | 4 | Workouts: exercise library, plans, timers | **Done (v0.6.0)**, automated tests passing; committed locally, not pushed yet |
 | 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Done (v0.4.0 + v0.5.0)**: weight/waist charts, water, sleep, habits with forgiving streaks, weekly/monthly report |
-| 6 | Health: step counter, Activity Recognition, Health Connect, step validation | Not started |
+| 6 | Health: step counter, Activity Recognition, Health Connect, step validation | **Done (v0.8.0)**, automated tests passing; committed locally, not pushed yet. Needs a real-phone check of Health Connect |
 | 7 | Advanced: food photos, kitchen assistant, barcode, notifications | Not started |
 
 ## Phase 1 report
@@ -141,4 +141,36 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
   - 180 tests passing (74 app, 37 core, 30 food data, 14 coach, 13 validation, 12 workouts); lint and type check clean; the Android bundle exports.
   - Not tested against the real Gemini service from here: the development workspace cannot reach Google. The client follows the documented v1beta REST format and is covered by tests with recorded-shape responses. The first real check is on your phone with your key.
   - Bug found by testing and fixed: "end my workout" was wrongly flagged as a crisis message.
+
+## Phase 6 — Steps and Health Connect (v0.8.0)
+- **Health Connect (read only):**
+  - Reads steps, weight and sleep from Android's on-phone Health Connect, using `react-native-health-connect` 4.1.3 (Expo config plugin; minSdk raised to 26 as it requires).
+  - Nothing is written to Health Connect, and nothing leaves the phone.
+- **Where the steps come from:** the phone itself (Android 14 and later count steps natively in Health Connect once an app asks to read steps, on phones with the required system update), or any app that shares with Health Connect: Google Fit, Fitbit, Mi Fitness, Samsung Health, or a watch app.
+- **No double counting:** daily totals use Health Connect's own aggregation, which merges phone and watch steps.
+- **Sync:**
+  - Covers the last 30 days.
+  - Runs automatically when Home opens (at most every 5 minutes), and from a "Sync now" button.
+  - The "Steps today" card shows when it last synced.
+- **Typing steps in:**
+  - Works for anyone without Health Connect.
+  - A typed-in day is never overwritten by a sync (checked by a SQL test).
+  - "Use Health Connect value instead" switches the day back to the synced number.
+- **Step validation:**
+  - The last two days' raw records are checked.
+  - Bursts, cadence above 220 steps/min and days over 60,000 steps are flagged with a warning ("may come from shaking or vehicle vibration").
+  - Flagged steps are not deleted: Health Connect already merges sources, and the user decides.
+- **Weight and sleep import** (each can be switched off):
+  - Weight from other apps or scales: the latest reading of the day, and only for days with no weight logged in FitMate.
+  - Sleep sessions of 1 hour or more: only for mornings with nothing logged. Naps are skipped.
+- **Step goal:** starts from the activity level (6,000 / 8,000 / 10,000 / 12,000) and can be changed (1,000–50,000).
+- **Screens:**
+  - **Home:** a "Steps today" card with goal progress, about how many km and kcal, the sync state and the warnings.
+  - **Progress:** "Steps this week" bars, the 7- and 30-day averages, and the days at goal.
+  - **Report:** average steps per day.
+  - **Settings:** You → Steps and Health Connect, covering availability (not installed or needs an update), connect, the import switches, open Health Connect, stop syncing, and the step goal.
+- **AI coach:** now also gets today's steps, the goal and the 7-day average; the consent text was updated to say so.
+- **Database:** migration v8 adds `step_days` (day, steps 0–200,000, source, flags), which is included in backups.
+- **Not built, by decision:** a separate background step counter of our own. Android only counts reliably for an app that keeps a background service and notification running. Health Connect already does this with the phone's step counter sensor, using less battery.
+- **Tests:** 205 passing (93 app, 43 core, 30 food data, 14 coach, 13 validation, 12 workouts). Lint and type check are clean, the Android bundle exports, and prebuild shows the Health Connect permissions, the rationale intent and the permission-usage alias in the manifest. Health Connect itself can only be tried on a real phone.
 

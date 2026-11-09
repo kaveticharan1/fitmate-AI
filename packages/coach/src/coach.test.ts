@@ -41,6 +41,9 @@ const ctx: CoachContext = {
   weeklyWeightChangeKg: -0.4,
   sleepLastNightMin: 400,
   workoutsThisWeek: 2,
+  stepsToday: 4200,
+  stepsAverage7: 6100,
+  stepGoal: 8000,
   lastWorkout: '2026-11-08 Home beginner',
 };
 
@@ -53,6 +56,8 @@ describe('system prompt', () => {
     expect(p).toContain('Daily targets: 2000 kcal, 138 g protein, 3000 ml water');
     expect(p).toContain('Logged today: 850 kcal, 40 g protein');
     expect(p).toContain('Sleep last night: 6 h 40 min');
+    expect(p).toContain('Steps today: 4200 (goal 8000)');
+    expect(p).toContain('Average steps, last 7 days: 6100');
     expect(p).toContain('Allergies: peanut');
     expect(p).toContain('- Works night shifts');
     expect(p).toContain('14416');

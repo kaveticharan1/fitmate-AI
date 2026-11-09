@@ -7,6 +7,7 @@ import { AppText } from '../../components/AppText';
 import { Banner, Button, Card, ChoiceGroup, Screen, TextField } from '../../components/ui';
 import { useTargets } from '../../features/food/hooks';
 import { useProfile } from '../../features/profile/hooks';
+import { StepsWeekCard } from '../../features/health/StepsCards';
 import { HabitsCard, SleepCard } from '../../features/progress/SleepHabits';
 import { TrendChart } from '../../features/progress/TrendChart';
 import { router } from 'expo-router';
@@ -68,6 +69,7 @@ export default function Progress() {
       <Button testID="open-report" label={t('report.open')} onPress={() => router.push('/report')} />
 
       <MeasurementsCard waist={waist} days={Number(range)} />
+      <StepsWeekCard />
       <SleepCard />
       <HabitsCard />
 

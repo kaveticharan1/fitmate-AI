@@ -89,6 +89,7 @@ function Root() {
           <Stack.Screen name="workout/session" />
           <Stack.Screen name="coach" />
           <Stack.Screen name="settings/ai" />
+          <Stack.Screen name="settings/health" />
         </Stack.Protected>
       </Stack>
     );

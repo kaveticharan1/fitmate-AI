@@ -1,7 +1,7 @@
 # Database schema
 
 Engine: SQLite 3 with SQLCipher 4 (AES-256), one encrypted file `fitmate.db` in the app's private storage.
-Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **7**.
+Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **8**.
 ORM definitions: `apps/mobile/src/db/schema.ts`. A test checks that the migration SQL and the Drizzle schema have identical columns.
 
 Conventions: UUID text primary keys (except the single profile row `id = 'me'`); `created_at`, `updated_at`, `deleted_at` as ISO-8601 UTC text; calendar dates (`measured_on`) as the user's local `YYYY-MM-DD`; booleans as 0/1; lists as JSON text.
@@ -131,6 +131,11 @@ id, workout_id (id from `packages/workouts`), done_on (local date), started_at, 
 `coach_memory`: id, text (1–200 characters), timestamps. At most 30 facts, managed in You → AI coach.
 The Gemini API key is **not** in the database: it is in SecureStore under `fm.ai.gemini.v1`.
 
+## step_days (v8)
+
+day (local `YYYY-MM-DD`, primary key), steps (0–200,000), source ('health_connect' | 'manual'), flags (JSON list of validation warnings: 'too_fast', 'burst', 'daily_total'), created_at, updated_at. Synced values never replace a 'manual' day.
+Health Connect settings live in `app_settings`: `healthEnabled`, `healthImportWeight`, `healthImportSleep`, `healthLastSync`, `stepGoal`.
+
 ## Food database
 
 Not stored in SQLite: the 133 foods (and the exercises and workouts in `packages/workouts`) ship with the app in `packages/food-data` (read-only), so updates arrive with app updates.
@@ -148,4 +153,4 @@ Not stored in SQLite: the 133 foods (and the exercises and workouts in `packages
 
 ## Planned tables (later phases)
 
-health_permissions, health_sync_records, step_samples, activity_segments (Phase 6); notification_preferences (Phase 7).
+notification_preferences (Phase 7).

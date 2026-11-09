@@ -45,6 +45,7 @@ const tables = [
   schema.workoutSessions,
   schema.coachMessages,
   schema.coachMemory,
+  schema.stepDays,
 ];
 
 describe('migrations', () => {

@@ -1,4 +1,4 @@
-import { ageFromDateOfBirth, weeklyRate } from '@fitmate/core';
+import { ageFromDateOfBirth, averageSteps, defaultStepGoal, weeklyRate } from '@fitmate/core';
 import {
   buildSystemPrompt,
   CoachError,
@@ -15,8 +15,9 @@ import {
 import { WORKOUTS } from '@fitmate/workouts';
 import { addMemory, addMessage, listMemory, recentMessages, type CoachMessage } from '../../db/coachRepo';
 import { sleepHistory } from '../../db/habitsRepo';
+import { stepHistory } from '../../db/stepsRepo';
 import { dailyFoodTotals, waterToday, weightHistory } from '../../db/progressRepo';
-import { getProfile, hasConsent, recordConsent, withdrawConsent } from '../../db/repositories';
+import { getProfile, getSetting, hasConsent, recordConsent, withdrawConsent } from '../../db/repositories';
 import { workoutHistory } from '../../db/workoutRepo';
 import { addDays, localDate } from '../../lib/time';
 import { targetsForProfile } from '../profile/targets';
@@ -35,6 +36,7 @@ export function buildCoachContext(now: Date = new Date()): { context: CoachConte
   const rate = weeklyRate(weights);
   const sleep = sleepHistory(today).find((s) => s.wokeOn === today);
   const workouts = workoutHistory(addDays(today, -6));
+  const steps = stepHistory(addDays(today, -6));
   const last = workouts[0];
   const lastName = last ? (WORKOUTS.find((w) => w.id === last.workoutId)?.name ?? last.workoutId) : null;
 
@@ -65,6 +67,9 @@ export function buildCoachContext(now: Date = new Date()): { context: CoachConte
       weeklyWeightChangeKg: rate == null ? null : Math.round(rate * 10) / 10,
       sleepLastNightMin: sleep?.minutes ?? null,
       workoutsThisWeek: workouts.length,
+      stepsToday: steps.find((s) => s.day === today)?.steps ?? null,
+      stepsAverage7: averageSteps(steps),
+      stepGoal: getSetting<number | null>('stepGoal', null) ?? defaultStepGoal(p.activityLevel),
       lastWorkout: last ? `${last.doneOn} ${lastName}` : null,
     },
   };

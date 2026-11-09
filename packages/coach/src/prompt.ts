@@ -35,6 +35,9 @@ export interface CoachContext {
   weeklyWeightChangeKg?: number | null;
   sleepLastNightMin?: number | null;
   workoutsThisWeek?: number | null;
+  stepsToday?: number | null;
+  stepsAverage7?: number | null;
+  stepGoal?: number | null;
   lastWorkout?: string | null;
 }
 
@@ -66,6 +69,8 @@ export function contextLines(c: CoachContext): string[] {
     line('Water today', c.waterTodayMl != null ? `${c.waterTodayMl} ml` : null),
     line('Weight trend', c.weeklyWeightChangeKg != null ? `${c.weeklyWeightChangeKg > 0 ? '+' : ''}${c.weeklyWeightChangeKg} kg per week` : null),
     line('Sleep last night', c.sleepLastNightMin != null ? `${Math.floor(c.sleepLastNightMin / 60)} h ${c.sleepLastNightMin % 60} min` : null),
+    line('Steps today', c.stepsToday != null ? `${c.stepsToday}${c.stepGoal ? ` (goal ${c.stepGoal})` : ''}` : null),
+    line('Average steps, last 7 days', c.stepsAverage7),
     line('Workouts in the last 7 days', c.workoutsThisWeek),
     line('Last workout', c.lastWorkout),
   ];

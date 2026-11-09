@@ -6,6 +6,13 @@ import { ThemeProvider } from '../theme/ThemeProvider';
 
 let mockWeights: { date: string; value: number }[] = [];
 const mockLogWaist = jest.fn();
+jest.mock('../features/health/hooks', () => ({
+  useHealthSettings: () => ({ data: { enabled: false, importWeight: true, importSleep: true, lastSync: null, stepGoal: null } }),
+  useStepHistory: () => ({ data: [] }),
+  useAutoSync: () => ({ mutate: jest.fn(), isPending: false, data: undefined }),
+  useManualSteps: () => ({ set: { mutate: jest.fn() }, clear: { mutate: jest.fn() } }),
+  useStepGoal: () => 8000,
+}));
 jest.mock('../features/progress/hooks', () => ({
   useWeightHistory: () => ({ data: mockWeights }),
   useWaistHistory: () => ({ data: [{ date: '2026-11-01', value: 96 }, { date: '2026-11-08', value: 94.5 }] }),
