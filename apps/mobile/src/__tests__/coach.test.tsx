@@ -8,6 +8,7 @@ import { ThemeProvider } from '../theme/ThemeProvider';
 
 const mockPush = jest.fn();
 let mockParams: Record<string, string> = {};
+jest.mock('../features/coach/service', () => ({ pruneChat: jest.fn() }));
 jest.mock('expo-router', () => ({
   router: { push: (...a: unknown[]) => mockPush(...a), back: jest.fn(), canGoBack: () => true },
   useLocalSearchParams: () => mockParams,
@@ -34,7 +35,7 @@ jest.mock('expo-speech-recognition', () => ({
 }));
 
 let mockStatus = { connected: true, model: 'gemini-3.6-flash' };
-let mockMessages: { id: string; role: 'user' | 'coach'; text: string; flags: string[]; createdAt: string }[] = [];
+let mockMessages: { id: string; role: 'user' | 'coach'; text: string; flags: string[]; actions: unknown[]; createdAt: string }[] = [];
 let mockSendState: { isPending: boolean; isError: boolean; error: unknown } = { isPending: false, isError: false, error: null };
 const mockSend = jest.fn();
 const mockConnect = jest.fn();
@@ -42,6 +43,8 @@ let mockConnectState: { isPending: boolean; isError: boolean; error: unknown } =
 const mockDisconnect = jest.fn();
 const mockForget = jest.fn();
 let mockReadAloud = false;
+const mockDecide = jest.fn();
+const mockSetAgent = jest.fn();
 jest.mock('../features/coach/hooks', () => ({
   useAiStatus: () => ({ data: mockStatus }),
   useCoachMessages: () => ({ data: mockMessages }),
@@ -53,11 +56,14 @@ jest.mock('../features/coach/hooks', () => ({
   useDisconnectAi: () => ({ mutate: mockDisconnect, isPending: false }),
   useReadAloud: () => ({ data: mockReadAloud }),
   useSetReadAloud: () => ({ mutate: jest.fn() }),
+  useActionDecision: () => ({ mutate: mockDecide, isPending: false, data: undefined }),
+  useAgentSettings: () => ({ data: { actions: 'confirm', retentionDays: 90 } }),
+  useSetAgentSetting: () => ({ mutate: mockSetAgent }),
 }));
 jest.mock('../features/profile/hooks', () => ({ useProfile: () => ({ data: { aiLanguage: 'te' } }) }));
 
 const wrap = (el: React.ReactElement) => render(<ThemeProvider>{el}</ThemeProvider>);
-const msg = (role: 'user' | 'coach', text: string, flags: string[] = []) => ({ id: `${role}-${text}`, role, text, flags, createdAt: '' });
+const msg = (role: 'user' | 'coach', text: string, flags: string[] = [], actions: unknown[] = []) => ({ id: `${role}-${text}`, role, text, flags, actions, createdAt: '' });
 
 beforeEach(async () => {
   jest.clearAllMocks();
@@ -134,6 +140,32 @@ describe('Coach chat', () => {
   });
 });
 
+describe('Coach actions', () => {
+  it('shows a proposed food log with matched foods and runs it only on Confirm', async () => {
+    mockMessages = [
+      msg('user', 'I had 2 dosas and sambar'),
+      msg('coach', 'Tap Confirm to log it.', [], [{ action: { type: 'log_food', meal: 'breakfast', items: [{ name: 'dosa', count: 2, unit: 'piece' }, { name: 'unicorn steak' }] }, status: 'proposed' }]),
+    ];
+    await wrap(<CoachScreen />);
+    expect(screen.getByText('Log to Breakfast:')).toBeTruthy();
+    expect(screen.getByText(/Dosa.*2/)).toBeTruthy();
+    expect(screen.getByText(/unicorn steak — not in the food list/)).toBeTruthy();
+    expect(mockDecide).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByTestId('action-confirm-0'));
+    expect(mockDecide).toHaveBeenCalledWith(expect.objectContaining({ index: 0, confirm: true }));
+    await fireEvent.press(screen.getByTestId('action-dismiss-0'));
+    expect(mockDecide).toHaveBeenLastCalledWith(expect.objectContaining({ confirm: false }));
+  });
+
+  it('shows the result of a finished action', async () => {
+    mockMessages = [msg('user', 'water'), msg('coach', 'Done?', [], [{ action: { type: 'log_water', ml: 500 }, status: 'done' }])];
+    await wrap(<CoachScreen />);
+    expect(screen.getByText('Add 500 ml of water today')).toBeTruthy();
+    expect(screen.getByTestId('action-status-0')).toHaveTextContent('✓ Done');
+    expect(screen.queryByTestId('action-confirm-0')).toBeNull();
+  });
+});
+
 describe('Coach voice', () => {
   it('listens in Telugu and puts the transcript in the box', async () => {
     await wrap(<CoachScreen />);
@@ -200,5 +232,14 @@ describe('AI coach settings', () => {
     expect(mockForget).toHaveBeenCalledWith('m1');
     await fireEvent.press(screen.getByTestId('disconnect-ai'));
     expect(mockDisconnect).toHaveBeenCalled();
+  });
+
+  it('controls coach actions and chat history length', async () => {
+    await wrap(<AiSettings />);
+    expect(screen.getByText(/never your name, date of birth or health notes/)).toBeTruthy();
+    await fireEvent(screen.getByTestId('agent-actions'), 'press');
+    expect(mockSetAgent).toHaveBeenCalledWith({ key: 'coachActions', value: 'off' });
+    await fireEvent.press(screen.getByTestId('agent-retention-30'));
+    expect(mockSetAgent).toHaveBeenCalledWith({ key: 'chatRetentionDays', value: 30 });
   });
 });

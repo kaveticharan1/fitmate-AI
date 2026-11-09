@@ -4,6 +4,8 @@ import { DEFAULT_SMART, type SmartConfig } from './smart';
 export interface ReminderConfig {
   water: { enabled: boolean; startHour: number; endHour: number; everyHours: 1 | 2 };
   medicines: { id: string; name: string; time: string }[];
+  /** Your own daily reminders ("Evening walk 18:30"), also created by the coach after you confirm. */
+  custom?: { id: string; label: string; time: string }[];
   /** Added in v0.12; older saved settings don't have it. */
   smart?: SmartConfig;
 }
@@ -13,6 +15,7 @@ export const REMINDERS_KEY = 'reminders.v1';
 export const DEFAULT_REMINDERS: ReminderConfig = {
   water: { enabled: false, startHour: 8, endHour: 21, everyHours: 1 },
   medicines: [],
+  custom: [],
   smart: DEFAULT_SMART,
 };
 
@@ -21,13 +24,14 @@ export function withDefaults(c: Partial<ReminderConfig> | null | undefined): Rem
   return {
     water: { ...DEFAULT_REMINDERS.water, ...(c?.water ?? {}) },
     medicines: c?.medicines ?? [],
+    custom: c?.custom ?? [],
     smart: { ...DEFAULT_SMART, ...(c?.smart ?? {}) },
   };
 }
 
 export interface PlannedNotification {
   id: string;
-  kind: 'water' | 'medicine';
+  kind: 'water' | 'medicine' | 'custom';
   hour: number;
   minute: number;
   /** Medicine name, shown only when the phone is unlocked. */
@@ -54,6 +58,10 @@ export function buildSchedule(c: ReminderConfig): PlannedNotification[] {
   for (const med of c.medicines) {
     const t = parseTime(med.time);
     if (t && med.name.trim()) out.push({ id: `med-${med.id}`, kind: 'medicine', ...t, label: med.name.trim() });
+  }
+  for (const r of c.custom ?? []) {
+    const t = parseTime(r.time);
+    if (t && r.label.trim()) out.push({ id: `custom-${r.id}`, kind: 'custom', ...t, label: r.label.trim() });
   }
   return out;
 }

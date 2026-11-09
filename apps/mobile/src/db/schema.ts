@@ -222,6 +222,7 @@ export const coachMessages = sqliteTable(
     role: text('role', { enum: ['user', 'coach'] }).notNull(),
     text: text('text').notNull(),
     flags: text('flags').notNull().default('[]'),
+    actions: text('actions').notNull().default('[]'),
     ...syncColumns,
   },
   (t) => [index('coach_messages_created_idx').on(t.createdAt)],

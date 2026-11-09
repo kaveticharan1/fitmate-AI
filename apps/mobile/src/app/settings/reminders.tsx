@@ -28,10 +28,14 @@ export default function RemindersScreen() {
   const water = config.water;
   const setWater = (patch: Partial<ReminderConfig['water']>) => setConfig({ ...config, water: { ...water, ...patch } });
   const smart = config.smart!;
+  const customList = config.custom ?? [];
   const setSmart = (patch: Partial<SmartConfig>) => setConfig({ ...config, smart: { ...smart, ...patch } });
 
   const save = async () => {
-    const bad = new Set(config.medicines.filter((m) => !m.name.trim() || !parseTime(m.time)).map((m) => m.id));
+    const bad = new Set([
+      ...config.medicines.filter((m) => !m.name.trim() || !parseTime(m.time)).map((m) => m.id),
+      ...customList.filter((m) => !m.label.trim() || !parseTime(m.time)).map((m) => m.id),
+    ]);
     setBadTimes(bad);
     if (bad.size) return;
     setBusy(true);
@@ -41,6 +45,7 @@ export default function RemindersScreen() {
         title: 'FitMate',
         water: t('reminders.waterBody'),
         medicine: (name) => t('reminders.medicineBody', { name }),
+        custom: (label) => t('reminders.customBody', { label }),
       });
       setSetting(REMINDERS_KEY, config);
       const day = currentDayStatus();
@@ -129,6 +134,51 @@ export default function RemindersScreen() {
           variant="secondary"
           label={t('reminders.addMedicine')}
           onPress={() => setConfig({ ...config, medicines: [...config.medicines, { id: randomUUID(), name: '', time: '08:00' }] })}
+        />
+      </Card>
+
+      <Card>
+        <AppText variant="heading">{t('reminders.custom')}</AppText>
+        <AppText variant="caption" tone="secondary">
+          {t('reminders.customHint')}
+        </AppText>
+        {customList.map((m, idx) => (
+          <View key={m.id} style={{ flexDirection: 'row', gap: space.sm, alignItems: 'flex-end' }}>
+            <View style={{ flex: 2 }}>
+              <TextField
+                testID={`custom-label-${idx}`}
+                label={t('reminders.customLabel')}
+                value={m.label}
+                onChangeText={(v) => setConfig({ ...config, custom: customList.map((x) => (x.id === m.id ? { ...x, label: v } : x)) })}
+                error={badTimes.has(m.id) && !m.label.trim() ? t('errors.required') : undefined}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextField
+                testID={`custom-time-${idx}`}
+                label={t('reminders.time')}
+                placeholder="08:00"
+                value={m.time}
+                onChangeText={(v) => setConfig({ ...config, custom: customList.map((x) => (x.id === m.id ? { ...x, time: v } : x)) })}
+                keyboardType="numbers-and-punctuation"
+                error={badTimes.has(m.id) && !parseTime(m.time) ? t('reminders.badTime') : undefined}
+              />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('food.delete')}
+              onPress={() => setConfig({ ...config, custom: customList.filter((x) => x.id !== m.id) })}
+              style={{ width: TOUCH, height: TOUCH, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Ionicons name="trash-outline" size={20} color={colors.textSecondary} />
+            </Pressable>
+          </View>
+        ))}
+        <Button
+          testID="custom-add"
+          variant="secondary"
+          label={t('reminders.addCustom')}
+          onPress={() => setConfig({ ...config, custom: [...customList, { id: randomUUID(), label: '', time: '18:00' }] })}
         />
       </Card>
 

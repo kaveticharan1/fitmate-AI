@@ -24,3 +24,22 @@ jest.mock('react-native-health-connect', () => ({
   readRecords: jest.fn(async () => ({ records: [] })),
   openHealthConnectSettings: jest.fn(),
 }));
+
+// Native notifications: a quiet stub; tests that check scheduling mock it themselves.
+jest.mock('expo-notifications', () => ({
+  AndroidImportance: { HIGH: 4 },
+  AndroidNotificationVisibility: { PRIVATE: 0 },
+  SchedulableTriggerInputTypes: { DAILY: 'daily', WEEKLY: 'weekly', DATE: 'date' },
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  setNotificationCategoryAsync: jest.fn(async () => null),
+  getPermissionsAsync: jest.fn(async () => ({ granted: false })),
+  requestPermissionsAsync: jest.fn(async () => ({ granted: false })),
+  getAllScheduledNotificationsAsync: jest.fn(async () => []),
+  cancelScheduledNotificationAsync: jest.fn(async () => undefined),
+  scheduleNotificationAsync: jest.fn(async () => 'id'),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  getLastNotificationResponseAsync: jest.fn(async () => null),
+  clearLastNotificationResponseAsync: jest.fn(async () => undefined),
+}));

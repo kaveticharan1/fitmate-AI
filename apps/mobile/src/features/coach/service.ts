@@ -1,6 +1,8 @@
 import { ageFromDateOfBirth, averageSteps, defaultStepGoal, weeklyRate } from '@fitmate/core';
 import {
+  ACTIONS_PROMPT,
   buildSystemPrompt,
+  extractActions,
   CoachError,
   extractMemory,
   generateReply,
@@ -13,7 +15,7 @@ import {
   type Personality,
 } from '@fitmate/coach';
 import { WORKOUTS } from '@fitmate/workouts';
-import { addMemory, addMessage, listMemory, recentMessages, type CoachMessage } from '../../db/coachRepo';
+import { addMemory, addMessage, deleteMessagesBefore, listMemory, recentMessages, type CoachMessage } from '../../db/coachRepo';
 import { sleepHistory } from '../../db/habitsRepo';
 import { stepHistory } from '../../db/stepsRepo';
 import { dailyFoodTotals, waterToday, weightHistory } from '../../db/progressRepo';
@@ -75,6 +77,24 @@ export function buildCoachContext(now: Date = new Date()): { context: CoachConte
   };
 }
 
+/**
+ * Extra context blocks for the coach (face & skin wellness, reference knowledge).
+ * Filled in by later modules; each only adds what the user has allowed.
+ */
+const contextProviders: (() => string | null)[] = [];
+export function registerCoachContext(provider: () => string | null) {
+  contextProviders.push(provider);
+}
+function extraContext(): string[] {
+  return contextProviders.map((p) => {
+    try {
+      return p();
+    } catch {
+      return null;
+    }
+  }).filter((x): x is string => !!x);
+}
+
 /** Saves the user's message (with any local safety flags). */
 export function saveUserMessage(text: string): CoachMessage {
   return addMessage('user', text.trim(), safetyFlags(text));
@@ -88,11 +108,20 @@ export async function requestCoachReply(): Promise<CoachMessage> {
   if (!setup) throw new CoachError('bad_response', 'No profile');
   const turns = trimHistory(recentMessages(40).map((m) => ({ role: m.role, text: m.text })));
   if (turns.length === 0) throw new CoachError('bad_response', 'Nothing to answer');
-  const system = buildSystemPrompt({ ...setup, memory: listMemory().map((m) => m.text) });
+  const actionsOn = getSetting<'confirm' | 'off'>('coachActions', 'confirm') === 'confirm';
+  const system = buildSystemPrompt({ ...setup, memory: listMemory().map((m) => m.text), extra: [...extraContext(), ...(actionsOn ? [ACTIONS_PROMPT] : [])] });
   const raw = await generateReply({ apiKey: stored.apiKey, model: stored.model, system, turns, fetchFn });
-  const { text, remember } = extractMemory(raw);
+  const { text: withoutMemory, remember } = extractMemory(raw);
   for (const fact of remember) addMemory(fact);
-  return addMessage('coach', text || raw);
+  const { text, actions } = extractActions(withoutMemory);
+  return addMessage('coach', text || withoutMemory || raw, [], actionsOn ? actions.map((action) => ({ action, status: 'proposed' as const })) : []);
+}
+
+/** Deletes chat older than the user's retention setting (default 90 days; 0 = keep). */
+export function pruneChat(now: Date = new Date()): number {
+  const days = getSetting<number>('chatRetentionDays', 90);
+  if (!days) return 0;
+  return deleteMessagesBefore(new Date(now.getTime() - days * 86400000).toISOString());
 }
 
 /** Checks a key with Google, then stores it and records consent. */

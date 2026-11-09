@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { Linking, View } from 'react-native';
 import { AppText } from '../../components/AppText';
 import { Header } from '../../components/Header';
-import { Banner, Button, Card, CheckRow, Screen, TextField } from '../../components/ui';
+import { Banner, Button, Card, CheckRow, ChoiceGroup, Screen, TextField, ToggleRow } from '../../components/ui';
 import { AI_STUDIO_KEYS_URL, coachErrorKey } from '../../features/coach/errors';
-import { useAiStatus, useClearChat, useCoachMemory, useConnectAi, useDeleteMemory, useDisconnectAi } from '../../features/coach/hooks';
+import { useAgentSettings, useAiStatus, useClearChat, useCoachMemory, useConnectAi, useDeleteMemory, useDisconnectAi, useSetAgentSetting } from '../../features/coach/hooks';
 import { space } from '../../theme/tokens';
 
 export default function AiSettings() {
@@ -21,6 +21,8 @@ export default function AiSettings() {
   const [agreed, setAgreed] = useState(false);
   const [key, setKey] = useState('');
   const [cleared, setCleared] = useState(false);
+  const { data: agent } = useAgentSettings();
+  const setAgent = useSetAgentSetting();
 
   const doConnect = () => {
     const k = cleanKey(key);
@@ -45,6 +47,34 @@ export default function AiSettings() {
               {t('coach.styleBody')}
             </AppText>
             <Button testID="edit-style" variant="secondary" label={t('profile.edit')} onPress={() => router.push('/edit-profile')} />
+          </Card>
+          <Card testID="agent-permissions">
+            <AppText variant="heading">{t('agent.permTitle')}</AppText>
+            <AppText variant="label" tone="secondary">
+              {t('agent.permRead')}
+            </AppText>
+            <AppText variant="label" tone="secondary">
+              {t('agent.permRecommend')}
+            </AppText>
+            <ToggleRow
+              testID="agent-actions"
+              label={t('agent.permAct')}
+              description={t('agent.permActHint')}
+              value={agent?.actions !== 'off'}
+              onChange={(v) => setAgent.mutate({ key: 'coachActions', value: v ? 'confirm' : 'off' })}
+            />
+            <ChoiceGroup<string>
+              testID="agent-retention"
+              label={t('agent.retention')}
+              value={String(agent?.retentionDays ?? 90)}
+              onChange={(v) => setAgent.mutate({ key: 'chatRetentionDays', value: Number(v) })}
+              options={[
+                { value: '30', label: t('agent.days', { count: 30 }) },
+                { value: '90', label: t('agent.days', { count: 90 }) },
+                { value: '365', label: t('agent.days', { count: 365 }) },
+                { value: '0', label: t('agent.keep') },
+              ]}
+            />
           </Card>
           <Card testID="memory-card">
             <AppText variant="heading">{t('coach.memoryTitle')}</AppText>

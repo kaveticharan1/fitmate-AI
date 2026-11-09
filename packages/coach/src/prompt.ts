@@ -79,7 +79,14 @@ export function contextLines(c: CoachContext): string[] {
 
 export const MEMORY_TAG = /\[\[remember:\s*([^\]]{1,200})\]\]/gi;
 
-export function buildSystemPrompt(opts: { context: CoachContext; personality: Personality; language: CoachLanguage; memory: string[] }): string {
+export function buildSystemPrompt(opts: {
+  context: CoachContext;
+  personality: Personality;
+  language: CoachLanguage;
+  memory: string[];
+  /** Extra instruction blocks (app actions, face & skin context, reference knowledge). */
+  extra?: string[];
+}): string {
   const { context: c, personality, language, memory } = opts;
   const rules = [
     'You are FitMate, a personal fitness and nutrition coach inside a phone app, mostly for users in India.',
@@ -109,6 +116,7 @@ export function buildSystemPrompt(opts: { context: CoachContext; personality: Pe
     memory.length ? '' : null,
     memory.length ? 'Things the user asked you to remember:' : null,
     ...memory.map((m) => `- ${m}`),
+    ...(opts.extra ?? []).flatMap((b) => ['', b]),
   ];
   return rules.filter((r): r is string => r != null).join('\n');
 }

@@ -1,7 +1,10 @@
+import type { CoachAction } from '@fitmate/coach';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { getSetting, setSetting } from '../../db/repositories';
-import { clearMessages, deleteMemory, listMemory, recentMessages } from '../../db/coachRepo';
-import { aiStatus, connectAi, disconnectAi, requestCoachReply, saveUserMessage } from './service';
+import { clearMessages, deleteMemory, listMemory, recentMessages, setActionStatus } from '../../db/coachRepo';
+import { runAction } from './actionRunner';
+import { aiStatus, connectAi, disconnectAi, pruneChat, requestCoachReply, saveUserMessage } from './service';
 
 export const coachKeys = {
   messages: ['coach', 'messages'] as const,
@@ -58,5 +61,62 @@ export function useSetReadAloud() {
   return useMutation({
     mutationFn: async (on: boolean) => setSetting('coachReadAloud', on),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['coach', 'readAloud'] }),
+  });
+}
+
+/** Runs a proposed action after the user taps Confirm, or marks it dismissed. */
+export function useActionDecision() {
+  const qc = useQueryClient();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: async (v: { messageId: string; index: number; action: CoachAction; confirm: boolean }) => {
+      if (!v.confirm) {
+        setActionStatus(v.messageId, v.index, 'dismissed');
+        return { done: 0, skipped: [] as string[] };
+      }
+      try {
+        const result = await runAction(v.action, {
+          title: 'FitMate',
+          water: t('reminders.waterBody'),
+          medicine: (name) => t('reminders.medicineBody', { name }),
+          custom: (label) => t('reminders.customBody', { label }),
+        });
+        setActionStatus(v.messageId, v.index, result.done > 0 ? 'done' : 'failed');
+        return result;
+      } catch (e) {
+        setActionStatus(v.messageId, v.index, 'failed');
+        throw e;
+      }
+    },
+    onSettled: () => {
+      for (const key of [coachKeys.messages, ['diary'], ['water'], ['progress'], ['profile'], ['weights'], ['recentFoods']]) qc.invalidateQueries({ queryKey: key });
+    },
+  });
+}
+
+export interface AgentSettings {
+  actions: 'confirm' | 'off';
+  retentionDays: number;
+}
+
+export const useAgentSettings = () =>
+  useQuery({
+    queryKey: ['coach', 'agentSettings'],
+    queryFn: (): AgentSettings => ({
+      actions: getSetting<'confirm' | 'off'>('coachActions', 'confirm'),
+      retentionDays: getSetting<number>('chatRetentionDays', 90),
+    }),
+  });
+
+export function useSetAgentSetting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { key: 'coachActions' | 'chatRetentionDays'; value: unknown }) => {
+      setSetting(v.key, v.value);
+      if (v.key === 'chatRetentionDays') pruneChat();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['coach'] });
+    },
   });
 }

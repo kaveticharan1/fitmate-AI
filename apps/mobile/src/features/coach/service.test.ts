@@ -1,11 +1,11 @@
 import { buildCoachContext, connectAi, disconnectAi, requestCoachReply, saveUserMessage } from './service';
 
-const mockMessages: { id: string; role: 'user' | 'coach'; text: string; flags: string[]; createdAt: string }[] = [];
+const mockMessages: { id: string; role: 'user' | 'coach'; text: string; flags: string[]; actions: unknown[]; createdAt: string }[] = [];
 const mockMemory: string[] = [];
 jest.mock('../../db/coachRepo', () => ({
   recentMessages: () => mockMessages,
-  addMessage: (role: 'user' | 'coach', text: string, flags: string[] = []) => {
-    const m = { id: String(mockMessages.length), role, text, flags, createdAt: '' };
+  addMessage: (role: 'user' | 'coach', text: string, flags: string[] = [], actions: unknown[] = []) => {
+    const m = { id: String(mockMessages.length), role, text, flags, actions, createdAt: '' };
     mockMessages.push(m);
     return m;
   },
@@ -36,11 +36,12 @@ const mockProfile = {
   aiLanguage: 'en',
 };
 let mockConsent = true;
+let mockActionsOff = false;
 const mockRecordConsent = jest.fn();
 const mockWithdraw = jest.fn();
 jest.mock('../../db/repositories', () => ({
   getProfile: () => mockProfile,
-  getSetting: (_k: string, fallback: unknown) => fallback,
+  getSetting: (k: string, fallback: unknown) => (k === 'coachActions' && mockActionsOff ? 'off' : fallback),
   hasConsent: () => mockConsent,
   recordConsent: (k: string) => mockRecordConsent(k),
   withdrawConsent: (k: string) => mockWithdraw(k),
@@ -70,6 +71,7 @@ beforeEach(() => {
   mockMessages.length = 0;
   mockMemory.length = 0;
   mockConsent = true;
+  mockActionsOff = false;
   mockStored = { apiKey: 'AIzaTEST', model: 'gemini-3.6-flash' };
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
@@ -106,6 +108,21 @@ describe('coach service', () => {
     expect(body.contents).toEqual([{ role: 'user', parts: [{ text: "I'm on night shift, dinner ideas?" }] }]);
     expect(body.systemInstruction.parts[0].text).toContain('Water today: 1500 ml');
     expect(body.systemInstruction.parts[0].text).not.toContain('Charan');
+  });
+
+  it('saves proposed actions for the user to confirm, unless actions are off', async () => {
+    const reply = 'I can log this — tap Confirm below.\n[[action: {"type":"log_water","ml":500}]]';
+    fetchMock.mockResolvedValue(ok({ candidates: [{ content: { parts: [{ text: reply }] } }] }));
+    saveUserMessage('I drank 2 glasses of water');
+    const m = await requestCoachReply();
+    expect(m.text).toBe('I can log this — tap Confirm below.');
+    expect(m.actions).toEqual([{ action: { type: 'log_water', ml: 500 }, status: 'proposed' }]);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).systemInstruction.parts[0].text).toContain('[[action:');
+
+    mockActionsOff = true;
+    const m2 = await requestCoachReply();
+    expect(m2.actions).toEqual([]);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).systemInstruction.parts[0].text).not.toContain('[[action:');
   });
 
   it('flags crisis messages locally', () => {

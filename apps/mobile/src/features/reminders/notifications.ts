@@ -34,7 +34,10 @@ async function cancelWhere(match: (id: string) => boolean) {
 
 const isSmart = (id: string) => id.startsWith('smart-');
 
-export async function applyReminders(config: ReminderConfig, text: { water: string; medicine: (name: string) => string; title: string }): Promise<number> {
+export async function applyReminders(
+  config: ReminderConfig,
+  text: { water: string; medicine: (name: string) => string; custom?: (label: string) => string; title: string },
+): Promise<number> {
   await cancelWhere((id) => !isSmart(id));
   const list = buildSchedule(config);
   if (list.length === 0) return 0;
@@ -42,7 +45,10 @@ export async function applyReminders(config: ReminderConfig, text: { water: stri
   for (const n of list) {
     await Notifications.scheduleNotificationAsync({
       identifier: n.id,
-      content: { title: text.title, body: n.kind === 'water' ? text.water : text.medicine(n.label ?? '') },
+      content: {
+        title: text.title,
+        body: n.kind === 'water' ? text.water : n.kind === 'custom' ? (text.custom ?? text.medicine)(n.label ?? '') : text.medicine(n.label ?? ''),
+      },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: n.hour, minute: n.minute, channelId: CHANNEL },
     });
   }

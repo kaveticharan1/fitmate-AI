@@ -276,6 +276,10 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE food_log_entries_v9 RENAME TO food_log_entries;
   CREATE INDEX food_log_entries_logged_on_idx ON food_log_entries (logged_on);
   `,
+  // v10 — central agent: actions the coach proposes (JSON list, user confirms each)
+  `
+  ALTER TABLE coach_messages ADD COLUMN actions TEXT NOT NULL DEFAULT '[]';
+  `,
 ];
 
 export interface MigratableDb {

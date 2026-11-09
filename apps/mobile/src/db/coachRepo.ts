@@ -1,4 +1,5 @@
-import { and, asc, desc, eq, gte, isNull, sql } from 'drizzle-orm';
+import type { StoredAction } from '@fitmate/coach';
+import { and, asc, desc, eq, gte, isNull, lt, sql } from 'drizzle-orm';
 import { randomUUID } from 'expo-crypto';
 import { nowIso } from '../lib/time';
 import { getDb } from './client';
@@ -9,8 +10,18 @@ export interface CoachMessage {
   role: 'user' | 'coach';
   text: string;
   flags: string[];
+  actions: StoredAction[];
   createdAt: string;
 }
+
+const parseActions = (raw: string): StoredAction[] => {
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? (v as StoredAction[]) : [];
+  } catch {
+    return [];
+  }
+};
 
 const parseFlags = (raw: string): string[] => {
   try {
@@ -30,14 +41,37 @@ export function recentMessages(limit = 100): CoachMessage[] {
     .orderBy(desc(coachMessages.createdAt), desc(coachMessages.id))
     .limit(limit)
     .all();
-  return rows.reverse().map((r) => ({ id: r.id, role: r.role, text: r.text, flags: parseFlags(r.flags), createdAt: r.createdAt }));
+  return rows.reverse().map((r) => ({ id: r.id, role: r.role, text: r.text, flags: parseFlags(r.flags), actions: parseActions(r.actions), createdAt: r.createdAt }));
 }
 
-export function addMessage(role: 'user' | 'coach', text: string, flags: string[] = []): CoachMessage {
+export function addMessage(role: 'user' | 'coach', text: string, flags: string[] = [], actions: StoredAction[] = []): CoachMessage {
   const now = nowIso();
   const id = randomUUID();
-  getDb().insert(coachMessages).values({ id, role, text, flags: JSON.stringify(flags), createdAt: now, updatedAt: now }).run();
-  return { id, role, text, flags, createdAt: now };
+  getDb()
+    .insert(coachMessages)
+    .values({ id, role, text, flags: JSON.stringify(flags), actions: JSON.stringify(actions), createdAt: now, updatedAt: now })
+    .run();
+  return { id, role, text, flags, actions, createdAt: now };
+}
+
+/** Records what happened to one proposed action (confirmed, dismissed or failed). */
+export function setActionStatus(messageId: string, index: number, status: StoredAction['status']): void {
+  const row = getDb().select().from(coachMessages).where(eq(coachMessages.id, messageId)).get();
+  if (!row) return;
+  const list = parseActions(row.actions);
+  if (!list[index]) return;
+  list[index] = { ...list[index]!, status };
+  getDb().update(coachMessages).set({ actions: JSON.stringify(list), updatedAt: nowIso() }).where(eq(coachMessages.id, messageId)).run();
+}
+
+/** True if a message with this flag already exists (used to avoid duplicate reminder messages). */
+export function hasMessageWithFlag(flag: string): boolean {
+  return getDb().select({ id: coachMessages.id }).from(coachMessages).where(sql`${coachMessages.flags} LIKE ${'%"' + flag + '"%'}`).get() != null;
+}
+
+/** Deletes chat messages older than the given ISO time (chat retention). Returns how many. */
+export function deleteMessagesBefore(iso: string): number {
+  return getDb().delete(coachMessages).where(lt(coachMessages.createdAt, iso)).run().changes;
 }
 
 /** Deletes the whole chat (memory is kept; it is managed separately). */

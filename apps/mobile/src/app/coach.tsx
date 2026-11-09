@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { HELPLINES, plainText } from '@fitmate/coach';
+import { HELPLINES, plainText, type CoachAction, type StoredAction } from '@fitmate/coach';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,10 @@ import { Header } from '../components/Header';
 import { Banner, Button, Card, Screen } from '../components/ui';
 import type { CoachMessage } from '../db/coachRepo';
 import { coachErrorKey } from '../features/coach/errors';
-import { useAiStatus, useCoachMessages, useReadAloud, useSendMessage, useSetReadAloud } from '../features/coach/hooks';
+import { resolveFoodItems } from '../features/coach/actionRunner';
+import { useActionDecision, useAiStatus, useCoachMessages, useReadAloud, useSendMessage, useSetReadAloud } from '../features/coach/hooks';
+import { useFoodName, useQuantityLabel } from '../features/food/ui';
+import { pruneChat } from '../features/coach/service';
 import { speakReply, stopSpeaking, useVoiceInput, type VoiceLang } from '../features/coach/voice';
 import { useProfile } from '../features/profile/hooks';
 import { useTheme } from '../theme/ThemeProvider';
@@ -33,6 +36,13 @@ export default function CoachScreen() {
   const voice = useVoiceInput(lang, (text) => setDraft((d) => (d.trim() ? `${d.trim()} ${text}` : text)));
 
   useEffect(() => () => stopSpeaking(), []);
+  useEffect(() => {
+    try {
+      pruneChat();
+    } catch {
+      /* best effort */
+    }
+  }, []);
 
   if (status && !status.connected) {
     return (
@@ -172,6 +182,7 @@ function MessageBubble({ m, onSpeak }: { m: CoachMessage; onSpeak: () => void })
         }}
       >
         <AppText selectable>{mine ? m.text : plainText(m.text)}</AppText>
+        {!mine ? m.actions.map((a, i) => <ActionCard key={i} messageId={m.id} index={i} stored={a} />) : null}
         {!mine ? (
           <Pressable accessibilityRole="button" accessibilityLabel={t('coach.listen')} onPress={onSpeak} hitSlop={12} style={{ alignSelf: 'flex-end' }}>
             <Ionicons name="volume-medium-outline" size={18} color={colors.textMuted} />
@@ -193,5 +204,62 @@ function MessageBubble({ m, onSpeak }: { m: CoachMessage; onSpeak: () => void })
         </Card>
       ) : null}
     </View>
+  );
+}
+
+function useActionSummary() {
+  const { t } = useTranslation();
+  const name = useFoodName();
+  const qty = useQuantityLabel();
+  return (a: CoachAction): string[] => {
+    switch (a.type) {
+      case 'log_food':
+        return [
+          t('agent.logFood', { meal: t(`meals.${a.meal}`) }),
+          ...resolveFoodItems(a.items).map((r) =>
+            r.food && r.measureKey ? `• ${name(r.food, r.food.name)} — ${qty(r.measureKey, r.count ?? 1)} · ${r.kcal} kcal` : `• ${r.name} — ${t('agent.notFound')}`,
+          ),
+        ];
+      case 'log_water':
+        return [t('agent.logWater', { ml: a.ml })];
+      case 'log_weight':
+        return [t('agent.logWeight', { kg: a.kg })];
+      case 'log_sleep':
+        return [t('agent.logSleep', { bed: a.bed, wake: a.wake })];
+      case 'set_reminder':
+        return [t('agent.setReminder', { label: a.label, time: a.time })];
+    }
+  };
+}
+
+function ActionCard({ messageId, index, stored }: { messageId: string; index: number; stored: StoredAction }) {
+  const { t } = useTranslation();
+  const summary = useActionSummary();
+  const decide = useActionDecision();
+  const lines = summary(stored.action);
+  const status = decide.isPending ? 'working' : stored.status;
+  return (
+    <Card tone="accent" testID={`action-${messageId}-${index}`}>
+      {lines.map((l, i) => (
+        <AppText key={i} weight={i === 0 ? 'bold' : undefined}>
+          {l}
+        </AppText>
+      ))}
+      {status === 'proposed' ? (
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <View style={{ flex: 1 }}>
+            <Button testID={`action-dismiss-${index}`} variant="secondary" label={t('agent.dismiss')} onPress={() => decide.mutate({ messageId, index, action: stored.action, confirm: false })} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button testID={`action-confirm-${index}`} label={t('agent.confirm')} onPress={() => decide.mutate({ messageId, index, action: stored.action, confirm: true })} />
+          </View>
+        </View>
+      ) : (
+        <AppText variant="label" tone={status === 'done' ? 'accent' : status === 'failed' ? 'danger' : 'secondary'} testID={`action-status-${index}`}>
+          {t(`agent.status.${status}`)}
+        </AppText>
+      )}
+      {decide.data?.skipped.length ? <AppText variant="caption" tone="warning">{t('agent.skipped', { items: decide.data.skipped.join(', ') })}</AppText> : null}
+    </Card>
   );
 }
