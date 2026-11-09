@@ -148,15 +148,15 @@ jobs:
 
   publish:
     name: Publish release
-    needs: [build, launch-test]
+    needs: [android, launch-test]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
       HAS_SIGNING_KEY: ${{ secrets.FITMATE_KEYSTORE_BASE64 != '' }}
-      APK_NAME: ${{ needs.build.outputs.apk_name }}
-      APP_VERSION: ${{ needs.build.outputs.app_version }}
+      APK_NAME: ${{ needs.android.outputs.apk_name }}
+      APP_VERSION: ${{ needs.android.outputs.app_version }}
     steps:
       - uses: actions/download-artifact@v4
         with:
