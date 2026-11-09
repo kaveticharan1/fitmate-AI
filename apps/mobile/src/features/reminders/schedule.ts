@@ -1,7 +1,11 @@
+import { DEFAULT_SMART, type SmartConfig } from './smart';
+
 /** Reminder settings, stored in app_settings under REMINDERS_KEY. */
 export interface ReminderConfig {
   water: { enabled: boolean; startHour: number; endHour: number; everyHours: 1 | 2 };
   medicines: { id: string; name: string; time: string }[];
+  /** Added in v0.12; older saved settings don't have it. */
+  smart?: SmartConfig;
 }
 
 export const REMINDERS_KEY = 'reminders.v1';
@@ -9,7 +13,17 @@ export const REMINDERS_KEY = 'reminders.v1';
 export const DEFAULT_REMINDERS: ReminderConfig = {
   water: { enabled: false, startHour: 8, endHour: 21, everyHours: 1 },
   medicines: [],
+  smart: DEFAULT_SMART,
 };
+
+/** Saved settings with any missing (newer) parts filled from the defaults. */
+export function withDefaults(c: Partial<ReminderConfig> | null | undefined): ReminderConfig {
+  return {
+    water: { ...DEFAULT_REMINDERS.water, ...(c?.water ?? {}) },
+    medicines: c?.medicines ?? [],
+    smart: { ...DEFAULT_SMART, ...(c?.smart ?? {}) },
+  };
+}
 
 export interface PlannedNotification {
   id: string;

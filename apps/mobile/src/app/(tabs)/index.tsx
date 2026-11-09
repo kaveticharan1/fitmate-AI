@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import { totalsOf } from '../../db/foodRepo';
 import { useDiary } from '../../features/food/hooks';
 import { StepsCard } from '../../features/health/StepsCards';
+import { useSmartReminderSync } from '../../features/reminders/smartSync';
 import { NutrientBar } from '../../features/food/ui';
 import { useLogWeight, useProfile, useRecentWeights } from '../../features/profile/hooks';
 import { useWaterActions, useWaterToday } from '../../features/progress/hooks';
@@ -20,6 +21,7 @@ import { radius, space } from '../../theme/tokens';
 const weightField = requiredNumber(25, 350);
 
 export default function Dashboard() {
+  useSmartReminderSync();
   const { t } = useTranslation();
   const { data: profile } = useProfile();
   const targets = useMemo(() => (profile ? targetsForProfile(profile) : null), [profile]);

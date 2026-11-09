@@ -726,6 +726,32 @@ const en = {
     note: 'Sorted by protein for the calories. Tap a dish to log it.',
     askCoach: 'Ask the AI coach for a recipe',
   },
+  smart: {
+    title: 'Smart reminders',
+    hint: 'Worked out on your phone from what you’ve logged today. They update every time you open FitMate.',
+    checkIn: 'Evening check-in',
+    checkInHint: 'Only if something is still short today (protein, water or steps).',
+    logNudgeLabel: 'Remind me to log food',
+    logNudgeHint: 'At 2 pm, only if nothing is logged yet.',
+    morningLabel: 'Morning plan',
+    morningHint: 'At 8 am: today’s targets.',
+    weighInLabel: 'Weekly weigh-in',
+    weighInHint: 'Sunday 7:30 am.',
+    checkInTitle: 'Evening check-in',
+    gap: {
+      protein: '{{proteinLeft}} g protein to go — curd, dal, eggs or paneer at dinner will help.',
+      water: '{{waterLeft}} more glasses of water.',
+      steps: 'About {{stepsLeft}} steps left — a 15-minute walk after dinner.',
+      move: 'No workout yet today — even a 10-minute walk counts.',
+    },
+    generic: 'How did today go? Take a minute to log your meals and water.',
+    logNudge: 'Nothing logged yet today. Add breakfast and lunch — it takes 30 seconds.',
+    morningTitle: 'Good morning',
+    morning: 'Today: {{protein}} g protein, {{water}} L water, {{steps}} steps. You’ve got this!',
+    morningGentle: 'Today: regular meals, {{water}} L water and {{steps}} steps. Be kind to yourself.',
+    weighInTitle: 'Weekly weigh-in',
+    weighIn: 'Weigh yourself before breakfast, after the toilet, on the same scale. One number a week is enough.',
+  },
 };
 
 export default en;

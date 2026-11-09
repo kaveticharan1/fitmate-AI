@@ -1,6 +1,6 @@
 # Development status
 
-_Last updated: 9 November 2026_
+_Last updated: 10 November 2026_
 
 ## Plan
 
@@ -14,7 +14,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | 4 | Workouts: exercise library, plans, timers | **Done (v0.6.0)**, automated tests passing; committed locally, not pushed yet |
 | 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Done (v0.4.0 + v0.5.0)**: weight/waist charts, water, sleep, habits with forgiving streaks, weekly/monthly report |
 | 6 | Health: step counter, Activity Recognition, Health Connect, step validation | **Done (v0.8.0)**, automated tests passing; committed locally, not pushed yet. Needs a real-phone check of Health Connect |
-| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | **In progress**: 7a barcode (v0.9.0), 7b food photo (v0.10.0), 7c kitchen assistant (v0.11.0) done, local |
+| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | **Done (v0.9.0 – v1.0.0)**, automated tests passing; committed locally, not pushed yet |
 
 ## Phase 1 report
 
@@ -217,4 +217,25 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
   - Shows "You can cook now" and "With one more thing (needs …)", sorted by protein per 100 kcal. Tap a dish to log it.
 - **AI coach option:** "Ask the AI coach for a recipe" opens the chat with a ready-made question listing your ingredients (English or Telugu). You can edit it before sending; it's never sent automatically.
 - **Tests:** 252 passing (123 app, 43 core, 42 food data, 19 coach, 13 validation, 12 workouts), covering the ingredient list without staples, dishes now and missing one, vegetables, diet/allergy/dislike filters, the coach question, the kitchen screen (remembering the selection, logging a dish, search, coach button) and the coach's prefilled question.
+
+## Phase 7d — Smart reminders (v1.0.0)
+- Worked out on the phone from today's data, with no server. They're recalculated whenever Home opens or food, water, steps or workouts change.
+- **Evening check-in** (18:30, 19:30, 20:30 or 21:30):
+  - Names at most two things still short: protein under 80% of the target, water under 70%, steps under 70% of the goal, or no workout when steps aren't tracked.
+  - Each comes with a practical tip.
+  - Nothing is sent on a day that's on track. A gentle generic check-in is sent if nothing was logged.
+  - Tomorrow's is prepared once today's time has passed.
+- **"Remind me to log food"** at 2 pm, only if nothing has been logged yet.
+- **Morning plan** at 8 am with the day's targets.
+- **Weekly weigh-in** on Sunday at 7:30 am, with how to weigh consistently.
+- **Eating-disorder history:** no food-number nudges, and a gentle morning text.
+- **Permissions and coexistence:**
+  - The automatic refresh never asks for notification permission; only Save in settings does.
+  - Water and medicine reminders and smart reminders replace only their own notifications.
+  - The lock screen still hides the text.
+- **Settings:** older saved reminder settings are upgraded with the new options turned off.
+- **Tests:** 268 passing (139 app, 43 core, 42 food data, 19 coach, 13 validation, 12 workouts).
+
+## Stage 1 complete
+All seven planned phases are built (WhatsApp and on-phone AI left out by decision). What's left is on-device testing of Phases 2–7 and then the optional Stage 2.
 

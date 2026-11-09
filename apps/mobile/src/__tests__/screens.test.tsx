@@ -10,6 +10,7 @@ import { ThemeProvider } from '../theme/ThemeProvider';
 
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), navigate: jest.fn(), canGoBack: () => true };
 // A getter, because jest.mock factories run before this file's constants are initialised.
+jest.mock('../features/reminders/smartSync', () => ({ useSmartReminderSync: () => undefined }));
 jest.mock('../features/health/hooks', () => ({
   useHealthSettings: () => ({ data: { enabled: false, importWeight: true, importSleep: true, lastSync: null, stepGoal: null } }),
   useStepHistory: () => ({ data: [] }),

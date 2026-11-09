@@ -32,3 +32,5 @@
 | 28 | Open Food Facts has fewer Indian products than European ones, and some entries are incomplete. | Many scans lead to typing values from the pack. | Values are saved, so each product only needs typing once. |
 | 29 | Food-photo calories are AI estimates; hidden oil and portion size are hard to see, and mixed dishes can be misidentified. | Errors of 20–50 % are possible. | A confidence banner, editable portions and removable items; logging from the food list is more accurate. |
 | 30 | Food photos use the same free Gemini allowance as the coach chat. | Many photos in a day can hit the free limit. | A clear error, after which you log from the list. |
+| 31 | Smart reminders use what was logged up to the last time the app was opened. | An evening check-in can be out of date if you logged nothing after opening the app. | The text is phrased as a nudge; opening FitMate refreshes it. |
+| 32 | Some phones (including HyperOS) delay or block notifications from apps under battery saving. | Reminders can arrive late or not at all. | Set FitMate's battery setting to "No restrictions" in Android settings. |

@@ -8,7 +8,9 @@ import { Header } from '../../components/Header';
 import { Banner, Button, Card, ChoiceGroup, Screen, TextField, ToggleRow } from '../../components/ui';
 import { getSetting, setSetting } from '../../db/repositories';
 import { applyReminders } from '../../features/reminders/notifications';
-import { DEFAULT_REMINDERS, parseTime, REMINDERS_KEY, type ReminderConfig } from '../../features/reminders/schedule';
+import { parseTime, REMINDERS_KEY, withDefaults, type ReminderConfig } from '../../features/reminders/schedule';
+import type { SmartConfig } from '../../features/reminders/smart';
+import { currentDayStatus, syncSmartReminders } from '../../features/reminders/smartSync';
 import { useTheme } from '../../theme/ThemeProvider';
 import { space, TOUCH } from '../../theme/tokens';
 
@@ -18,13 +20,15 @@ const END_HOURS = [19, 20, 21, 22] as const;
 export default function RemindersScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const [config, setConfig] = useState<ReminderConfig>(() => getSetting(REMINDERS_KEY, DEFAULT_REMINDERS));
+  const [config, setConfig] = useState<ReminderConfig>(() => withDefaults(getSetting<Partial<ReminderConfig> | null>(REMINDERS_KEY, null)));
   const [message, setMessage] = useState<{ tone: 'accent' | 'danger'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [badTimes, setBadTimes] = useState<Set<string>>(new Set());
 
   const water = config.water;
   const setWater = (patch: Partial<ReminderConfig['water']>) => setConfig({ ...config, water: { ...water, ...patch } });
+  const smart = config.smart!;
+  const setSmart = (patch: Partial<SmartConfig>) => setConfig({ ...config, smart: { ...smart, ...patch } });
 
   const save = async () => {
     const bad = new Set(config.medicines.filter((m) => !m.name.trim() || !parseTime(m.time)).map((m) => m.id));
@@ -39,7 +43,10 @@ export default function RemindersScreen() {
         medicine: (name) => t('reminders.medicineBody', { name }),
       });
       setSetting(REMINDERS_KEY, config);
-      setMessage({ tone: 'accent', text: n ? t('reminders.saved', { count: n }) : t('reminders.allOff') });
+      const day = currentDayStatus();
+      const smartCount = day ? await syncSmartReminders(t, day.status, day.targets, true) : 0;
+      const anySmart = smart.checkIn || smart.logNudge || smart.morning || smart.weighIn;
+      setMessage({ tone: 'accent', text: n || smartCount || anySmart ? t('reminders.saved', { count: n + smartCount }) : t('reminders.allOff') });
     } catch (e) {
       setMessage({ tone: 'danger', text: e instanceof Error && e.message === 'permission' ? t('reminders.noPermission') : t('errors.generic') });
     } finally {
@@ -123,6 +130,26 @@ export default function RemindersScreen() {
           label={t('reminders.addMedicine')}
           onPress={() => setConfig({ ...config, medicines: [...config.medicines, { id: randomUUID(), name: '', time: '08:00' }] })}
         />
+      </Card>
+
+      <Card testID="smart-card">
+        <AppText variant="heading">{t('smart.title')}</AppText>
+        <AppText variant="caption" tone="secondary">
+          {t('smart.hint')}
+        </AppText>
+        <ToggleRow testID="smart-checkin" label={t('smart.checkIn')} description={t('smart.checkInHint')} value={smart.checkIn} onChange={(v) => setSmart({ checkIn: v })} />
+        {smart.checkIn ? (
+          <ChoiceGroup<string>
+            testID="smart-time"
+            label={t('reminders.time')}
+            value={smart.checkInTime}
+            onChange={(v) => setSmart({ checkInTime: v })}
+            options={['18:30', '19:30', '20:30', '21:30'].map((v) => ({ value: v, label: v }))}
+          />
+        ) : null}
+        <ToggleRow testID="smart-log" label={t('smart.logNudgeLabel')} description={t('smart.logNudgeHint')} value={smart.logNudge} onChange={(v) => setSmart({ logNudge: v })} />
+        <ToggleRow testID="smart-morning" label={t('smart.morningLabel')} description={t('smart.morningHint')} value={smart.morning} onChange={(v) => setSmart({ morning: v })} />
+        <ToggleRow testID="smart-weighin" label={t('smart.weighInLabel')} description={t('smart.weighInHint')} value={smart.weighIn} onChange={(v) => setSmart({ weighIn: v })} />
       </Card>
 
       <AppText variant="caption" tone="muted">
