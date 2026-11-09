@@ -21,6 +21,7 @@ jest.mock('react-native-health-connect', () => ({
   requestPermission: jest.fn(async () => []),
   getGrantedPermissions: jest.fn(async () => []),
   aggregateGroupByPeriod: jest.fn(async () => []),
+  aggregateRecord: jest.fn(async () => ({})),
   readRecords: jest.fn(async () => ({ records: [] })),
   openHealthConnectSettings: jest.fn(),
 }));
@@ -42,4 +43,14 @@ jest.mock('expo-notifications', () => ({
   addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
   getLastNotificationResponseAsync: jest.fn(async () => null),
   clearLastNotificationResponseAsync: jest.fn(async () => undefined),
+}));
+
+// Background tasks: no-ops in tests.
+jest.mock('expo-task-manager', () => ({ defineTask: jest.fn(), isTaskRegisteredAsync: jest.fn(async () => false) }));
+jest.mock('expo-background-task', () => ({
+  BackgroundTaskStatus: { Restricted: 1, Available: 2 },
+  BackgroundTaskResult: { Success: 1, Failed: 2 },
+  getStatusAsync: jest.fn(async () => 2),
+  registerTaskAsync: jest.fn(async () => undefined),
+  unregisterTaskAsync: jest.fn(async () => undefined),
 }));

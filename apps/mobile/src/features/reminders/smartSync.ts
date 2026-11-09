@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import i18n from '../../i18n';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { defaultStepGoal } from '@fitmate/core';
@@ -20,7 +21,8 @@ import { useTodayCheckin } from '../face/hooks';
 import { useRoutineDone } from '../skin/hooks';
 import { applySmart } from './notifications';
 import { REMINDERS_KEY, withDefaults, type ReminderConfig } from './schedule';
-import { buildSmartNudges, type DayStatus, type SmartNudge } from './smart';
+import { buildSmartNudges, findGaps, type DayStatus, type SmartNudge } from './smart';
+import { saveStepsSnapshot, setStepsTask } from '../health/background';
 
 /** Notification text for a nudge. Lock-screen visibility is PRIVATE, so this only shows once unlocked. */
 export function smartText(t: TFunction, n: SmartNudge, targets: { proteinG: number; waterMl: number; steps: number; gentle: boolean }) {
@@ -62,7 +64,36 @@ export function smartText(t: TFunction, n: SmartNudge, targets: { proteinG: numb
 export async function syncSmartReminders(t: TFunction, status: DayStatus, targets: Parameters<typeof smartText>[2], askPermission = false) {
   const config: ReminderConfig = withDefaults(getSetting<Partial<ReminderConfig> | null>(REMINDERS_KEY, null));
   const nudges = buildSmartNudges(config.smart!, status, config.water);
-  return applySmart(nudges, (n) => smartText(t, n, targets), { askPermission });
+  const count = await applySmart(nudges, (n) => smartText(t, n, targets), { askPermission });
+  await keepStepsCheck(status, nudges);
+  return count;
+}
+
+/**
+ * If tonight's check-in will mention steps, lets the background step check
+ * keep it accurate while FitMate is closed (steps only go up during the day,
+ * so it's only needed while you're behind).
+ */
+async function keepStepsCheck(status: DayStatus, nudges: SmartNudge[]) {
+  const checkIn = nudges.find((n) => n.id === 'smart-checkin');
+  const today = localDate(status.now);
+  const tonight = checkIn && 'date' in checkIn.when && localDate(checkIn.when.date) === today && !checkIn.generic ? checkIn : null;
+  const behind = status.steps != null && status.steps < status.stepGoal * 0.7;
+  if (!tonight || !behind || !('date' in tonight.when)) {
+    await saveStepsSnapshot(null);
+    await setStepsTask(false);
+    return;
+  }
+  await saveStepsSnapshot({
+    day: today,
+    checkInAt: tonight.when.date.toISOString(),
+    otherGaps: findGaps({ ...status, steps: status.stepGoal }),
+    gaps: tonight.gaps ?? [],
+    params: Object.fromEntries(Object.entries(tonight.params ?? {}).map(([k, v]) => [k, Number(v)])),
+    stepGoal: status.stepGoal,
+    lang: i18n.language === 'te' ? 'te' : 'en',
+  });
+  await setStepsTask(true);
 }
 
 /** Today's status read straight from the database (for the settings screen's Save). */

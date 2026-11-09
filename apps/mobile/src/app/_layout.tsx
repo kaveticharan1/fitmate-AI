@@ -9,6 +9,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppText, TELUGU_FONT, TELUGU_FONT_BOLD } from '../components/AppText';
 import { Button, Screen } from '../components/ui';
 import { NotificationBridge } from '../features/reminders/bridge';
+// Defines the background step check so Android can run it with the app closed.
+import '../features/health/background';
 import { loadSavedLanguage } from '../i18n';
 import { LockScreen } from '../security/LockScreen';
 import { SessionProvider, useSession } from '../security/SessionProvider';

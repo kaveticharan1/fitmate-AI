@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 import { buildSchedule, type ReminderConfig } from './schedule';
 import type { SmartNudge } from './smart';
 
-const CHANNEL = 'reminders';
+export const CHANNEL = 'reminders';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),

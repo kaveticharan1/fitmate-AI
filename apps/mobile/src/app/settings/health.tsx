@@ -5,7 +5,7 @@ import { AppText } from '../../components/AppText';
 import { Header } from '../../components/Header';
 import { Banner, Button, Card, Screen, TextField, ToggleRow } from '../../components/ui';
 import { openHealthSettings } from '../../features/health/healthConnect';
-import {
+import { useBackgroundAccess, useRequestBackgroundAccess ,
   useConnectHealth,
   useDisconnectHealth,
   useHealthAvailability,
@@ -85,6 +85,7 @@ export default function HealthSettings() {
             value={settings.importSleep}
             onChange={(v) => setSetting.mutate({ key: 'healthImportSleep', value: v })}
           />
+          <BackgroundAccessRow />
           <Button testID="hc-open" variant="secondary" label={t('health.openHc')} onPress={() => openHealthSettings()} />
           <Button testID="hc-disconnect" variant="danger" label={t('health.disconnect')} onPress={() => disconnect.mutate()} />
           <AppText variant="caption" tone="secondary">
@@ -125,5 +126,24 @@ export default function HealthSettings() {
         </View>
       </Card>
     </Screen>
+  );
+}
+
+/** Lets the evening reminder use your live step count while FitMate is closed. */
+function BackgroundAccessRow() {
+  const { t } = useTranslation();
+  const { data: granted } = useBackgroundAccess();
+  const request = useRequestBackgroundAccess();
+  if (granted === undefined) return null;
+  return (
+    <View style={{ gap: space.xs }} testID="hc-background">
+      <AppText weight="bold">{t('health.backgroundTitle')}</AppText>
+      <AppText variant="label" tone="secondary">
+        {granted ? t('health.backgroundOn') : t('health.backgroundHint')}
+      </AppText>
+      {!granted ? (
+        <Button testID="hc-background-allow" variant="secondary" label={t('health.backgroundAllow')} onPress={() => request.mutate()} loading={request.isPending} />
+      ) : null}
+    </View>
   );
 }

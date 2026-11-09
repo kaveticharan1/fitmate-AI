@@ -3,6 +3,7 @@ import * as HC from 'react-native-health-connect';
 import { getSetting, logWeight, setSetting } from '../../db/repositories';
 import { addSleepIfMissing, hasWeightOn, saveSyncedSteps } from '../../db/stepsRepo';
 import { addDays, localDate } from '../../lib/time';
+import { saveStepsSnapshot, setStepsTask } from './background';
 
 /**
  * Health Connect: Android's on-phone health data hub. We only READ steps,
@@ -63,7 +64,14 @@ function grantedFrom(list: { accessType?: string; recordType?: string }[]): Gran
 /** Shows Health Connect's permission screen. Returns what was granted. */
 export async function connectHealth(): Promise<Granted> {
   await HC.initialize();
-  const granted = grantedFrom(await HC.requestPermission([...HEALTH_PERMISSIONS]));
+  let list: { accessType?: string; recordType?: string }[];
+  try {
+    // Background access lets the evening reminder use live steps; older Health Connect may not know it.
+    list = await HC.requestPermission([...HEALTH_PERMISSIONS, { accessType: 'read', recordType: 'BackgroundAccessPermission' }]);
+  } catch {
+    list = await HC.requestPermission([...HEALTH_PERMISSIONS]);
+  }
+  const granted = grantedFrom(list);
   if (granted.steps) setSetting('healthEnabled', true);
   return granted;
 }
@@ -71,6 +79,8 @@ export async function connectHealth(): Promise<Granted> {
 /** Stops syncing. (Health Connect itself is where access is fully removed.) */
 export function disconnectHealth() {
   setSetting('healthEnabled', false);
+  void saveStepsSnapshot(null);
+  void setStepsTask(false);
 }
 
 export const openHealthSettings = () => HC.openHealthConnectSettings();

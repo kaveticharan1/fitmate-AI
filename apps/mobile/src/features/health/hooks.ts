@@ -1,3 +1,4 @@
+import { hasBackgroundAccess, requestBackgroundAccess } from './background';
 import { defaultStepGoal } from '@fitmate/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -15,6 +16,7 @@ import {
 } from './healthConnect';
 
 export const healthKeys = {
+  background: ['health', 'background'] as const,
   steps: (days: number) => ['steps', days] as const,
   settings: ['health', 'settings'] as const,
   availability: ['health', 'availability'] as const,
@@ -89,4 +91,14 @@ export function useManualSteps() {
 export function useStepGoal(settings: HealthSettings | undefined): number {
   const { data: profile } = useProfile();
   return settings?.stepGoal ?? defaultStepGoal(profile?.activityLevel ?? 'light');
+}
+
+export const useBackgroundAccess = () => useQuery({ queryKey: healthKeys.background, queryFn: () => hasBackgroundAccess() });
+
+export function useRequestBackgroundAccess() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => requestBackgroundAccess(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: healthKeys.background }),
+  });
 }

@@ -145,6 +145,12 @@ describe('Health Connect sync', () => {
     hc.requestPermission!.mockResolvedValue(ALL);
     expect((await connectHealth()).steps).toBe(true);
     expect(mockSettings.healthEnabled).toBe(true);
+    expect(hc.requestPermission!.mock.calls[1]![0]).toEqual([...ALL, { accessType: 'read', recordType: 'BackgroundAccessPermission' }]);
+  });
+
+  it('falls back to the basic permissions on older Health Connect', async () => {
+    hc.requestPermission!.mockRejectedValueOnce(new Error('unknown permission')).mockResolvedValueOnce(ALL);
+    expect((await connectHealth()).steps).toBe(true);
     expect(hc.requestPermission!.mock.calls[1]![0]).toEqual(ALL);
   });
 });

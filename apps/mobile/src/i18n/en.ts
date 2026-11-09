@@ -620,6 +620,10 @@ const en = {
     daysAtGoal: 'Goal of {{goal}} reached on {{count}} of 7 days',
   },
   health: {
+    backgroundTitle: 'Live steps for reminders',
+    backgroundHint: 'Allow Health Connect to share steps while FitMate is closed, so the evening reminder knows if you’ve already caught up.',
+    backgroundOn: 'On — the evening reminder checks your live steps and stays quiet once you’ve caught up.',
+    backgroundAllow: 'Allow background access',
     title: 'Steps and Health Connect',
     whatTitle: 'How step counting works',
     whatBody: 'Android’s Health Connect keeps health data on your phone. FitMate reads your steps, weight and sleep from it — it never writes anything and nothing leaves your phone.',

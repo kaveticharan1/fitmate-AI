@@ -31,7 +31,11 @@ jest.mock('../features/health/hooks', () => ({
   useConnectHealth: () => ({ mutate: mockConnect, isPending: false, data: mockConnectData, isError: false }),
   useDisconnectHealth: () => ({ mutate: mockDisconnect }),
   useSetHealthSetting: () => ({ mutate: mockSetSetting }),
+  useBackgroundAccess: () => ({ data: mockBackground }),
+  useRequestBackgroundAccess: () => ({ mutate: mockRequestBg, isPending: false }),
 }));
+let mockBackground: boolean | undefined = false;
+const mockRequestBg = jest.fn();
 jest.mock('../features/health/healthConnect', () => ({ openHealthSettings: jest.fn() }));
 
 const wrap = (el: React.ReactElement) => render(<ThemeProvider>{el}</ThemeProvider>);
@@ -141,7 +145,19 @@ describe('Health Connect settings', () => {
     await fireEvent.press(screen.getByTestId('step-goal-save'));
     expect(mockSetSetting).toHaveBeenCalledWith({ key: 'stepGoal', value: 10000 }, expect.anything());
 
+    await fireEvent.press(screen.getByTestId('hc-background-allow'));
+    expect(mockRequestBg).toHaveBeenCalled();
+
     await fireEvent.press(screen.getByTestId('hc-disconnect'));
     expect(mockDisconnect).toHaveBeenCalled();
+  });
+
+  it('shows when live steps for reminders are on', async () => {
+    mockSettings = { ...mockSettings, enabled: true, lastSync: new Date().toISOString() };
+    mockBackground = true;
+    await wrap(<HealthSettings />);
+    expect(screen.getByTestId('hc-background')).toHaveTextContent(/stays quiet once you’ve caught up/);
+    expect(screen.queryByTestId('hc-background-allow')).toBeNull();
+    mockBackground = false;
   });
 });
