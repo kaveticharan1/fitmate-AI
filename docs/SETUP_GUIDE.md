@@ -3,8 +3,8 @@
 ## A. Install FitMate on an Android phone (no developer tools needed)
 
 1. **One-time: add the signing key to GitHub** (section C). Do this before installing the first APK you intend to keep, otherwise later updates won't install over it.
-2. Open the repository on GitHub → **Actions** → latest **CI** run on `main` → scroll to **Artifacts** → download `FitMate-<version>-<commit>.apk` (it downloads as a .zip; open it to get the .apk).
-3. Copy the .apk to the phone (or download it directly on the phone while signed in to GitHub).
+2. On the phone, open **https://github.com/kaveticharan1/fitmate-AI/releases/latest/download/FitMate.apk** — it always downloads the newest signed version. (Test builds without the signing key are not published there; they appear only under Actions → Artifacts.)
+3. If you downloaded on a computer instead, copy the .apk to the phone.
 4. Tap the file. Android asks to allow installs from that app (Files/Chrome) → **Allow** → **Install**.
 5. Open FitMate → choose language → accept the notice → create a PIN → onboarding.
 

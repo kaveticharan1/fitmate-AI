@@ -31,6 +31,8 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: write # to publish signed APKs as GitHub Releases
     env:
       HAS_SIGNING_KEY: ${{ secrets.FITMATE_KEYSTORE_BASE64 != '' }}
     steps:
@@ -87,9 +89,26 @@ jobs:
           fi
           mkdir -p out && cp "$APK" "out/$NAME" && cp signature.txt out/
           echo "APK_NAME=$NAME" >> "$GITHUB_ENV"
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APK_NAME }}
           path: out/
           retention-days: 30
+
+      # Signed builds from main become a public release, so the newest APK is always at
+      # https://github.com/kaveticharan1/fitmate-AI/releases/latest/download/FitMate.apk
+      - name: Publish release
+        if: env.HAS_SIGNING_KEY == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${APP_VERSION}-build${{ github.run_number }}"
+          cp "out/$APK_NAME" out/FitMate.apk
+          gh release create "$TAG" out/FitMate.apk "out/$APK_NAME" \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "FitMate ${APP_VERSION} (build ${{ github.run_number }})" \
+            --notes "Signed Android APK built from ${GITHUB_SHA::7}. Install over the previous version; your data stays." \
+            --latest
