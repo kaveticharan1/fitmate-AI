@@ -259,3 +259,13 @@ describe('grocery list', () => {
     expect(list.find((i) => i.foodId === 'egg_raw')!.amount).toEqual({ value: 14, unit: 'pcs' });
   });
 });
+
+describe('regional dishes (v1.3)', () => {
+  it('finds new dishes by English, Telugu and everyday names', () => {
+    expect(searchFoods('gongura')[0]?.id).toMatch(/gongura/);
+    expect(searchFoods('బొబ్బట్లు')[0]?.id).toBe('bobbatlu');
+    expect(searchFoods('maggi')[0]?.id).toBe('instant_noodles');
+    expect(searchFoods('jonna rotte')[0]?.id).toBe('jowar_roti');
+    expect(FOODS.length).toBeGreaterThanOrEqual(200);
+  });
+});

@@ -14,11 +14,11 @@
 | 10 | Repository is public. | Code (not data) is visible to anyone; no secrets are in it. | Make it private in GitHub settings if preferred. |
 | 11 | APKs are built for 64-bit ARM (`arm64-v8a`) only, to cut build time roughly 4×. | Rare 32-bit-only or x86 phones can't install it. | Add `armeabi-v7a` to the Gradle flag in `ci.yml` if ever needed. |
 | 12 | Food values for home-cooked dishes are typical recipes, not measurements of your kitchen. | Logged calories can be off by 10–25 %, mostly from oil. | Oil choice, home recipes for your own dishes, weekly weight trend as the real check. |
-| 13 | Food database has 133 items; many regional dishes are missing. | Some foods can't be found. | Add as a home recipe; database grows in later updates. |
+| 13 | Food database has 200 items (67 regional dishes added in v1.3). Values for home-cooked dishes are approximate. | Some foods may still be missing. | Add as a home recipe or custom food. |
 | 14 | The planner's protein top-up may still fall short for high-protein targets on vegan diets. | Plan below protein target. | Shown honestly on the plan's protein bar; AI coach (Phase 3) will suggest alternatives. |
 | 15 | Grocery ticks are not saved after leaving the screen. | Ticks reset. | Acceptable for now; persist if useful. |
 | 16 | Food repository functions are covered through screen tests and pure-logic tests, not direct database tests. | A database-only bug could slip through. | Covered by the on-device test. |
-| 17 | Exercise names are in English and Telugu, but the how-to steps and safety notes are English only. | Telugu users read the instructions in English. | Translate the 33 exercises' steps in a later update. |
+| 17 | ~~Exercise steps English only~~ — fixed in v1.3: steps and safety notes are in Telugu too. | — | — |
 | 18 | Spoken cues use the phone's own text-to-speech. Many phones have no Telugu voice installed. | Telugu cues may be read in an English voice or not at all. | Install a Telugu voice in Android's text-to-speech settings, or keep cues in English. |
 | 19 | A workout in progress is kept in memory only. | If Android closes the app mid-workout, that workout is lost. | Acceptable for 10–40 minute sessions. |
 | 20 | Calorie burn is a MET estimate. | Can be off by 20–30 %. | Shown as "~" and explained on the screen; weight trend is the real check. |
@@ -27,7 +27,7 @@
 | 23 | Voice typing uses the Google app's speech recogniser, which may send audio to Google, and Telugu needs the Telugu language pack. | Voice may not work, or works only online, on some phones. | A clear message is shown; typing always works. |
 | 24 | The AI can be wrong. | Bad advice is possible. | Safety rules in the prompt, local crisis and emergency checks, and a "not medical advice" note on screen. |
 | 25 | Steps need a source writing to Health Connect. Native phone step counting needs Android 14 with a recent Health Connect system update; some phones (for example some HyperOS builds) may not have it yet. | Steps stay at 0 after connecting. | Install a free step app that shares with Health Connect (Google Fit, Fitbit or Mi Fitness), or type steps in. |
-| 26 | Steps sync only when the app is opened (no background sync). | Home shows the last synced number until the app opens. | Sync runs automatically on opening Home; background sync can be added later. |
+| 26 | Steps are saved into FitMate when the app is opened (the database stays locked behind your PIN). Since v1.3 a background check reads live steps from Health Connect to keep the evening reminder accurate. | Home shows the last synced number until the app opens. | Needs "Live steps for reminders" allowed in Settings → Health. |
 | 27 | Unusual-looking steps are flagged but not removed. | A shaken phone can still inflate a day. | The warning tells the user; the day can be corrected by typing in the right number. |
 | 28 | Open Food Facts has fewer Indian products than European ones, and some entries are incomplete. | Many scans lead to typing values from the pack. | Values are saved, so each product only needs typing once. |
 | 29 | Food-photo calories are AI estimates; hidden oil and portion size are hard to see, and mixed dishes can be misidentified. | Errors of 20–50 % are possible. | A confidence banner, editable portions and removable items; logging from the food list is more accurate. |
