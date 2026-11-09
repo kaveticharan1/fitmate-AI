@@ -74,6 +74,9 @@ export default function AddFood() {
         <View style={{ flex: 1 }}>
           <Button testID="open-scan" variant="secondary" label={t('scan.button')} onPress={() => router.push({ pathname: '/food/scan', params: { meal, date } })} />
         </View>
+        <View style={{ flex: 1 }}>
+          <Button testID="open-photo" variant="secondary" label={t('photo.button')} onPress={() => router.push({ pathname: '/food/photo', params: { meal, date } })} />
+        </View>
       </View>
       {packagedSection}
       {query.trim() ? (

@@ -14,7 +14,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | 4 | Workouts: exercise library, plans, timers | **Done (v0.6.0)**, automated tests passing; committed locally, not pushed yet |
 | 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Done (v0.4.0 + v0.5.0)**: weight/waist charts, water, sleep, habits with forgiving streaks, weekly/monthly report |
 | 6 | Health: step counter, Activity Recognition, Health Connect, step validation | **Done (v0.8.0)**, automated tests passing; committed locally, not pushed yet. Needs a real-phone check of Health Connect |
-| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | **In progress**: 7a barcode scanning done (v0.9.0, local) |
+| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | **In progress**: 7a barcode scanning (v0.9.0) and 7b food photo (v0.10.0) done, local |
 
 ## Phase 1 report
 
@@ -193,4 +193,16 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
   - Rebuilds `food_log_entries`, keeping all entries, to add `custom_food_id` and allow 'barcode' and 'photo' entries.
   - "Same as yesterday" keeps a photo entry's type.
 - **Tests:** 226 passing (108 app, 43 core, 36 food data, 14 coach, 13 validation, 12 workouts), including the v9 upgrade keeping data, barcode check digits, reading Open Food Facts (kJ conversion, missing values, unknown products), the lookup order and errors, and the scan, label form, amount and add-food screens.
+
+## Phase 7b — Food photo → calories (v0.10.0)
+- **Starting a photo:** Add food → "Food photo". Take a photo or choose one from the gallery (Android's system photo picker, so no storage permission is needed).
+- **The AI coach is required:** the photo goes to Google Gemini with your own key, in the same way as the coach. Without the coach turned on, the screen offers to set it up. The consent text now mentions food photos.
+- **Photos are never kept:** each photo is shrunk to 1,024 px JPEG (about 100–200 KB, for a fast upload), sent as Base64, and both temporary files are deleted.
+- **The AI's answer is not trusted blindly:**
+  - It must be strict JSON: at most 12 items, each value clamped to a believable range, unnamed items dropped.
+  - If the stated calories disagree with protein/carbs/fat by more than 35%, the calories are recalculated from the macros (4/4/9).
+  - A "no food" answer is shown as such.
+- **You correct it before anything is saved:** a confidence banner (high, medium or low) and the AI's note are shown. Each item's portion can be changed (nutrients scale with it) or the item removed. Then pick the meal and "Add to …".
+- **Saving:** each item becomes its own 'photo' diary entry. Tapping one shows what was saved, with a remove button.
+- **Tests:** 241 passing (118 app, 43 core, 36 food data, 19 coach, 13 validation, 12 workouts), including the prompt and request shape, reading and checking the estimate, scaling, the key in a header, error mapping, shrinking and deleting the photo, the no-key and no-consent refusals, and the photo screen (needs the coach, privacy note, portion fixing, removing, impossible portions, no food, denied camera, AI errors, cancelled picking).
 

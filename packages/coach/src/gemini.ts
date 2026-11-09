@@ -38,7 +38,7 @@ function errorFrom(status: number, body: ApiError): CoachError {
   return new CoachError('bad_response', msg);
 }
 
-async function call(fetchFn: FetchFn, url: string, apiKey: string, body: unknown | undefined, timeoutMs: number): Promise<unknown> {
+export async function call(fetchFn: FetchFn, url: string, apiKey: string, body: unknown | undefined, timeoutMs: number): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   let res: Awaited<ReturnType<FetchFn>>;

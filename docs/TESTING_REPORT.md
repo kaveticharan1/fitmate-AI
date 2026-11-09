@@ -1,6 +1,6 @@
 # Testing report
 
-_Last run: 10 November 2026 (Phase 7a), Node 22, in the development workspace and on GitHub Actions._
+_Last run: 10 November 2026 (Phase 7b), Node 22, in the development workspace and on GitHub Actions._
 
 ## Summary
 
@@ -12,14 +12,14 @@ _Last run: 10 November 2026 (Phase 7a), Node 22, in the development workspace an
 | Food data tests | `npm test -w @fitmate/food-data` | 36 / 36 pass |
 | Validation tests | `npm test -w @fitmate/validation` | 13 / 13 pass |
 | Workout tests | `npm test -w @fitmate/workouts` | 12 / 12 pass |
-| Coach tests | `npm test -w @fitmate/coach` | 14 / 14 pass |
-| App tests | `npm test -w @fitmate/mobile` | 108 / 108 pass |
-| Android JS bundle | `npx expo export --platform android` | Pass (5.6 MB Hermes bytecode) |
+| Coach tests | `npm test -w @fitmate/coach` | 19 / 19 pass |
+| App tests | `npm test -w @fitmate/mobile` | 118 / 118 pass |
+| Android JS bundle | `npx expo export --platform android` | Pass (5.7 MB Hermes bytecode) |
 | Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true`, `android:allowBackup="false"`, `RECORD_AUDIO`, the speech-recognition service query, the Health Connect read permissions, rationale intent and permission-usage alias, minSdk 26, and CAMERA |
 | Release APK build | GitHub Actions `android` job | Pass; signed with the release key (verified) |
 | On-device testing | Poco X5 (Android 14) | v0.1.x installed by the owner; Phase 2 not yet tried on device |
 
-**Total automated tests: 226, all passing.**
+**Total automated tests: 241, all passing.**
 
 ## What the tests cover
 
@@ -99,6 +99,9 @@ _Last run: 10 November 2026 (Phase 7a), Node 22, in the development workspace an
   - Settings: availability states, connect and denial, sync result, switches, goal validation, stop syncing.
 
 ## Not yet tested (needs a real phone)
+
+Phase 7: barcode scanning with the real camera; food-photo estimates with a real Gemini key, and how good they are for Indian thalis.
+
 
 Phase 6: Health Connect permission screen and real data on the Poco X5 (whether HyperOS has native phone step counting, or a source app like Google Fit or Mi Fitness is needed), and sync speed with 30 days of data.
 

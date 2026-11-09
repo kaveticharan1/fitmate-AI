@@ -30,3 +30,5 @@
 | 26 | Steps sync only when the app is opened (no background sync). | Home shows the last synced number until the app opens. | Sync runs automatically on opening Home; background sync can be added later. |
 | 27 | Unusual-looking steps are flagged but not removed. | A shaken phone can still inflate a day. | The warning tells the user; the day can be corrected by typing in the right number. |
 | 28 | Open Food Facts has fewer Indian products than European ones, and some entries are incomplete. | Many scans lead to typing values from the pack. | Values are saved, so each product only needs typing once. |
+| 29 | Food-photo calories are AI estimates; hidden oil and portion size are hard to see, and mixed dishes can be misidentified. | Errors of 20–50 % are possible. | A confidence banner, editable portions and removable items; logging from the food list is more accurate. |
+| 30 | Food photos use the same free Gemini allowance as the coach chat. | Many photos in a day can hit the free limit. | A clear error, after which you log from the list. |
