@@ -118,7 +118,7 @@ export function copyMeal(fromDate: string, toDate: string, meal: Meal): number {
   db.transaction((tx) => {
     for (const e of source) {
       tx.insert(foodLogEntries)
-        .values({ ...e, id: randomUUID(), loggedOn: toDate, source: 'repeat', createdAt: now, updatedAt: now, deletedAt: null })
+        .values({ ...e, id: randomUUID(), loggedOn: toDate, source: e.source === 'photo' ? 'photo' : 'repeat', createdAt: now, updatedAt: now, deletedAt: null })
         .run();
     }
   });

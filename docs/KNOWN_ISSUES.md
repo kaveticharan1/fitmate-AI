@@ -29,3 +29,4 @@
 | 25 | Steps need a source writing to Health Connect. Native phone step counting needs Android 14 with a recent Health Connect system update; some phones (for example some HyperOS builds) may not have it yet. | Steps stay at 0 after connecting. | Install a free step app that shares with Health Connect (Google Fit, Fitbit or Mi Fitness), or type steps in. |
 | 26 | Steps sync only when the app is opened (no background sync). | Home shows the last synced number until the app opens. | Sync runs automatically on opening Home; background sync can be added later. |
 | 27 | Unusual-looking steps are flagged but not removed. | A shaken phone can still inflate a day. | The warning tells the user; the day can be corrected by typing in the right number. |
+| 28 | Open Food Facts has fewer Indian products than European ones, and some entries are incomplete. | Many scans lead to typing values from the pack. | Values are saved, so each product only needs typing once. |

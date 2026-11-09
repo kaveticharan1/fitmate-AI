@@ -79,7 +79,9 @@ export default function FoodDiary() {
           onOpen={(e) =>
             e.foodId
               ? router.push({ pathname: '/food/item', params: { foodId: e.foodId, meal, date, entryId: e.id } })
-              : router.push({ pathname: '/food/recipes', params: { meal, date, entryId: e.id } })
+              : e.recipeId
+                ? router.push({ pathname: '/food/recipes', params: { meal, date, entryId: e.id } })
+                : router.push({ pathname: '/food/custom', params: { entryId: e.id } })
           }
         />
       ))}

@@ -3,7 +3,7 @@
     "name": "FitMate AI",
     "slug": "fitmate-ai",
     "scheme": "fitmate",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.kaveticharan.fitmate",
-      "versionCode": 9,
+      "versionCode": 10,
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#0F1113",
@@ -67,6 +67,13 @@
       "expo-notifications",
       "react-native-health-connect",
       "expo-build-properties",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FitMate uses the camera to scan food barcodes and take food photos.",
+          "recordAudioAndroid": false
+        }
+      ],
       [
         "expo-build-properties",
         {

@@ -226,6 +226,56 @@ export const MIGRATIONS: readonly string[] = [
     updated_at TEXT NOT NULL
   );
   `,
+  // v9 — Phase 7: packaged foods (barcode) and food-photo entries.
+  // SQLite can't change a CHECK constraint, so food_log_entries is rebuilt with its data copied over.
+  `
+  CREATE TABLE custom_foods (
+    id TEXT PRIMARY KEY NOT NULL,
+    barcode TEXT UNIQUE,
+    name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 120),
+    brand TEXT,
+    kcal_100g REAL NOT NULL CHECK (kcal_100g BETWEEN 0 AND 900),
+    protein_100g REAL NOT NULL CHECK (protein_100g BETWEEN 0 AND 100),
+    carbs_100g REAL NOT NULL CHECK (carbs_100g BETWEEN 0 AND 100),
+    fat_100g REAL NOT NULL CHECK (fat_100g BETWEEN 0 AND 100),
+    fiber_100g REAL NOT NULL DEFAULT 0 CHECK (fiber_100g BETWEEN 0 AND 100),
+    serving_g REAL CHECK (serving_g IS NULL OR serving_g BETWEEN 1 AND 2000),
+    source TEXT NOT NULL CHECK (source IN ('barcode','label')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE TABLE food_log_entries_v9 (
+    id TEXT PRIMARY KEY NOT NULL,
+    logged_on TEXT NOT NULL,
+    meal TEXT NOT NULL CHECK (meal IN ('breakfast','lunch','snack','dinner')),
+    food_id TEXT,
+    recipe_id TEXT,
+    custom_food_id TEXT,
+    name TEXT NOT NULL,
+    quantity_g REAL NOT NULL CHECK (quantity_g > 0 AND quantity_g <= 5000),
+    measure_key TEXT NOT NULL,
+    measure_count REAL NOT NULL,
+    oil_level TEXT NOT NULL DEFAULT 'normal' CHECK (oil_level IN ('less','normal','more')),
+    kcal REAL NOT NULL CHECK (kcal >= 0),
+    protein_g REAL NOT NULL,
+    carbs_g REAL NOT NULL,
+    fat_g REAL NOT NULL,
+    fiber_g REAL NOT NULL,
+    source TEXT NOT NULL CHECK (source IN ('manual','plan','repeat','recipe','barcode','photo')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    CHECK (food_id IS NOT NULL OR recipe_id IS NOT NULL OR custom_food_id IS NOT NULL OR source = 'photo')
+  );
+  INSERT INTO food_log_entries_v9 (id, logged_on, meal, food_id, recipe_id, custom_food_id, name, quantity_g, measure_key, measure_count,
+    oil_level, kcal, protein_g, carbs_g, fat_g, fiber_g, source, created_at, updated_at, deleted_at)
+  SELECT id, logged_on, meal, food_id, recipe_id, NULL, name, quantity_g, measure_key, measure_count,
+    oil_level, kcal, protein_g, carbs_g, fat_g, fiber_g, source, created_at, updated_at, deleted_at FROM food_log_entries;
+  DROP TABLE food_log_entries;
+  ALTER TABLE food_log_entries_v9 RENAME TO food_log_entries;
+  CREATE INDEX food_log_entries_logged_on_idx ON food_log_entries (logged_on);
+  `,
 ];
 
 export interface MigratableDb {

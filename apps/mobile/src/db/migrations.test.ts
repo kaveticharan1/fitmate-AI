@@ -46,6 +46,7 @@ const tables = [
   schema.coachMessages,
   schema.coachMemory,
   schema.stepDays,
+  schema.customFoods,
 ];
 
 describe('migrations', () => {
@@ -102,6 +103,22 @@ describe('migrations', () => {
       db.exec(`INSERT INTO food_log_entries (id, logged_on, meal, name, quantity_g, measure_key, measure_count, kcal, protein_g, carbs_g, fat_g, fiber_g, source, created_at, updated_at)
         VALUES ('e', '2026-11-09', 'lunch', 'x', 100, 'g', 100, 1, 1, 1, 1, 1, 'manual', 't', 't')`),
     ).toThrow();
+  });
+
+  it('rebuild the food diary in v9 without losing entries, and allow photo entries', () => {
+    const db = new DatabaseSync(':memory:');
+    runMigrations(adapter(db), MIGRATIONS.slice(0, 8));
+    db.exec(`INSERT INTO food_log_entries (id, logged_on, meal, food_id, name, quantity_g, measure_key, measure_count, oil_level, kcal, protein_g, carbs_g, fat_g, fiber_g, source, created_at, updated_at)
+      VALUES ('e1', '2026-11-09', 'lunch', 'idli', 'Idli', 120, 'piece', 3, 'normal', 175, 5.5, 36, 0.6, 1.8, 'manual', 't', 't')`);
+    expect(runMigrations(adapter(db))).toBe(MIGRATIONS.length);
+    expect(db.prepare('SELECT id, food_id, custom_food_id, kcal FROM food_log_entries').all()).toEqual([{ id: 'e1', food_id: 'idli', custom_food_id: null, kcal: 175 }]);
+    expect(db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name = 'food_log_entries_logged_on_idx'").get()).toEqual({ n: 1 });
+    const insert = (id: string, source: string) =>
+      db.exec(`INSERT INTO food_log_entries (id, logged_on, meal, name, quantity_g, measure_key, measure_count, kcal, protein_g, carbs_g, fat_g, fiber_g, source, created_at, updated_at)
+        VALUES ('${id}', '2026-11-09', 'dinner', 'Plate', 350, 'g', 350, 520, 18, 70, 16, 6, '${source}', 't', 't')`);
+    expect(() => insert('p', 'photo')).not.toThrow();
+    expect(() => insert('m', 'manual')).toThrow();
+    expect(() => db.exec("INSERT INTO custom_foods (id, name, kcal_100g, protein_100g, carbs_100g, fat_100g, source, created_at, updated_at) VALUES ('c', 'Bad', 1200, 1, 1, 1, 'label', 't', 't')")).toThrow();
   });
 
   it('refuse to open data from a newer app version', () => {

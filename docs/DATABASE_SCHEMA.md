@@ -1,7 +1,7 @@
 # Database schema
 
 Engine: SQLite 3 with SQLCipher 4 (AES-256), one encrypted file `fitmate.db` in the app's private storage.
-Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **8**.
+Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **9**.
 ORM definitions: `apps/mobile/src/db/schema.ts`. A test checks that the migration SQL and the Drizzle schema have identical columns.
 
 Conventions: UUID text primary keys (except the single profile row `id = 'me'`); `created_at`, `updated_at`, `deleted_at` as ISO-8601 UTC text; calendar dates (`measured_on`) as the user's local `YYYY-MM-DD`; booleans as 0/1; lists as JSON text.
@@ -135,6 +135,11 @@ The Gemini API key is **not** in the database: it is in SecureStore under `fm.ai
 
 day (local `YYYY-MM-DD`, primary key), steps (0–200,000), source ('health_connect' | 'manual'), flags (JSON list of validation warnings: 'too_fast', 'burst', 'daily_total'), created_at, updated_at. Synced values never replace a 'manual' day.
 Health Connect settings live in `app_settings`: `healthEnabled`, `healthImportWeight`, `healthImportSleep`, `healthLastSync`, `stepGoal`.
+
+## custom_foods (v9) and food_log_entries changes
+
+`custom_foods`: id, barcode (unique, optional), name (1–120), brand, kcal/protein/carbs/fat/fibre per 100 g (range-checked), serving_g (1–2000, optional), source ('barcode' | 'label'), timestamps.
+`food_log_entries` was rebuilt in v9 (data copied) to add `custom_food_id` and the sources 'barcode' and 'photo'. A row must reference a food, recipe or custom food, unless it is a 'photo' estimate.
 
 ## Food database
 

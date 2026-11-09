@@ -1,6 +1,6 @@
 # Testing report
 
-_Last run: 10 November 2026 (Phase 6), Node 22, in the development workspace and on GitHub Actions._
+_Last run: 10 November 2026 (Phase 7a), Node 22, in the development workspace and on GitHub Actions._
 
 ## Summary
 
@@ -9,17 +9,17 @@ _Last run: 10 November 2026 (Phase 6), Node 22, in the development workspace and
 | Type check (all packages) | `npm run typecheck` | Pass, 0 errors |
 | Lint (app) | `npm run lint` | Pass, 0 errors, 0 warnings |
 | Core tests | `npm test -w @fitmate/core` | 43 / 43 pass |
-| Food data tests | `npm test -w @fitmate/food-data` | 30 / 30 pass |
+| Food data tests | `npm test -w @fitmate/food-data` | 36 / 36 pass |
 | Validation tests | `npm test -w @fitmate/validation` | 13 / 13 pass |
 | Workout tests | `npm test -w @fitmate/workouts` | 12 / 12 pass |
 | Coach tests | `npm test -w @fitmate/coach` | 14 / 14 pass |
-| App tests | `npm test -w @fitmate/mobile` | 93 / 93 pass |
+| App tests | `npm test -w @fitmate/mobile` | 108 / 108 pass |
 | Android JS bundle | `npx expo export --platform android` | Pass (5.6 MB Hermes bytecode) |
-| Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true`, `android:allowBackup="false"`, `RECORD_AUDIO`, the speech-recognition service query, the Health Connect read permissions, rationale intent and permission-usage alias, and minSdk 26 |
+| Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true`, `android:allowBackup="false"`, `RECORD_AUDIO`, the speech-recognition service query, the Health Connect read permissions, rationale intent and permission-usage alias, minSdk 26, and CAMERA |
 | Release APK build | GitHub Actions `android` job | Pass; signed with the release key (verified) |
 | On-device testing | Poco X5 (Android 14) | v0.1.x installed by the owner; Phase 2 not yet tried on device |
 
-**Total automated tests: 205, all passing.**
+**Total automated tests: 226, all passing.**
 
 ## What the tests cover
 
@@ -121,5 +121,6 @@ Phase 2 screens on a phone, SQLCipher encryption on device, Keystore/biometric p
 | `Date.now()` called during render | Lint (React Compiler rules) | Lazy `useState` initialiser |
 | Ref updated during render | Lint | Moved to an effect |
 | Jest mock factory read a constant before it was initialised | Screen tests | Getter in the `expo-router` mock |
+| "Same as yesterday" would have failed for a food-photo entry (new database rule) | Code review while adding v9 | Copies keep the 'photo' type |
 | Rest timer showed one extra second right after a set | Workout screen test | Clock refreshed on every workout action |
 | "How to end my workout" was flagged as a crisis message | Coach safety test | Narrowed the pattern to "end it all" / "end my life" |

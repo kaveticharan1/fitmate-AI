@@ -99,6 +99,7 @@ export const foodLogEntries = sqliteTable(
     meal: text('meal', { enum: MEALS }).notNull(),
     foodId: text('food_id'),
     recipeId: text('recipe_id'),
+    customFoodId: text('custom_food_id'),
     name: text('name').notNull(),
     quantityG: real('quantity_g').notNull(),
     measureKey: text('measure_key').notNull(),
@@ -109,7 +110,7 @@ export const foodLogEntries = sqliteTable(
     carbsG: real('carbs_g').notNull(),
     fatG: real('fat_g').notNull(),
     fiberG: real('fiber_g').notNull(),
-    source: text('source', { enum: ['manual', 'plan', 'repeat', 'recipe'] }).notNull(),
+    source: text('source', { enum: ['manual', 'plan', 'repeat', 'recipe', 'barcode', 'photo'] }).notNull(),
     ...syncColumns,
   },
   (t) => [index('food_log_entries_logged_on_idx').on(t.loggedOn)],
@@ -233,6 +234,24 @@ export const coachMemory = sqliteTable('coach_memory', {
   ...syncColumns,
 });
 
+/** Packaged foods saved from a barcode scan or typed from a label (values per 100 g). */
+export const customFoods = sqliteTable('custom_foods', {
+  id: text('id').primaryKey(),
+  barcode: text('barcode').unique(),
+  name: text('name').notNull(),
+  brand: text('brand'),
+  kcal100: real('kcal_100g').notNull(),
+  protein100: real('protein_100g').notNull(),
+  carbs100: real('carbs_100g').notNull(),
+  fat100: real('fat_100g').notNull(),
+  fiber100: real('fiber_100g').notNull().default(0),
+  servingG: real('serving_g'),
+  source: text('source', { enum: ['barcode', 'label'] }).notNull(),
+  ...syncColumns,
+});
+
+export type CustomFoodRow = typeof customFoods.$inferSelect;
+
 /** One row per local day. Manual entries are never overwritten by Health Connect. */
 export const stepDays = sqliteTable('step_days', {
   day: text('day').primaryKey(),
@@ -273,4 +292,5 @@ export const BACKUP_TABLES = [
   'coach_messages',
   'coach_memory',
   'step_days',
+  'custom_foods',
 ] as const;

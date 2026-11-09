@@ -14,7 +14,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | 4 | Workouts: exercise library, plans, timers | **Done (v0.6.0)**, automated tests passing; committed locally, not pushed yet |
 | 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Done (v0.4.0 + v0.5.0)**: weight/waist charts, water, sleep, habits with forgiving streaks, weekly/monthly report |
 | 6 | Health: step counter, Activity Recognition, Health Connect, step validation | **Done (v0.8.0)**, automated tests passing; committed locally, not pushed yet. Needs a real-phone check of Health Connect |
-| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | Not started |
+| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | **In progress**: 7a barcode scanning done (v0.9.0, local) |
 
 ## Phase 1 report
 
@@ -173,4 +173,24 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - **Database:** migration v8 adds `step_days` (day, steps 0–200,000, source, flags), which is included in backups.
 - **Not built, by decision:** a separate background step counter of our own. Android only counts reliably for an app that keeps a background service and notification running. Health Connect already does this with the phone's step counter sensor, using less battery.
 - **Tests:** 205 passing (93 app, 43 core, 30 food data, 14 coach, 13 validation, 12 workouts). Lint and type check are clean, the Android bundle exports, and prebuild shows the Health Connect permissions, the rationale intent and the permission-usage alias in the manifest. Health Connect itself can only be tried on a real phone.
+
+## Phase 7a — Barcode scanning (v0.9.0)
+- **Scanning:** Add food → "Scan barcode" uses the camera (expo-camera, EAN-13/EAN-8/UPC). You can also type the barcode number, which is checked with the check digit before looking it up.
+- **Lookup:**
+  - Saved packaged foods are checked first, so they work offline.
+  - Otherwise FitMate asks Open Food Facts, a free, open community database, with no key. The request sends only the barcode and an app-only User-Agent (no personal data), fetches only the needed fields and times out after 15 seconds.
+  - Data is credited to Open Food Facts contributors (ODbL).
+- **Checks on the values:**
+  - Products are shown per 100 g with a "check against the pack" note.
+  - Missing or unbelievable values (over 900 kcal, or macros adding up to more than 100 g per 100 g) send you to a form to type the pack's "per 100 g" column.
+  - Unknown products, and foods without a barcode, use the same form.
+- **Logging:**
+  - Saved packaged foods appear in Add food and in search.
+  - The amount is chosen in grams or "1 serving", with live calories and macros.
+  - Logged packaged foods can be edited or removed from the diary.
+- **Database:** migration v9.
+  - Adds a new `custom_foods` table (in backups).
+  - Rebuilds `food_log_entries`, keeping all entries, to add `custom_food_id` and allow 'barcode' and 'photo' entries.
+  - "Same as yesterday" keeps a photo entry's type.
+- **Tests:** 226 passing (108 app, 43 core, 36 food data, 14 coach, 13 validation, 12 workouts), including the v9 upgrade keeping data, barcode check digits, reading Open Food Facts (kJ conversion, missing values, unknown products), the lookup order and errors, and the scan, label form, amount and add-food screens.
 

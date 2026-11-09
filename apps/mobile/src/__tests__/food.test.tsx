@@ -11,6 +11,7 @@ import { ThemeProvider } from '../theme/ThemeProvider';
 
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), navigate: jest.fn(), canGoBack: () => true };
 let mockParams: Record<string, string> = {};
+jest.mock('../features/food/packaged', () => ({ useCustomFoods: () => ({ data: [] }) }));
 jest.mock('expo-router', () => ({
   get router() {
     return mockRouter;

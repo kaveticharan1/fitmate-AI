@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AppText } from '../../components/AppText';
 import { Header } from '../../components/Header';
-import { Button, ListGroup, Screen, TextField } from '../../components/ui';
+import { Button, ListGroup, ListRow, Screen, TextField } from '../../components/ui';
 import type { Meal } from '../../db/schema';
 import { useFavourites, useRecentFoods } from '../../features/food/hooks';
+import { useCustomFoods } from '../../features/food/packaged';
 import { FoodRow } from '../../features/food/ui';
 import { localDate } from '../../lib/time';
 import { space } from '../../theme/tokens';
@@ -23,6 +24,22 @@ export default function AddFood() {
   const { data: recent = [] } = useRecentFoods();
   const { data: favourites = [] } = useFavourites();
   const results = useMemo(() => searchFoods(query, { limit: 40 }), [query]);
+  const { data: packaged = [] } = useCustomFoods();
+  const q = query.trim().toLowerCase();
+  const packagedShown = q ? packaged.filter((f) => `${f.name} ${f.brand ?? ''}`.toLowerCase().includes(q)) : packaged.slice(0, 8);
+  const openPackaged = (customFoodId: string) => router.push({ pathname: '/food/custom', params: { customFoodId, meal, date } });
+  const packagedSection = packagedShown.length ? (
+    <View style={{ gap: space.sm }} testID="packaged">
+      <AppText variant="label" tone="secondary" weight="bold">
+        {t('scan.savedFoods')}
+      </AppText>
+      <ListGroup>
+        {packagedShown.map((f) => (
+          <ListRow key={f.id} testID={`packaged-${f.id}`} label={f.brand ? `${f.name} · ${f.brand}` : f.name} value={`${Math.round(f.kcal100)} kcal/100 g`} onPress={() => openPackaged(f.id)} />
+        ))}
+      </ListGroup>
+    </View>
+  ) : null;
 
   const open = (foodId: string) => router.push({ pathname: '/food/item', params: { foodId, meal, date } });
 
@@ -53,8 +70,14 @@ export default function AddFood() {
         autoCorrect={false}
         returnKeyType="search"
       />
+      <View style={{ flexDirection: 'row', gap: space.sm }}>
+        <View style={{ flex: 1 }}>
+          <Button testID="open-scan" variant="secondary" label={t('scan.button')} onPress={() => router.push({ pathname: '/food/scan', params: { meal, date } })} />
+        </View>
+      </View>
+      {packagedSection}
       {query.trim() ? (
-        results.length ? (
+        results.length || packagedShown.length ? (
           section(t('addFood.results'), results.map((f) => f.id), 'search-results')
         ) : (
           <View style={{ gap: space.md }}>
