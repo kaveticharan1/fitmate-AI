@@ -112,3 +112,19 @@ jobs:
             --title "FitMate ${APP_VERSION} (build ${{ github.run_number }})" \
             --notes "Signed Android APK built from ${GITHUB_SHA::7}. Install over the previous version; your data stays." \
             --latest
+
+      # Without the release key, publish a clearly labelled TEST pre-release instead
+      # (never marked "latest", so the permanent FitMate.apk link only serves signed builds).
+      - name: Publish test pre-release
+        if: env.HAS_SIGNING_KEY != 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="test-build${{ github.run_number }}"
+          cp "out/$APK_NAME" out/FitMate-TEST.apk
+          gh release create "$TAG" out/FitMate-TEST.apk \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "TEST build ${{ github.run_number }} (not for real data)" \
+            --notes "Debug-signed test build. Signed releases cannot be installed over it: uninstall first (make a backup if you entered data)." \
+            --prerelease --latest=false
