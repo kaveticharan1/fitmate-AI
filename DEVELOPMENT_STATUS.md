@@ -87,3 +87,9 @@ Migration v2: `food_log_entries`, `favourite_foods`, `recipes`, `recipe_ingredie
 
 ### 11. Next phase
 Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/medicine reminders first, as discussed.
+
+## Reminders (v0.3.0, pulled forward from Phase 7)
+- Water reminders (from/until hour, every 1 or 2 hours) and medicine reminders (name + time), as local daily notifications: offline, nothing leaves the phone.
+- Android channel with lock-screen text hidden; settings stored in `app_settings` (`reminders.v1`), no migration needed.
+- FitMate never suggests medicine doses; it only reminds at the user's times.
+- Tests: schedule building and time parsing (4 new tests; 38 app tests total). Not yet tested on a phone.

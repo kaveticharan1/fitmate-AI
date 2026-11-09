@@ -78,6 +78,7 @@ function Root() {
           <Stack.Screen name="settings/backup" />
           <Stack.Screen name="settings/privacy" />
           <Stack.Screen name="settings/appearance" />
+          <Stack.Screen name="settings/reminders" />
           <Stack.Screen name="food/add" />
           <Stack.Screen name="food/item" />
           <Stack.Screen name="food/recipes" />

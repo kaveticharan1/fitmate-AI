@@ -26,6 +26,7 @@ export default function You() {
 
       <ListGroup>
         <ListRow testID="row-edit" label={t('profile.edit')} onPress={() => router.push('/edit-profile')} />
+        <ListRow testID="row-reminders" label={t('reminders.title')} onPress={() => router.push('/settings/reminders')} />
         <ListRow testID="row-security" label={t('profile.security')} onPress={() => router.push('/settings/security')} />
         <ListRow testID="row-backup" label={t('profile.backup')} onPress={() => router.push('/settings/backup')} />
         <ListRow testID="row-privacy" label={t('profile.privacy')} onPress={() => router.push('/settings/privacy')} />
