@@ -18,3 +18,7 @@
 | 14 | The planner's protein top-up may still fall short for high-protein targets on vegan diets. | Plan below protein target. | Shown honestly on the plan's protein bar; AI coach (Phase 3) will suggest alternatives. |
 | 15 | Grocery ticks are not saved after leaving the screen. | Ticks reset. | Acceptable for now; persist if useful. |
 | 16 | Food repository functions are covered through screen tests and pure-logic tests, not direct database tests. | A database-only bug could slip through. | Covered by the on-device test. |
+| 17 | Exercise names are in English and Telugu, but the how-to steps and safety notes are English only. | Telugu users read the instructions in English. | Translate the 33 exercises' steps in a later update. |
+| 18 | Spoken cues use the phone's own text-to-speech. Many phones have no Telugu voice installed. | Telugu cues may be read in an English voice or not at all. | Install a Telugu voice in Android's text-to-speech settings, or keep cues in English. |
+| 19 | A workout in progress is kept in memory only. | If Android closes the app mid-workout, that workout is lost. | Acceptable for 10–40 minute sessions. |
+| 20 | Calorie burn is a MET estimate. | Can be off by 20–30 %. | Shown as "~" and explained on the screen; weight trend is the real check. |

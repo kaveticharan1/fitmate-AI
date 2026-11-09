@@ -1,6 +1,6 @@
 # Testing report
 
-_Last run: 9 November 2026 (Phase 2), Node 22, in the development workspace and on GitHub Actions._
+_Last run: 9 November 2026 (Phase 4), Node 22, in the development workspace and on GitHub Actions._
 
 ## Summary
 
@@ -8,16 +8,17 @@ _Last run: 9 November 2026 (Phase 2), Node 22, in the development workspace and 
 | --- | --- | --- |
 | Type check (all packages) | `npm run typecheck` | Pass, 0 errors |
 | Lint (app) | `npm run lint` | Pass, 0 errors, 0 warnings |
-| Core tests | `npm test -w @fitmate/core` | 25 / 25 pass |
+| Core tests | `npm test -w @fitmate/core` | 37 / 37 pass |
 | Food data tests | `npm test -w @fitmate/food-data` | 30 / 30 pass |
 | Validation tests | `npm test -w @fitmate/validation` | 13 / 13 pass |
-| App tests | `npm test -w @fitmate/mobile` | 34 / 34 pass |
-| Android JS bundle | `npx expo export --platform android` | Pass (4.8 MB Hermes bytecode) |
+| Workout tests | `npm test -w @fitmate/workouts` | 12 / 12 pass |
+| App tests | `npm test -w @fitmate/mobile` | 56 / 56 pass |
+| Android JS bundle | `npx expo export --platform android` | Pass (5.4 MB Hermes bytecode) |
 | Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true` and `android:allowBackup="false"` |
 | Release APK build | GitHub Actions `android` job | Pass; signed with the release key (verified) |
 | On-device testing | Poco X5 (Android 14) | v0.1.x installed by the owner; Phase 2 not yet tried on device |
 
-**Total automated tests: 102, all passing.**
+**Total automated tests: 148, all passing.**
 
 ## What the tests cover
 
@@ -53,7 +54,15 @@ _Last run: 9 November 2026 (Phase 2), Node 22, in the development workspace and 
 - Screens: search → portion screen with live kcal, oil choice and save; plan with swap and "I ate this"; grocery tick-off; recipe editor validation, preview and save; dashboard "Today" card.
 - Date arithmetic across months, years and leap days.
 
+### Phase 4 (workouts)
+- `@fitmate/workouts`: unique ids, easier alternatives exist, are no harder and never loop; every workout uses known exercises; equipment/preference filters; injury text (English and Telugu) → joints; knee-safe swaps; weekday suggestions; calorie and time estimates; the session state machine (sets, rests, skips, ending early, ignoring wrong-phase actions).
+- Screens: tab filters, week summary and resume card; detail swaps exercises for knee pain and starts a session; full session run with rest, easier swap and save; rest and timed-set countdowns finishing on their own; nothing saved when ended before any set; voice cues only when switched on.
+- Migration v6 columns match the Drizzle schema.
+
 ## Not yet tested (needs a real phone)
+
+Phase 4: text-to-speech voices (Telugu voice availability varies by phone), screen staying awake during a workout, 6 tabs fitting on small screens.
+
 
 Phase 2 screens on a phone, SQLCipher encryption on device, Keystore/biometric prompts, auto-lock timing, screenshot blocking, backup share sheet and file picker, Telugu font rendering, small/large screens and font scaling, performance of scrypt on mid-range phones (expected ~1–2 s for backups).
 
@@ -65,3 +74,4 @@ Phase 2 screens on a phone, SQLCipher encryption on device, Keystore/biometric p
 | `Date.now()` called during render | Lint (React Compiler rules) | Lazy `useState` initialiser |
 | Ref updated during render | Lint | Moved to an effect |
 | Jest mock factory read a constant before it was initialised | Screen tests | Getter in the `expo-router` mock |
+| Rest timer showed one extra second right after a set | Workout screen test | Clock refreshed on every workout action |

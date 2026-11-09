@@ -195,6 +195,25 @@ export const habitLogs = sqliteTable(
   (t) => [uniqueIndex('habit_logs_habit_day_idx').on(t.habitId, t.doneOn)],
 );
 
+/** A finished (or ended-early) workout. `exercises` is a JSON list of exercise ids done. */
+export const workoutSessions = sqliteTable(
+  'workout_sessions',
+  {
+    id: text('id').primaryKey(),
+    workoutId: text('workout_id').notNull(),
+    doneOn: text('done_on').notNull(),
+    startedAt: text('started_at').notNull(),
+    durationS: integer('duration_s').notNull(),
+    completedSets: integer('completed_sets').notNull(),
+    totalSets: integer('total_sets').notNull(),
+    estKcal: integer('est_kcal').notNull(),
+    exercises: text('exercises').notNull().default('[]'),
+    ...syncColumns,
+  },
+  (t) => [index('workout_sessions_done_on_idx').on(t.doneOn)],
+);
+
+export type WorkoutSessionRow = typeof workoutSessions.$inferSelect;
 export type FoodLogEntryRow = typeof foodLogEntries.$inferSelect;
 export type RecipeRow = typeof recipes.$inferSelect;
 export type RecipeIngredientRow = typeof recipeIngredients.$inferSelect;
@@ -219,4 +238,5 @@ export const BACKUP_TABLES = [
   'sleep_logs',
   'habit_definitions',
   'habit_logs',
+  'workout_sessions',
 ] as const;

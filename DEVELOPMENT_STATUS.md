@@ -11,7 +11,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | 1 | Foundation: encrypted storage, app lock, consent, onboarding, calculations, dashboard, backup | **Done (v0.1.1), installed on device** |
 | 2 | Nutrition: Indian food database, food diary, oil/family-pot logging, meal planner, grocery list | **Done (v0.2.0), automated tests passing; awaiting on-device test** |
 | 3 | AI coach: chat, personalities, memory, Telugu, voice | Not started |
-| 4 | Workouts: exercise library, plans, timers | Not started |
+| 4 | Workouts: exercise library, plans, timers | **Done (v0.6.0)**, automated tests passing; committed locally, not pushed yet |
 | 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Done (v0.4.0 + v0.5.0)**: weight/waist charts, water, sleep, habits with forgiving streaks, weekly/monthly report |
 | 6 | Health: step counter, Activity Recognition, Health Connect, step validation | Not started |
 | 7 | Advanced: food photos, kitchen assistant, barcode, notifications | Not started |
@@ -108,3 +108,16 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - DB migration v4: `sleep_logs`, `habit_definitions`, `habit_logs` (cascade delete; in backups).
 - Tests: 126 passing (46 app, 37 core, 30 food data, 13 validation). Not yet tested on a phone.
 - Body measurements card: waist, hip, chest and upper arm (any combination), with change over the selected period. DB migration v5 adds `chest_cm`, `arm_cm`.
+
+## Phase 4 — Workouts (v0.6.0)
+- New package `@fitmate/workouts`: 33 exercises (strength, cardio, stretching, mobility) with English and Telugu names, steps, a safety note, MET value, the joints each one loads and an easier alternative; 8 workouts (home beginner and intermediate, low-impact cardio, cardio blast, dumbbell, gym machines, 30-minute walk, daily stretch).
+- Personalisation: workouts are filtered by the equipment and workout preference in the profile; injuries typed in the profile (English or Telugu, e.g. "knee pain", "మోకాలు") swap exercises that load that joint for an easier one, or drop them.
+- Daily suggestion rotates strength, walking/cardio and a Sunday stretch; level comes from the activity level in the profile.
+- Workout tab (6th tab): today's suggestion, this week's count and minutes, workouts with filters, history.
+- Workout screen: set counter, rest timer and timed-exercise countdown based on end times (stay correct if the phone sleeps), "easier version" and skip buttons, end early, screen kept awake, optional spoken cues (phone's own text-to-speech, offline; off by default). A workout in progress survives auto-lock (kept in memory, not on disk).
+- Finished workouts are saved with duration, sets done and estimated calories (MET × weight × time, scaled by sets done); a workout ended before any set isn't saved.
+- DB migration v6: `workout_sessions` (in backups).
+- New packages: `expo-speech`, `expo-keep-awake`.
+- Tests: 148 passing (56 app, 37 core, 30 food data, 13 validation, 12 workouts). Lint and type check clean; Android bundle exports. Not yet tested on a phone.
+- Bug found by testing and fixed: the rest timer showed one extra second right after a set until the first tick.
+

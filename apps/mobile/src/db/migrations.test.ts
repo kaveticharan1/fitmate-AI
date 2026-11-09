@@ -42,6 +42,7 @@ const tables = [
   schema.sleepLogs,
   schema.habitDefinitions,
   schema.habitLogs,
+  schema.workoutSessions,
 ];
 
 describe('migrations', () => {

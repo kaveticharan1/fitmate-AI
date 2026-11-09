@@ -177,6 +177,24 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE body_measurements ADD COLUMN chest_cm REAL CHECK (chest_cm IS NULL OR chest_cm BETWEEN 40 AND 250);
   ALTER TABLE body_measurements ADD COLUMN arm_cm REAL CHECK (arm_cm IS NULL OR arm_cm BETWEEN 10 AND 80);
   `,
+  // v6 — Phase 4: finished workouts
+  `
+  CREATE TABLE workout_sessions (
+    id TEXT PRIMARY KEY NOT NULL,
+    workout_id TEXT NOT NULL,
+    done_on TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    duration_s INTEGER NOT NULL CHECK (duration_s >= 0),
+    completed_sets INTEGER NOT NULL CHECK (completed_sets >= 0),
+    total_sets INTEGER NOT NULL CHECK (total_sets >= 0),
+    est_kcal INTEGER NOT NULL CHECK (est_kcal >= 0),
+    exercises TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE INDEX workout_sessions_done_on_idx ON workout_sessions (done_on);
+  `,
 ];
 
 export interface MigratableDb {
