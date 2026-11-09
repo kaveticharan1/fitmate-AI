@@ -4,19 +4,18 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, ScrollView, TextInput, View } from 'react-native';
-import { AppText } from '../components/AppText';
-import { Header } from '../components/Header';
-import { Banner, Button, Card, Screen } from '../components/ui';
-import type { CoachMessage } from '../db/coachRepo';
-import { coachErrorKey } from '../features/coach/errors';
-import { resolveFoodItems } from '../features/coach/actionRunner';
-import { useActionDecision, useAiStatus, useCoachMessages, useReadAloud, useSendMessage, useSetReadAloud } from '../features/coach/hooks';
-import { useFoodName, useQuantityLabel } from '../features/food/ui';
-import { pruneChat } from '../features/coach/service';
-import { speakReply, stopSpeaking, useVoiceInput, type VoiceLang } from '../features/coach/voice';
-import { useProfile } from '../features/profile/hooks';
-import { useTheme } from '../theme/ThemeProvider';
-import { radius, space, TOUCH } from '../theme/tokens';
+import { AppText } from '../../components/AppText';
+import { Banner, Button, Card, IconTile, Screen } from '../../components/ui';
+import type { CoachMessage } from '../../db/coachRepo';
+import { coachErrorKey } from '../../features/coach/errors';
+import { resolveFoodItems } from '../../features/coach/actionRunner';
+import { useActionDecision, useAiStatus, useCoachMessages, useReadAloud, useSendMessage, useSetReadAloud } from '../../features/coach/hooks';
+import { useFoodName, useQuantityLabel } from '../../features/food/ui';
+import { pruneChat } from '../../features/coach/service';
+import { speakReply, stopSpeaking, useVoiceInput, type VoiceLang } from '../../features/coach/voice';
+import { useProfile } from '../../features/profile/hooks';
+import { useTheme } from '../../theme/ThemeProvider';
+import { radius, space, TOUCH } from '../../theme/tokens';
 
 const SUGGESTIONS = ['dinner', 'workout', 'craving', 'plateau'] as const;
 
@@ -29,13 +28,24 @@ export default function CoachScreen() {
   const { data: readAloud = false } = useReadAloud();
   const setReadAloud = useSetReadAloud();
   const send = useSendMessage();
-  const { prefill } = useLocalSearchParams<{ prefill?: string }>();
+  const { prefill, listen, n } = useLocalSearchParams<{ prefill?: string; listen?: string; n?: string }>();
   const [draft, setDraft] = useState(prefill ?? '');
   const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const lang: VoiceLang = profile?.aiLanguage === 'te' ? 'te' : 'en';
   const voice = useVoiceInput(lang, (text) => setDraft((d) => (d.trim() ? `${d.trim()} ${text}` : text)));
 
   useEffect(() => () => stopSpeaking(), []);
+  // The Coach tab stays mounted, so apply each new request (prefill or "start listening").
+  const [seenN, setSeenN] = useState(n);
+  if (n !== seenN) {
+    setSeenN(n);
+    if (prefill) setDraft(prefill);
+  }
+  const startVoice = voice.start;
+  useEffect(() => {
+    if (listen === '1' && status?.connected) startVoice();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n, status?.connected]);
   useEffect(() => {
     try {
       pruneChat();
@@ -47,7 +57,7 @@ export default function CoachScreen() {
   if (status && !status.connected) {
     return (
       <Screen testID="coach">
-        <Header title={t('coach.title')} />
+        <CoachHeader online={false} />
         <Card testID="coach-setup">
           <AppText variant="heading">{t('coach.setupTitle')}</AppText>
           <AppText tone="secondary">{t('coach.setupBody')}</AppText>
@@ -114,24 +124,24 @@ export default function CoachScreen() {
 
   return (
     <Screen testID="coach" scroll={false} footer={composer}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flex: 1 }}>
-          <Header title={t('coach.title')} />
-        </View>
-        <Pressable
-          testID="read-aloud"
-          accessibilityRole="switch"
-          accessibilityState={{ checked: readAloud }}
-          accessibilityLabel={t('coach.readAloud')}
-          onPress={() => {
-            if (readAloud) stopSpeaking();
-            setReadAloud.mutate(!readAloud);
-          }}
-          style={{ width: TOUCH, height: TOUCH, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Ionicons name={readAloud ? 'volume-high' : 'volume-mute-outline'} size={24} color={readAloud ? colors.accent : colors.textMuted} />
-        </Pressable>
-      </View>
+      <CoachHeader
+        online
+        right={
+          <Pressable
+            testID="read-aloud"
+            accessibilityRole="switch"
+            accessibilityState={{ checked: readAloud }}
+            accessibilityLabel={t('coach.readAloud')}
+            onPress={() => {
+              if (readAloud) stopSpeaking();
+              setReadAloud.mutate(!readAloud);
+            }}
+            style={{ width: TOUCH, height: TOUCH, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name={readAloud ? 'volume-high' : 'volume-mute-outline'} size={24} color={readAloud ? colors.accent : colors.textMuted} />
+          </Pressable>
+        }
+      />
 
       <ScrollView ref={scroll} style={{ flex: 1 }} contentContainerStyle={{ gap: space.md, paddingBottom: space.md }} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}>
         <AppText variant="caption" tone="muted" center>
@@ -164,6 +174,35 @@ export default function CoachScreen() {
   );
 }
 
+function CoachHeader({ online, right }: { online: boolean; right?: React.ReactNode }) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, paddingTop: space.sm }}>
+      <IconTile name="sparkles" size={44} />
+      <View style={{ flex: 1 }}>
+        <AppText variant="heading">{t('coach.title')}</AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: online ? colors.success : colors.textMuted }} />
+          <AppText variant="caption" tone="secondary" testID="coach-status">
+            {online ? t('coach.online') : t('coach.offline')}
+          </AppText>
+        </View>
+      </View>
+      {right}
+      <Pressable
+        testID="coach-settings"
+        accessibilityRole="button"
+        accessibilityLabel={t('coach.settingsTitle')}
+        onPress={() => router.push('/settings/ai')}
+        style={{ width: TOUCH, height: TOUCH, alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
+      </Pressable>
+    </View>
+  );
+}
+
 function MessageBubble({ m, onSpeak }: { m: CoachMessage; onSpeak: () => void }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -182,7 +221,19 @@ function MessageBubble({ m, onSpeak }: { m: CoachMessage; onSpeak: () => void })
         }}
       >
         <AppText selectable>{mine ? m.text : plainText(m.text)}</AppText>
-        {!mine ? m.actions.map((a, i) => <ActionCard key={i} messageId={m.id} index={i} stored={a} />) : null}
+        {!mine && m.actions.length ? (
+          <View style={{ gap: space.sm }} testID="action-list">
+            {m.actions.length > 1 ? (
+              <AppText variant="label" tone="secondary">
+                {t('agent.changesTitle')}
+              </AppText>
+            ) : null}
+            {m.actions.map((a, i) => (
+              <ActionCard key={i} messageId={m.id} index={i} stored={a} />
+            ))}
+            {m.actions.filter((a) => a.status === 'proposed').length > 1 ? <ApplyAll m={m} /> : null}
+          </View>
+        ) : null}
         {!mine ? (
           <Pressable accessibilityRole="button" accessibilityLabel={t('coach.listen')} onPress={onSpeak} hitSlop={12} style={{ alignSelf: 'flex-end' }}>
             <Ionicons name="volume-medium-outline" size={18} color={colors.textMuted} />
@@ -205,6 +256,30 @@ function MessageBubble({ m, onSpeak }: { m: CoachMessage; onSpeak: () => void })
       ) : null}
     </View>
   );
+}
+
+/** One tap to confirm every change the coach proposed in this reply. */
+function ApplyAll({ m }: { m: CoachMessage }) {
+  const { t } = useTranslation();
+  const decide = useActionDecision();
+  const [busy, setBusy] = useState(false);
+  const apply = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      for (const [index, a] of m.actions.entries()) {
+        if (a.status !== 'proposed') continue;
+        try {
+          await decide.mutateAsync({ messageId: m.id, index, action: a.action, confirm: true });
+        } catch {
+          /* that action is marked failed; carry on with the rest */
+        }
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+  return <Button testID="apply-all" label={t('agent.applyAll')} loading={busy} onPress={apply} />;
 }
 
 function useActionSummary() {

@@ -242,6 +242,13 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
 - Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
 
+## New look (v1.2.0)
+Kept FitMate's dark, readable style and one green accent; borrowed layout ideas from the FitPilot concept.
+- Five tabs: Home, Food, Coach, Workout, You (active tab shown as a pill). Plan and Progress open from Home and Food.
+- Home: greeting with your initial, an "Ask your AI coach" bar with camera (photo-log a meal for the time of day) and mic (opens the coach already listening), briefing/review card, and a Daily summary list — food, protein, water, workout, steps, face check-in — each with a status chip (To do / In progress / Done / Over) and a tap-through. Gentle mode hides calorie and protein numbers.
+- Coach is a tab with an online status and settings button. When a reply proposes several changes, "Apply all changes" confirms them in one tap (each still listed; a failure doesn't stop the rest).
+- Food tab: shortcuts to Plan, Kitchen and Photo log.
+
 ## Stage 1 complete
 All seven planned phases are built (WhatsApp and on-phone AI left out by decision). What's left is on-device testing of Phases 2–7 and then the optional Stage 2.
 

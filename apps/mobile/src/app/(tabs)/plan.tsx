@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, View } from 'react-native';
 import { AppText } from '../../components/AppText';
+import { Header } from '../../components/Header';
 import { Button, Card, Screen } from '../../components/ui';
 import type { Meal } from '../../db/schema';
 import { useDayPlan, useLogPlannedMeal, useSwapMeal } from '../../features/food/hooks';
@@ -34,7 +35,7 @@ export default function PlanTab() {
   return (
     <Screen testID="plan">
       <View style={{ gap: space.xs, paddingTop: space.sm }}>
-        <AppText variant="title">{t('plan.title')}</AppText>
+        <Header title={t('plan.title')} />
         <AppText variant="caption" tone="secondary">
           {t('plan.note')}
         </AppText>

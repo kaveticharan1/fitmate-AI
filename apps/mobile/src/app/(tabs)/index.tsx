@@ -2,13 +2,15 @@ import type { NutritionTargets } from '@fitmate/core';
 import { requiredNumber } from '@fitmate/validation';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { AppText } from '../../components/AppText';
-import { Banner, Button, Card, ProgressBar, Screen, TextField, useErrorText } from '../../components/ui';
+import { Banner, Button, Card, ProgressBar, QuickLinks, Screen, TextField, useErrorText } from '../../components/ui';
 import { router } from 'expo-router';
 import { totalsOf } from '../../db/foodRepo';
 import { useDiary } from '../../features/food/hooks';
 import { DayCard } from '../../features/agent/DayCard';
+import { DailySummary } from '../../features/agent/DailySummary';
+import { AskCoachBar } from '../../features/coach/AskCoachBar';
 import { StepsCard } from '../../features/health/StepsCards';
 import { useSmartReminderSync } from '../../features/reminders/smartSync';
 import { NutrientBar } from '../../features/food/ui';
@@ -30,25 +32,31 @@ export default function Dashboard() {
 
   return (
     <Screen testID="dashboard">
-      <View style={{ gap: space.xs, paddingTop: space.sm }}>
-        <AppText variant="caption" tone="secondary">
-          {isoToDisplayDate(localDate())}
-        </AppText>
-        <AppText variant="title">{t('dashboard.hello', { name: profile.name })}</AppText>
-      </View>
-
+      <Greeting name={profile.name} />
+      <AskCoachBar />
       <DayCard />
-      <CoachCard />
-      <TodayCard targets={targets} />
+      <DailySummary />
       <WaterCard targetMl={targets.waterMl} />
+      <TodayCard targets={targets} />
       <StepsCard />
+      <WeightCard current={profile.weightKg} target={profile.targetWeightKg} targets={targets} />
+
+      <AppText variant="heading" style={{ marginTop: space.sm }}>
+        {t('home.targetsTitle')}
+      </AppText>
       <CalorieCard targets={targets} />
       <MacroRow targets={targets} />
       {targets.flags.map((f) => (
         <Banner key={f} tone="warning" text={t(`dashboard.flags.${f}`)} />
       ))}
-      <WeightCard current={profile.weightKg} target={profile.targetWeightKg} targets={targets} />
       <BmiCard targets={targets} />
+      <QuickLinks
+        links={[
+          { testID: 'home-plan', icon: 'calendar-outline', label: t('tabs.plan'), onPress: () => router.navigate('/plan') },
+          { testID: 'home-progress', icon: 'trending-down-outline', label: t('tabs.progress'), onPress: () => router.navigate('/progress') },
+          { testID: 'home-wellness', icon: 'happy-outline', label: t('wellness.title'), onPress: () => router.push('/wellness') },
+        ]}
+      />
 
       <AppText variant="caption" tone="muted">
         {t('dashboard.estimatesNote')}
@@ -57,16 +65,35 @@ export default function Dashboard() {
   );
 }
 
-function CoachCard() {
+function greetingKey(h: number) {
+  return h < 5 ? 'home.evening' : h < 12 ? 'home.morning' : h < 17 ? 'home.afternoon' : 'home.evening';
+}
+
+function Greeting({ name }: { name: string }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const [now] = useState(() => new Date());
+  const initial = name.trim().charAt(0).toUpperCase() || '?';
   return (
-    <Card testID="coach-card" tone="accent">
-      <AppText variant="heading">{t('coach.homeTitle')}</AppText>
-      <AppText variant="label" tone="secondary">
-        {t('coach.homeBody')}
-      </AppText>
-      <Button testID="open-coach-home" label={t('coach.homeButton')} onPress={() => router.push('/coach')} />
-    </Card>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, paddingTop: space.sm }}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <AppText variant="caption" tone="secondary">
+          {t(greetingKey(now.getHours()))} · {isoToDisplayDate(localDate(now))}
+        </AppText>
+        <AppText variant="title">{t('dashboard.hello', { name })}</AppText>
+      </View>
+      <Pressable
+        testID="home-avatar"
+        accessibilityRole="button"
+        accessibilityLabel={t('profile.title')}
+        onPress={() => router.navigate('/you')}
+        style={{ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft }}
+      >
+        <AppText variant="heading" tone="accent">
+          {initial}
+        </AppText>
+      </Pressable>
+    </View>
   );
 }
 

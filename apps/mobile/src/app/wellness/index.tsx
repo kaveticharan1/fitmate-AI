@@ -7,6 +7,7 @@ import { Banner, Button, Card, ListGroup, ListRow, Screen, ToggleRow } from '../
 import { getSetting, setSetting } from '../../db/repositories';
 import { useState } from 'react';
 import { useAiStatus } from '../../features/coach/hooks';
+import { openCoach } from '../../features/coach/open';
 import { useFaceInsights } from '../../features/face/hooks';
 import { PUFFINESS } from '../../features/face/logic';
 import { useRoutineDone, useRoutineSteps, useSkinProfile } from '../../features/skin/hooks';
@@ -136,7 +137,7 @@ export default function WellnessHome() {
         />
       ) : null}
       {ai?.connected ? (
-        <Button testID="wellness-coach" variant="secondary" label={t('wellness.askCoach')} onPress={() => router.push({ pathname: '/coach', params: { prefill: t('wellness.askCoachPrompt') } })} />
+        <Button testID="wellness-coach" variant="secondary" label={t('wellness.askCoach')} onPress={() => openCoach({ prefill: t('wellness.askCoachPrompt') })} />
       ) : null}
       <AppText variant="caption" tone="muted">
         {t('wellness.disclaimer')}

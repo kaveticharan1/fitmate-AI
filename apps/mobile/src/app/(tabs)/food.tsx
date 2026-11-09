@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 import { AppText } from '../../components/AppText';
-import { Banner, Card, ListGroup, Screen } from '../../components/ui';
+import { Banner, Card, ListGroup, Screen, QuickLinks } from '../../components/ui';
 import { totalsOf } from '../../db/foodRepo';
 import { MEALS, type FoodLogEntryRow, type Meal } from '../../db/schema';
 import { useCopyMeal, useDiary, useTargets } from '../../features/food/hooks';
@@ -62,6 +62,14 @@ export default function FoodDiary() {
           <NutrientBar label={t('dashboard.fat')} value={totals.fat} target={targets.fatG} unit="g" />
         </Card>
       ) : null}
+
+      <QuickLinks
+        links={[
+          { testID: 'food-plan', icon: 'calendar-outline', label: t('tabs.plan'), onPress: () => router.navigate('/plan') },
+          { testID: 'food-kitchen', icon: 'basket-outline', label: t('home.kitchen'), onPress: () => router.push('/food/kitchen') },
+          { testID: 'food-photo-log', icon: 'camera-outline', label: t('home.photoShort'), onPress: () => router.push({ pathname: '/food/photo', params: { date } }) },
+        ]}
+      />
 
       {notice ? <Banner tone="accent" text={notice} /> : null}
 

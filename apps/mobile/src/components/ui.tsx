@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { forwardRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -401,5 +402,120 @@ export function Banner({ text, tone = 'warning' }: { text: string; tone?: 'warni
         {text}
       </AppText>
     </Card>
+  );
+}
+
+export type ChipTone = 'accent' | 'warning' | 'danger' | 'neutral';
+
+/** Small status label, e.g. "Done" or "To do". */
+export function Chip({ label, tone = 'neutral', testID }: { label: string; tone?: ChipTone; testID?: string }) {
+  const { colors } = useTheme();
+  const bg = { accent: colors.accentSoft, warning: colors.warningSoft, danger: colors.dangerSoft, neutral: colors.surfaceRaised }[tone];
+  const fg = { accent: colors.accent, warning: colors.warning, danger: colors.danger, neutral: colors.textSecondary }[tone];
+  return (
+    <View testID={testID} style={{ backgroundColor: bg, borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: 3 }}>
+      <AppText variant="caption" weight="bold" style={{ color: fg }}>
+        {label}
+      </AppText>
+    </View>
+  );
+}
+
+/** Rounded square with an icon, used at the start of summary rows. */
+export function IconTile({ name, tone = 'accent', size = 44 }: { name: React.ComponentProps<typeof Ionicons>['name']; tone?: ChipTone; size?: number }) {
+  const { colors } = useTheme();
+  const bg = { accent: colors.accentSoft, warning: colors.warningSoft, danger: colors.dangerSoft, neutral: colors.surfaceRaised }[tone];
+  const fg = { accent: colors.accent, warning: colors.warning, danger: colors.danger, neutral: colors.textSecondary }[tone];
+  return (
+    <View style={{ width: size, height: size, borderRadius: radius.md, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
+      <Ionicons name={name} size={Math.round(size * 0.5)} color={fg} />
+    </View>
+  );
+}
+
+/** Icon + title + subtitle + status chip; the whole row is one button. */
+export function SummaryRow({
+  icon,
+  tone,
+  title,
+  subtitle,
+  chip,
+  onPress,
+  testID,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  tone?: ChipTone;
+  title: string;
+  subtitle?: string;
+  chip?: { label: string; tone: ChipTone };
+  onPress?: () => void;
+  testID?: string;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={[title, subtitle, chip?.label].filter(Boolean).join(', ')}
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: space.md,
+        minHeight: TOUCH + 8,
+        paddingVertical: space.sm,
+        paddingHorizontal: space.md,
+        borderRadius: radius.lg,
+        backgroundColor: pressed ? colors.surfaceRaised : colors.surface,
+      })}
+    >
+      <IconTile name={icon} tone={tone} />
+      <View style={{ flex: 1, gap: 2 }}>
+        <AppText weight="bold">{title}</AppText>
+        {subtitle ? (
+          <AppText variant="label" tone="secondary">
+            {subtitle}
+          </AppText>
+        ) : null}
+      </View>
+      {chip ? <Chip label={chip.label} tone={chip.tone} /> : null}
+    </Pressable>
+  );
+}
+
+/** A row of small icon buttons that wrap, for shortcuts to other screens. */
+export function QuickLinks({ links }: { links: { testID: string; icon: React.ComponentProps<typeof Ionicons>['name']; label: string; onPress: () => void }[] }) {
+  const { colors } = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+      {links.map((l) => (
+        <Pressable
+          key={l.testID}
+          testID={l.testID}
+          accessibilityRole="button"
+          accessibilityLabel={l.label}
+          onPress={l.onPress}
+          style={({ pressed }) => ({
+            flexGrow: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: space.xs,
+            minHeight: TOUCH,
+            paddingHorizontal: space.md,
+            borderRadius: radius.pill,
+            backgroundColor: pressed ? colors.surfaceRaised : colors.surface,
+            borderWidth: 1,
+            borderColor: colors.border,
+          })}
+        >
+          <Ionicons name={l.icon} size={18} color={colors.accent} />
+          <AppText variant="label" weight="bold">
+            {l.label}
+          </AppText>
+        </Pressable>
+      ))}
+    </View>
   );
 }

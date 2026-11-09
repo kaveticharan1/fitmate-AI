@@ -8,6 +8,7 @@ import { Header } from '../../components/Header';
 import { Button, ListGroup, ListRow, Screen, TextField } from '../../components/ui';
 import { getSetting, setSetting } from '../../db/repositories';
 import { useAiStatus } from '../../features/coach/hooks';
+import { openCoach } from '../../features/coach/open';
 import { useFoodName } from '../../features/food/ui';
 import { useProfile } from '../../features/profile/hooks';
 import { localDate } from '../../lib/time';
@@ -109,7 +110,7 @@ export default function Kitchen() {
               testID="kitchen-ask-coach"
               variant="secondary"
               label={t('kitchen.askCoach')}
-              onPress={() => router.push({ pathname: '/coach', params: { prefill: kitchenQuestion(have, i18n.language === 'te' ? 'te' : 'en') } })}
+              onPress={() => openCoach({ prefill: kitchenQuestion(have, i18n.language === 'te' ? 'te' : 'en') })}
             />
           ) : null}
         </>

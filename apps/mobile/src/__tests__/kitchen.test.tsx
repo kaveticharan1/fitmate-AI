@@ -64,6 +64,6 @@ describe('Kitchen assistant', () => {
     expect(screen.getByTestId('have-spinach')).toBeTruthy();
     expect(screen.queryByTestId('have-egg_raw')).toBeNull();
     await fireEvent.press(screen.getByTestId('kitchen-ask-coach'));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/coach', params: { prefill: expect.stringMatching(/^I have: Spinach/) } });
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/coach', params: expect.objectContaining({ prefill: expect.stringMatching(/^I have: Spinach/) }) });
   });
 });

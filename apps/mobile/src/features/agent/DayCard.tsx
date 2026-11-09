@@ -1,13 +1,13 @@
 import { suggestFor } from '@fitmate/workouts';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AppText } from '../../components/AppText';
-import { Button, Card } from '../../components/ui';
+import { Button, Card, IconTile } from '../../components/ui';
 import { localDate } from '../../lib/time';
 import { space } from '../../theme/tokens';
 import { useAiStatus } from '../coach/hooks';
+import { openCoach } from '../coach/open';
 import { useFaceToday } from '../face/hooks';
 import { useDiary } from '../food/hooks';
 import { useHealthSettings, useStepGoal, useStepHistory } from '../health/hooks';
@@ -40,13 +40,13 @@ export function DayCard() {
   const targets = targetsForProfile(profile);
   const gentle = profile.hasEatingDisorderHistory;
   const sleepMin = sleep.find((s) => s.wokeOn === today)?.minutes ?? null;
-  const askCoach = (prefill: string) => router.push({ pathname: '/coach', params: { prefill } });
+  const askCoach = (prefill: string) => openCoach({ prefill });
 
   if (mode === 'briefing') {
     const w = me ? suggestFor(today, me.p, me.level) : null;
     return (
       <Card testID="briefing-card">
-        <AppText variant="heading">{t('agent.briefingTitle')}</AppText>
+        <CardTitle icon="sunny-outline" title={t('agent.briefingTitle')} />
         {sleepMin != null ? <AppText tone="secondary">{t('agent.sleptFor', { h: Math.floor(sleepMin / 60), m: sleepMin % 60 })}</AppText> : null}
         <AppText>
           {gentle
@@ -77,7 +77,7 @@ export function DayCard() {
   const review = eveningReview(facts);
   return (
     <Card testID="review-card">
-      <AppText variant="heading">{t('agent.reviewTitle')}</AppText>
+      <CardTitle icon="moon-outline" title={t('agent.reviewTitle')} />
       {review.wins.length ? (
         <View style={{ gap: space.xs }}>
           {review.wins.map((w) => (
@@ -99,5 +99,20 @@ export function DayCard() {
       ) : null}
       {ai?.connected ? <Button testID="review-coach" variant="secondary" label={t('agent.reviewWithCoach')} onPress={() => askCoach(t('agent.reviewPrompt'))} /> : null}
     </Card>
+  );
+}
+
+function CardTitle({ icon, title }: { icon: React.ComponentProps<typeof IconTile>['name']; title: string }) {
+  const { t } = useTranslation();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+      <IconTile name={icon} size={40} />
+      <View style={{ flex: 1 }}>
+        <AppText variant="heading">{title}</AppText>
+        <AppText variant="caption" tone="secondary">
+          {t('agent.byCoach')}
+        </AppText>
+      </View>
+    </View>
   );
 }

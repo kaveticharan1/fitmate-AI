@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AppText } from '../../components/AppText';
+import { Header } from '../../components/Header';
 import { Banner, Button, Card, ChoiceGroup, Screen, TextField } from '../../components/ui';
 import { useTargets } from '../../features/food/hooks';
 import { useProfile } from '../../features/profile/hooks';
@@ -36,9 +37,7 @@ export default function Progress() {
 
   return (
     <Screen testID="progress">
-      <AppText variant="title" style={{ paddingTop: space.sm }}>
-        {t('progress.title')}
-      </AppText>
+      <Header title={t('progress.title')} />
       <ChoiceGroup<'30' | '90' | '365'>
         value={range}
         onChange={setRange}

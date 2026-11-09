@@ -1,7 +1,7 @@
 import { CoachError } from '@fitmate/coach';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { Linking } from 'react-native';
-import CoachScreen from '../app/coach';
+import CoachScreen from '../app/(tabs)/coach';
 import AiSettings from '../app/settings/ai';
 import i18n from '../i18n';
 import { ThemeProvider } from '../theme/ThemeProvider';
@@ -44,6 +44,7 @@ const mockDisconnect = jest.fn();
 const mockForget = jest.fn();
 let mockReadAloud = false;
 const mockDecide = jest.fn();
+const mockDecideAsync = jest.fn();
 const mockSetAgent = jest.fn();
 jest.mock('../features/coach/hooks', () => ({
   useAiStatus: () => ({ data: mockStatus }),
@@ -56,7 +57,7 @@ jest.mock('../features/coach/hooks', () => ({
   useDisconnectAi: () => ({ mutate: mockDisconnect, isPending: false }),
   useReadAloud: () => ({ data: mockReadAloud }),
   useSetReadAloud: () => ({ mutate: jest.fn() }),
-  useActionDecision: () => ({ mutate: mockDecide, isPending: false, data: undefined }),
+  useActionDecision: () => ({ mutate: mockDecide, mutateAsync: mockDecideAsync, isPending: false, data: undefined }),
   useAgentSettings: () => ({ data: { actions: 'confirm', retentionDays: 90 } }),
   useSetAgentSetting: () => ({ mutate: mockSetAgent }),
 }));
@@ -157,6 +158,41 @@ describe('Coach actions', () => {
     expect(mockDecide).toHaveBeenLastCalledWith(expect.objectContaining({ confirm: false }));
   });
 
+  it('applies several proposed changes with one tap and carries on after a failure', async () => {
+    mockDecideAsync.mockRejectedValueOnce(new Error('db')).mockResolvedValue({ done: 1, skipped: [] });
+    mockMessages = [
+      msg('user', 'skipped my workout, tired'),
+      msg('coach', 'Here is the plan.', [], [
+        { action: { type: 'log_water', ml: 500 }, status: 'proposed' },
+        { action: { type: 'log_sleep', bed: '22:30', wake: '06:30' }, status: 'done' },
+        { action: { type: 'set_reminder', label: 'Walk', time: '18:30' }, status: 'proposed' },
+      ]),
+    ];
+    await wrap(<CoachScreen />);
+    expect(screen.getByText('Here’s what I suggest changing:')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('apply-all'));
+    await act(async () => {});
+    expect(mockDecideAsync).toHaveBeenCalledTimes(2);
+    expect(mockDecideAsync).toHaveBeenNthCalledWith(1, expect.objectContaining({ index: 0, confirm: true }));
+    expect(mockDecideAsync).toHaveBeenNthCalledWith(2, expect.objectContaining({ index: 2, confirm: true }));
+  });
+
+  it('picks up a new question while the Coach tab is already open', async () => {
+    mockParams = { prefill: 'first', n: '1' };
+    const r = await wrap(<CoachScreen />);
+    expect(screen.getByTestId('coach-input').props.value).toBe('first');
+    mockParams = { prefill: 'second question', n: '2' };
+    await r.rerender(<ThemeProvider><CoachScreen /></ThemeProvider>);
+    expect(screen.getByTestId('coach-input').props.value).toBe('second question');
+  });
+
+  it('has no Apply all for a single change', async () => {
+    mockMessages = [msg('user', 'water'), msg('coach', 'Ok', [], [{ action: { type: 'log_water', ml: 250 }, status: 'proposed' }])];
+    await wrap(<CoachScreen />);
+    expect(screen.queryByTestId('apply-all')).toBeNull();
+    expect(screen.getByTestId('coach-status')).toHaveTextContent('Online');
+  });
+
   it('shows the result of a finished action', async () => {
     mockMessages = [msg('user', 'water'), msg('coach', 'Done?', [], [{ action: { type: 'log_water', ml: 500 }, status: 'done' }])];
     await wrap(<CoachScreen />);
@@ -167,6 +203,13 @@ describe('Coach actions', () => {
 });
 
 describe('Coach voice', () => {
+  it('starts listening when opened from the Home mic button', async () => {
+    mockParams = { listen: '1', n: '1' };
+    await wrap(<CoachScreen />);
+    await act(async () => {});
+    expect(mockStart).toHaveBeenCalled();
+  });
+
   it('listens in Telugu and puts the transcript in the box', async () => {
     await wrap(<CoachScreen />);
     await fireEvent.press(screen.getByTestId('mic'));

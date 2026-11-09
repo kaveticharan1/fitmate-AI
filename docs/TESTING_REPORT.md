@@ -108,6 +108,11 @@ _Last run: 10 November 2026 (Phase 7d, v1.0.0), Node 22, in the development work
 - Coach knowledge retrieval only triggers on skin questions (not on "coconut oil for cooking" or "get toned").
 - Translations: every key used in code exists in English and Telugu.
 
+### New look (v1.2.0)
+- Daily summary statuses (to do / in progress / done / over), gentle mode hides numbers, rows open the right screens.
+- Ask-coach bar: coach, voice (starts listening), meal photo with the meal for the time of day.
+- Coach tab: new question applied while the tab is already open; Apply all confirms only proposed changes and continues after a failure; no Apply all for a single change.
+
 ## Not yet tested (needs a real phone)
 
 Phase 7: barcode scanning with the real camera; smart reminder timing on a real phone (Android battery savers can delay notifications); food-photo estimates with a real Gemini key, and how good they are for Indian thalis.
