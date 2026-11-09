@@ -12,3 +12,4 @@
 | 8 | `newArchEnabled=true` and React Native 0.88 with several native modules not yet exercised on device. | Possible native crash. | Covered by issue 1. |
 | 9 | iPhone not supported in Stage 1 (APK only). | Friends with iPhones can't install. | Stage 2 with an Apple developer account. |
 | 10 | Repository is public. | Code (not data) is visible to anyone; no secrets are in it. | Make it private in GitHub settings if preferred. |
+| 11 | APKs are built for 64-bit ARM (`arm64-v8a`) only, to cut build time roughly 4×. | Rare 32-bit-only or x86 phones can't install it. | Add `armeabi-v7a` to the Gradle flag in `ci.yml` if ever needed. |
