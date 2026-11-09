@@ -102,10 +102,19 @@ describe('ProfileWizard', () => {
     await fireEvent.press(screen.getByTestId('wizard-next'));
     expect(await screen.findAllByText('This is required')).toHaveLength(2);
     await fireEvent.changeText(screen.getByTestId('field-name'), 'Charan');
-    await fireEvent.changeText(screen.getByTestId('field-dateOfBirth'), '15-08-2012');
+    // Pick dates with the calendar (mocked native picker).
+    const pickDate = async (d: Date) => {
+      (global as unknown as { __pickDate: Date }).__pickDate = d;
+      await fireEvent.press(screen.getByTestId('field-dateOfBirth-calendar'));
+      const picker = screen.queryByTestId('mock-date-picker');
+      if (picker) await fireEvent.press(picker);
+    };
+    await pickDate(new Date(2012, 7, 15, 12));
+    expect(screen.getByText('15-08-2012')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('wizard-next'));
     expect(await screen.findByText('FitMate is for adults aged 18 and over.')).toBeTruthy();
-    await fireEvent.changeText(screen.getByTestId('field-dateOfBirth'), '09-11-1996');
+    await pickDate(new Date(1996, 10, 9, 12));
+    expect(screen.getByText('09-11-1996')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('field-sex-male'));
     await fireEvent.press(screen.getByTestId('wizard-next'));
 

@@ -17,6 +17,7 @@ const en = {
     hours: 'hours',
     on: 'On',
     off: 'Off',
+    pickDate: 'Choose a date',
     version: 'Version {{version}}',
   },
   errors: {
@@ -87,6 +88,7 @@ const en = {
       name: 'Your name',
       dob: 'Date of birth',
       dobHint: 'DD-MM-YYYY',
+      dobPickHint: 'Tap to choose from the calendar',
       sex: 'Sex',
       sexHint: 'Used only to estimate calories.',
       male: 'Male',

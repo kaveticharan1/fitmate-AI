@@ -3,7 +3,7 @@
     "name": "FitMate AI",
     "slug": "fitmate-ai",
     "scheme": "fitmate",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.kaveticharan.fitmate",
-      "versionCode": 1,
+      "versionCode": 2,
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#0F1113",
@@ -50,7 +50,8 @@
       "expo-sharing",
       "expo-localization",
       "expo-font",
-      "./plugins/withReleaseSigning"
+      "./plugins/withReleaseSigning",
+      "@react-native-community/datetimepicker"
     ]
   }
 }

@@ -18,6 +18,7 @@ import { Controller, useForm, useWatch, type Control, type FieldPath } from 'rea
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { AppText } from '../../components/AppText';
+import { DateField } from '../../components/DateField';
 import { Banner, Button, ChoiceGroup, ProgressBar, Screen, TextField, ToggleRow, useErrorText } from '../../components/ui';
 import type { ProfileRow } from '../../db/schema';
 import { isoToDisplayDate } from '../../lib/time';
@@ -266,17 +267,34 @@ function ChoiceField<T extends string>({
   );
 }
 
+/** Latest date of birth that makes someone 18 today. */
+function latestAdultBirthday(today: Date = new Date()): Date {
+  return new Date(today.getFullYear() - 18, today.getMonth(), today.getDate(), 12);
+}
+
 function AboutStep({ control }: C) {
   const { t } = useTranslation();
+  const errText = useErrorText();
   return (
     <>
       <TextInputField control={control} name="name" label={t('onboarding.about.name')} />
-      <TextInputField
+      <Controller
         control={control}
         name="dateOfBirth"
-        label={t('onboarding.about.dob')}
-        hint={t('onboarding.about.dobHint')}
-        numeric
+        render={({ field, fieldState }) => (
+          <DateField
+            testID="field-dateOfBirth"
+            label={t('onboarding.about.dob')}
+            value={String(field.value ?? '')}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            error={errText(fieldState.error?.message)}
+            hint={t('onboarding.about.dobPickHint')}
+            minimumDate={new Date(1925, 0, 1)}
+            maximumDate={latestAdultBirthday()}
+            defaultPickerDate={new Date(1995, 0, 1, 12)}
+          />
+        )}
       />
       <Controller
         control={control}

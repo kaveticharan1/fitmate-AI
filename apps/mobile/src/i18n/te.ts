@@ -24,6 +24,7 @@ const te: Translations = {
     hours: 'గంటలు',
     on: 'ఆన్',
     off: 'ఆఫ్',
+    pickDate: 'తేదీ ఎంచుకోండి',
     version: 'వెర్షన్ {{version}}',
   },
   errors: {
@@ -94,6 +95,7 @@ const te: Translations = {
       name: 'మీ పేరు',
       dob: 'పుట్టిన తేదీ',
       dobHint: 'DD-MM-YYYY',
+      dobPickHint: 'క్యాలెండర్ నుండి ఎంచుకోవడానికి నొక్కండి',
       sex: 'లింగం',
       sexHint: 'కేలరీల అంచనా కోసం మాత్రమే.',
       male: 'పురుషుడు',
