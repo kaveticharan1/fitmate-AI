@@ -38,6 +38,8 @@ jobs:
             adb logcat -d -b crash > crash.txt || true
             adb logcat -d '*:E' > errors.txt || true
             adb logcat -d -s ReactNativeJS:V AndroidRuntime:E > rn.txt || true
+            echo "=== CRASH BUFFER ==="; cat crash.txt | head -150
+            echo "=== RN / RUNTIME ==="; cat rn.txt | tail -80
       - uses: actions/upload-artifact@v4
         if: always()
         with:
