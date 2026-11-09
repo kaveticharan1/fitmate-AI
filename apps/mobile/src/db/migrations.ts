@@ -280,6 +280,70 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE coach_messages ADD COLUMN actions TEXT NOT NULL DEFAULT '[]';
   `,
+  // v11 — Face & Skin Wellness: daily puffiness check-ins, private face photos, skin profile, skincare routine
+  `
+  CREATE TABLE face_checkins (
+    day TEXT PRIMARY KEY NOT NULL,
+    puffiness INTEGER NOT NULL CHECK (puffiness BETWEEN 0 AND 3),
+    areas TEXT NOT NULL DEFAULT '[]',
+    time_of_day TEXT CHECK (time_of_day IS NULL OR time_of_day IN ('morning','afternoon','evening','all_day')),
+    symptoms TEXT NOT NULL DEFAULT '[]',
+    stress INTEGER CHECK (stress IS NULL OR stress BETWEEN 0 AND 2),
+    salty_yesterday INTEGER CHECK (salty_yesterday IS NULL OR salty_yesterday IN (0,1)),
+    alcohol_yesterday INTEGER CHECK (alcohol_yesterday IS NULL OR alcohol_yesterday IN (0,1)),
+    note TEXT CHECK (note IS NULL OR length(note) <= 300),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE TABLE face_photos (
+    id TEXT PRIMARY KEY NOT NULL,
+    taken_on TEXT NOT NULL,
+    taken_at TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    note TEXT CHECK (note IS NULL OR length(note) <= 300),
+    ai_quality TEXT,
+    ai_observation TEXT,
+    ai_compared_with TEXT,
+    user_verdict TEXT CHECK (user_verdict IS NULL OR user_verdict IN ('agree','disagree')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE INDEX face_photos_taken_on_idx ON face_photos (taken_on);
+  CREATE TABLE skin_profile (
+    id TEXT PRIMARY KEY NOT NULL CHECK (id = 'me'),
+    skin_type TEXT NOT NULL CHECK (skin_type IN ('oily','dry','combination','sensitive','normal','unsure')),
+    sensitive INTEGER NOT NULL DEFAULT 0,
+    concerns TEXT NOT NULL DEFAULT '[]',
+    allergies TEXT,
+    products TEXT,
+    budget TEXT NOT NULL DEFAULT 'medium' CHECK (budget IN ('low','medium','high')),
+    fragrance_free INTEGER NOT NULL DEFAULT 1,
+    experience TEXT NOT NULL DEFAULT 'beginner' CHECK (experience IN ('beginner','some','experienced')),
+    pregnant INTEGER NOT NULL DEFAULT 0,
+    goals TEXT,
+    share_with_coach INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE TABLE skincare_steps (
+    id TEXT PRIMARY KEY NOT NULL,
+    slot TEXT NOT NULL CHECK (slot IN ('am','pm')),
+    position INTEGER NOT NULL,
+    step TEXT NOT NULL,
+    product TEXT,
+    ingredient TEXT,
+    frequency TEXT NOT NULL DEFAULT 'daily',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE TABLE skincare_done (
+    day TEXT NOT NULL,
+    slot TEXT NOT NULL CHECK (slot IN ('am','pm')),
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (day, slot)
+  );
+  `,
 ];
 
 export interface MigratableDb {

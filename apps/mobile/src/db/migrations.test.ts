@@ -47,6 +47,11 @@ const tables = [
   schema.coachMemory,
   schema.stepDays,
   schema.customFoods,
+  schema.faceCheckins,
+  schema.facePhotos,
+  schema.skinProfile,
+  schema.skincareSteps,
+  schema.skincareDone,
 ];
 
 describe('migrations', () => {

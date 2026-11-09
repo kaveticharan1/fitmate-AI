@@ -34,3 +34,10 @@
 | 30 | Food photos use the same free Gemini allowance as the coach chat. | Many photos in a day can hit the free limit. | A clear error, after which you log from the list. |
 | 31 | Smart reminders use what was logged up to the last time the app was opened. | An evening check-in can be out of date if you logged nothing after opening the app. | The text is phrased as a nudge; opening FitMate refreshes it. |
 | 32 | Some phones (including HyperOS) delay or block notifications from apps under battery saving. | Reminders can arrive late or not at all. | Set FitMate's battery setting to "No restrictions" in Android settings. |
+
+## Face & Skin (v1.1.0)
+- Puffiness is self-rated; photo observations are AI visual estimates and depend on lighting/angle. Neither is a measurement.
+- Patterns need at least 3 days with and 3 without a factor; they show association, not cause.
+- Face photos are not in backups (by design). Restoring a backup on a new phone brings check-ins and the skin routine, not photos.
+- Reading an ingredient label from a photo needs the AI coach key; pasting the list always works.
+- Skincare library reviewed 2026-11-10 (AAD, NHS). It is educational and short by design.

@@ -263,6 +263,87 @@ export const stepDays = sqliteTable('step_days', {
   updatedAt: text('updated_at').notNull(),
 });
 
+// ── Face & Skin Wellness (v11) ─────────────────────────────────────────────
+
+/** One self-reported check-in per day. Lists are JSON text. Optional answers are NULL, never 0. */
+export const faceCheckins = sqliteTable('face_checkins', {
+  day: text('day').primaryKey(),
+  puffiness: integer('puffiness').notNull(),
+  areas: text('areas').notNull().default('[]'),
+  timeOfDay: text('time_of_day', { enum: ['morning', 'afternoon', 'evening', 'all_day'] }),
+  symptoms: text('symptoms').notNull().default('[]'),
+  stress: integer('stress'),
+  saltyYesterday: integer('salty_yesterday'),
+  alcoholYesterday: integer('alcohol_yesterday'),
+  note: text('note'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+/** Face photos: the image itself is an encrypted file in app storage (never in backups or public URLs). */
+export const facePhotos = sqliteTable(
+  'face_photos',
+  {
+    id: text('id').primaryKey(),
+    takenOn: text('taken_on').notNull(),
+    takenAt: text('taken_at').notNull(),
+    fileName: text('file_name').notNull(),
+    note: text('note'),
+    aiQuality: text('ai_quality'),
+    aiObservation: text('ai_observation'),
+    aiComparedWith: text('ai_compared_with'),
+    userVerdict: text('user_verdict', { enum: ['agree', 'disagree'] }),
+    ...syncColumns,
+  },
+  (t) => [index('face_photos_taken_on_idx').on(t.takenOn)],
+);
+
+export const skinProfile = sqliteTable('skin_profile', {
+  id: text('id').primaryKey(),
+  skinType: text('skin_type', { enum: ['oily', 'dry', 'combination', 'sensitive', 'normal', 'unsure'] }).notNull(),
+  sensitive: integer('sensitive', { mode: 'boolean' }).notNull().default(false),
+  concerns: text('concerns').notNull().default('[]'),
+  allergies: text('allergies'),
+  products: text('products'),
+  budget: text('budget', { enum: ['low', 'medium', 'high'] }).notNull().default('medium'),
+  fragranceFree: integer('fragrance_free', { mode: 'boolean' }).notNull().default(true),
+  experience: text('experience', { enum: ['beginner', 'some', 'experienced'] }).notNull().default('beginner'),
+  pregnant: integer('pregnant', { mode: 'boolean' }).notNull().default(false),
+  goals: text('goals'),
+  shareWithCoach: integer('share_with_coach', { mode: 'boolean' }).notNull().default(true),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+/** The user's saved skincare routine, step by step. */
+export const skincareSteps = sqliteTable('skincare_steps', {
+  id: text('id').primaryKey(),
+  slot: text('slot', { enum: ['am', 'pm'] }).notNull(),
+  position: integer('position').notNull(),
+  step: text('step').notNull(),
+  product: text('product'),
+  ingredient: text('ingredient'),
+  frequency: text('frequency').notNull().default('daily'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+/** Routine ticked off for a day (morning or night). */
+export const skincareDone = sqliteTable(
+  'skincare_done',
+  {
+    day: text('day').notNull(),
+    slot: text('slot', { enum: ['am', 'pm'] }).notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.slot] })],
+);
+
+export type FaceCheckinRow = typeof faceCheckins.$inferSelect;
+export type FacePhotoRow = typeof facePhotos.$inferSelect;
+export type SkinProfileRow = typeof skinProfile.$inferSelect;
+export type SkincareStepRow = typeof skincareSteps.$inferSelect;
+
 export type CoachMessageRow = typeof coachMessages.$inferSelect;
 export type WorkoutSessionRow = typeof workoutSessions.$inferSelect;
 export type FoodLogEntryRow = typeof foodLogEntries.$inferSelect;
@@ -294,4 +375,9 @@ export const BACKUP_TABLES = [
   'coach_memory',
   'step_days',
   'custom_foods',
+  // Face photo rows are not backed up: the encrypted image files stay on this phone only.
+  'face_checkins',
+  'skin_profile',
+  'skincare_steps',
+  'skincare_done',
 ] as const;

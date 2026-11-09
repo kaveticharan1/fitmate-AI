@@ -236,6 +236,12 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - **Settings:** older saved reminder settings are upgraded with the new options turned off.
 - **Tests:** 268 passing (139 app, 43 core, 42 food data, 19 coach, 13 validation, 12 workouts).
 
+## Central agent + Face & Skin (v1.1.0)
+- Coach can propose actions (log food, water, weight, sleep; set a reminder) — each shown as a card you Confirm or Decline. Agent settings and chat retention (30/90/365 days/forever) in Settings → AI.
+- Smart reminders tap through to the coach; daily briefing (morning) and evening review card on Home.
+- Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
+- Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
+
 ## Stage 1 complete
 All seven planned phases are built (WhatsApp and on-phone AI left out by decision). What's left is on-device testing of Phases 2–7 and then the optional Stage 2.
 

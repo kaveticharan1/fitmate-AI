@@ -70,6 +70,7 @@ export default function Progress() {
 
       <MeasurementsCard waist={waist} days={Number(range)} />
       <StepsWeekCard />
+      <Button testID="open-wellness" variant="secondary" label={t('wellness.title')} onPress={() => router.push('/wellness')} />
       <SleepCard />
       <HabitsCard />
 

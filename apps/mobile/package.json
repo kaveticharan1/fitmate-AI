@@ -7,6 +7,7 @@
     "@fitmate/coach": "0.1.0",
     "@fitmate/core": "0.1.0",
     "@fitmate/food-data": "0.1.0",
+    "@fitmate/skin": "0.1.0",
     "@fitmate/validation": "0.1.0",
     "@fitmate/workouts": "0.1.0",
     "@hookform/resolvers": "^7.0.5",

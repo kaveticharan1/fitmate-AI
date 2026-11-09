@@ -1,0 +1,16 @@
+{
+  "name": "@fitmate/skin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Skincare knowledge, ingredient checks and routine builder",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vitest": "^3.2.0"
+  }
+}

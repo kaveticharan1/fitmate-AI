@@ -24,6 +24,7 @@ import { workoutHistory } from '../../db/workoutRepo';
 import { addDays, localDate } from '../../lib/time';
 import { targetsForProfile } from '../profile/targets';
 import { deleteAiKey, getAiKey, setAiKey } from './aiKey';
+import { faceSkinContext, knowledgeFor, WELLNESS_RULES } from './wellnessContext';
 
 const fetchFn: FetchFn = (url, init) => fetch(url, init);
 
@@ -77,22 +78,17 @@ export function buildCoachContext(now: Date = new Date()): { context: CoachConte
   };
 }
 
-/**
- * Extra context blocks for the coach (face & skin wellness, reference knowledge).
- * Filled in by later modules; each only adds what the user has allowed.
- */
-const contextProviders: (() => string | null)[] = [];
-export function registerCoachContext(provider: () => string | null) {
-  contextProviders.push(provider);
-}
-function extraContext(): string[] {
-  return contextProviders.map((p) => {
-    try {
-      return p();
-    } catch {
-      return null;
-    }
-  }).filter((x): x is string => !!x);
+/** Face & skin context and matching reference knowledge for this question (only what the user shares). */
+function extraContext(lastUserText: string): string[] {
+  const blocks: (string | null)[] = [];
+  try {
+    const ctx = faceSkinContext();
+    const kb = knowledgeFor(lastUserText);
+    blocks.push(WELLNESS_RULES, ctx, kb);
+  } catch {
+    /* wellness data is optional */
+  }
+  return blocks.filter((x): x is string => !!x);
 }
 
 /** Saves the user's message (with any local safety flags). */
@@ -109,7 +105,7 @@ export async function requestCoachReply(): Promise<CoachMessage> {
   const turns = trimHistory(recentMessages(40).map((m) => ({ role: m.role, text: m.text })));
   if (turns.length === 0) throw new CoachError('bad_response', 'Nothing to answer');
   const actionsOn = getSetting<'confirm' | 'off'>('coachActions', 'confirm') === 'confirm';
-  const system = buildSystemPrompt({ ...setup, memory: listMemory().map((m) => m.text), extra: [...extraContext(), ...(actionsOn ? [ACTIONS_PROMPT] : [])] });
+  const system = buildSystemPrompt({ ...setup, memory: listMemory().map((m) => m.text), extra: [...extraContext(turns.filter((x) => x.role === 'user').at(-1)?.text ?? ''), ...(actionsOn ? [ACTIONS_PROMPT] : [])] });
   const raw = await generateReply({ apiKey: stored.apiKey, model: stored.model, system, turns, fetchFn });
   const { text: withoutMemory, remember } = extractMemory(raw);
   for (const fact of remember) addMemory(fact);

@@ -98,6 +98,16 @@ _Last run: 10 November 2026 (Phase 7d, v1.0.0), Node 22, in the development work
   - Week card: averages and days at goal.
   - Settings: availability states, connect and denial, sync result, switches, goal validation, stop syncing.
 
+### Central agent and Face & Skin (v1.1.0)
+- Coach actions: validation rejects unknown types, out-of-range values and malformed tags; at most 3 per reply; nothing runs without Confirm.
+- Safety: emergency phrases (incl. curly apostrophes, Telugu) flagged; everyday phrases ("end my workout", "breathe during squats") not flagged.
+- Face check-in: rating required; optional answers stay null (never treated as 0); emergency card for lip/tongue/throat swelling or breathing; doctor note for pain.
+- Photo encryption: round-trip, wrong key, tampered file and foreign file all rejected; large images encode safely.
+- Skin routine: every skin type × experience × pregnancy combination — sunscreen always in the morning, ≤1 active for beginners, no retinoid in pregnancy, no clashing actives in the same slot.
+- Ingredient checker: empty / messy / 500-item lists; allergy synonyms (fragrance ↔ parfum); pregnancy warnings; compare two; name-only input asks for the list.
+- Coach knowledge retrieval only triggers on skin questions (not on "coconut oil for cooking" or "get toned").
+- Translations: every key used in code exists in English and Telugu.
+
 ## Not yet tested (needs a real phone)
 
 Phase 7: barcode scanning with the real camera; smart reminder timing on a real phone (Android battery savers can delay notifications); food-photo estimates with a real Gemini key, and how good they are for Indian thalis.
@@ -127,3 +137,8 @@ Phase 2 screens on a phone, SQLCipher encryption on device, Keystore/biometric p
 | "Same as yesterday" would have failed for a food-photo entry (new database rule) | Code review while adding v9 | Copies keep the 'photo' type |
 | Rest timer showed one extra second right after a set | Workout screen test | Clock refreshed on every workout action |
 | "How to end my workout" was flagged as a crisis message | Coach safety test | Narrowed the pattern to "end it all" / "end my life" |
+
+### Bugs found in the v1.1.0 test pass and fixed
+- Skin keywords were too broad: "oil", "red", "tone", "dry" made the coach attach skincare notes to food and workout questions. Now matched as skin phrases only.
+- An allergy to "fragrance" did not flag "Parfum" (same thing, different label name). Allergy words now cover known synonyms.
+- If the AI marked a photo unusable without naming a reason, the message showed empty brackets. Now a plain retake message is shown.

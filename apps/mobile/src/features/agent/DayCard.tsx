@@ -8,6 +8,7 @@ import { Button, Card } from '../../components/ui';
 import { localDate } from '../../lib/time';
 import { space } from '../../theme/tokens';
 import { useAiStatus } from '../coach/hooks';
+import { useFaceToday } from '../face/hooks';
 import { useDiary } from '../food/hooks';
 import { useHealthSettings, useStepGoal, useStepHistory } from '../health/hooks';
 import { useProfile } from '../profile/hooks';
@@ -33,7 +34,7 @@ export function DayCard() {
   const { data: ai } = useAiStatus();
   const me = usePersonalisation();
   const { workoutName } = useWorkoutText();
-  const face: boolean | null = null;
+  const face = useFaceToday();
 
   if (mode === 'none' || !profile) return null;
   const targets = targetsForProfile(profile);

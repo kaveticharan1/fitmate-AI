@@ -95,6 +95,13 @@ function Root() {
           <Stack.Screen name="coach" />
           <Stack.Screen name="settings/ai" />
           <Stack.Screen name="settings/health" />
+          <Stack.Screen name="wellness/index" />
+          <Stack.Screen name="wellness/checkin" />
+          <Stack.Screen name="wellness/photos" />
+          <Stack.Screen name="wellness/skin-profile" />
+          <Stack.Screen name="wellness/routine" />
+          <Stack.Screen name="wellness/ingredients" />
+          <Stack.Screen name="wellness/report" />
         </Stack.Protected>
       </Stack>
     );

@@ -7,6 +7,8 @@ import { waterToday } from '../../db/progressRepo';
 import { getProfile, getSetting } from '../../db/repositories';
 import { stepHistory } from '../../db/stepsRepo';
 import { workoutHistory } from '../../db/workoutRepo';
+import { getCheckin } from '../../db/faceRepo';
+import { routineDone } from '../../db/skinRepo';
 import { localDate } from '../../lib/time';
 import { useDiary } from '../food/hooks';
 import { useHealthSettings, useStepGoal, useStepHistory } from '../health/hooks';
@@ -14,6 +16,8 @@ import { useProfile } from '../profile/hooks';
 import { targetsForProfile } from '../profile/targets';
 import { useWaterToday } from '../progress/hooks';
 import { useWorkoutHistory } from '../workouts/hooks';
+import { useTodayCheckin } from '../face/hooks';
+import { useRoutineDone } from '../skin/hooks';
 import { applySmart } from './notifications';
 import { REMINDERS_KEY, withDefaults, type ReminderConfig } from './schedule';
 import { buildSmartNudges, type DayStatus, type SmartNudge } from './smart';
@@ -83,6 +87,8 @@ export function currentDayStatus(now: Date = new Date()): { status: DayStatus; t
       steps: stepsRow?.steps ?? (enabled ? 0 : null),
       stepGoal,
       workoutToday: workoutHistory(today).some((w) => w.doneOn === today),
+      faceCheckedIn: getCheckin(today) != null,
+      skincareDone: { am: routineDone(today).some((d) => d.slot === 'am'), pm: routineDone(today).some((d) => d.slot === 'pm') },
       gentle: profile.hasEatingDisorderHistory,
     },
     targets: { proteinG: t.proteinG, waterMl: t.waterMl, steps: stepGoal, gentle: profile.hasEatingDisorderHistory },
@@ -103,6 +109,11 @@ export function useSmartReminderSync() {
   const { data: steps = [] } = useStepHistory(1);
   const { data: workouts = [] } = useWorkoutHistory(0);
   const stepGoal = useStepGoal(health);
+  const { data: faceToday } = useTodayCheckin();
+  const { data: skinDone = [] } = useRoutineDone();
+  const faceDone = faceToday != null;
+  const amDone = skinDone.some((d) => d.day === today && d.slot === 'am');
+  const pmDone = skinDone.some((d) => d.day === today && d.slot === 'pm');
 
   const proteinG = Math.round(entries.reduce((s, e) => s + e.proteinG, 0));
   const meals = [...new Set(entries.map((e) => e.meal))].sort().join(',');
@@ -124,6 +135,8 @@ export function useSmartReminderSync() {
       steps: stepsToday,
       stepGoal,
       workoutToday,
+      faceCheckedIn: faceDone,
+      skincareDone: { am: amDone, pm: pmDone },
       gentle: profile.hasEatingDisorderHistory,
     };
     syncSmartReminders(t, status, { proteinG: targets.proteinG, waterMl: targets.waterMl, steps: stepGoal, gentle: profile.hasEatingDisorderHistory }).catch(() => {
@@ -131,5 +144,5 @@ export function useSmartReminderSync() {
     });
     // Recalculate only when the numbers that matter change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, today, entries.length, meals, proteinG, water, stepsToday, stepGoal, workoutToday]);
+  }, [ready, today, entries.length, meals, proteinG, water, stepsToday, stepGoal, workoutToday, faceDone, amDone, pmDone]);
 }

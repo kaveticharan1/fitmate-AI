@@ -141,6 +141,16 @@ Health Connect settings live in `app_settings`: `healthEnabled`, `healthImportWe
 `custom_foods`: id, barcode (unique, optional), name (1–120), brand, kcal/protein/carbs/fat/fibre per 100 g (range-checked), serving_g (1–2000, optional), source ('barcode' | 'label'), timestamps.
 `food_log_entries` was rebuilt in v9 (data copied) to add `custom_food_id` and the sources 'barcode' and 'photo'. A row must reference a food, recipe or custom food, unless it is a 'photo' estimate.
 
+## coach_messages.actions (v10)
+`actions` — JSON list of actions the coach proposed in that reply (log food/water/weight/sleep, set a reminder) with status `pending` / `done` / `declined` / `failed`. Nothing runs until the user taps Confirm.
+
+## Face & skin (v11)
+- `face_checkins` — one row per day (`day` PK): `puffiness` 0–3 (user-reported), `areas` (JSON), `time_of_day`, `symptoms` (JSON), `stress` 0–2, `salty_yesterday`, `alcohol_yesterday` (null = skipped), `note`.
+- `face_photos` — metadata only (`taken_on`, `file_name`, `note`, `ai_quality`, `ai_observation` JSON, `ai_compared_with`, `user_verdict`). The image itself is an AES-256-GCM file in app storage (`face-photos/*.fmp`); the key is in `app_settings.photoKey` inside the encrypted database. **Not included in backups.**
+- `skin_profile` — single row `id='me'`: skin type, sensitive, concerns, allergies, products, budget, fragrance-free, experience, pregnant, goals, `share_with_coach`.
+- `skincare_steps` — routine steps per slot (`am`/`pm`), ordered, optional knowledge-base `ingredient` id.
+- `skincare_done` — (`day`, `slot`) PK: routine ticked off.
+
 ## Food database
 
 Not stored in SQLite: the 133 foods (and the exercises and workouts in `packages/workouts`) ship with the app in `packages/food-data` (read-only), so updates arrive with app updates.

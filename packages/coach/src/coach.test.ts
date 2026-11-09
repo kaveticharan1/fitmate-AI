@@ -114,6 +114,10 @@ describe('safety', () => {
     expect(safetyFlags('నాకు ఆత్మహత్య ఆలోచనలు వస్తున్నాయి')).toEqual(['crisis']);
     expect(safetyFlags('chest pain while running')).toEqual(['emergency']);
     expect(safetyFlags('ఛాతీ నొప్పి')).toEqual(['emergency']);
+    expect(safetyFlags('my lips and tongue are swelling after a new cream')).toEqual(['emergency']);
+    expect(safetyFlags('swollen throat, can’t swallow')).toEqual(['emergency']);
+    expect(safetyFlags('I can’t breathe properly')).toEqual(['emergency']);
+    expect(safetyFlags('My face looks puffy this morning')).toEqual([]);
   });
 
   it('does not flag ordinary fitness talk', () => {

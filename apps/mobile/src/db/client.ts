@@ -1,4 +1,5 @@
 import { drizzle, type ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
+import { Directory, Paths } from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
 import { runMigrations } from './migrations';
 import * as schema from './schema';
@@ -75,12 +76,18 @@ export function closeDatabase(): void {
   orm = null;
 }
 
-/** Closes and deletes the database file. */
+/** Closes and deletes the database file, and the encrypted face photos that belong to it. */
 export function deleteDatabaseFile(): void {
   closeDatabase();
   try {
     SQLite.deleteDatabaseSync(DB_NAME);
   } catch {
     // no file yet
+  }
+  try {
+    const photos = new Directory(Paths.document, 'face-photos');
+    if (photos.exists) photos.delete();
+  } catch {
+    // no photos
   }
 }
