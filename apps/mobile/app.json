@@ -3,7 +3,7 @@
     "name": "FitMate AI",
     "slug": "fitmate-ai",
     "scheme": "fitmate",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.kaveticharan.fitmate",
-      "versionCode": 16,
+      "versionCode": 17,
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#0F1113",
@@ -79,7 +79,8 @@
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 26
+            "minSdkVersion": 26,
+            "extraProguardRules": "# WorkManager (used by background tasks) creates its Room database by reflection.\n-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class androidx.work.impl.WorkDatabase_Impl { *; }\n-keep class * extends androidx.work.ListenableWorker { public <init>(android.content.Context, androidx.work.WorkerParameters); }\n-keep class androidx.work.impl.background.systemjob.SystemJobService { *; }\n-keep class expo.modules.backgroundtask.** { *; }\n-keep class expo.modules.taskManager.** { *; }"
           }
         }
       ],

@@ -35,6 +35,9 @@ jobs:
       contents: write # to publish signed APKs as GitHub Releases
     env:
       HAS_SIGNING_KEY: ${{ secrets.FITMATE_KEYSTORE_BASE64 != '' }}
+    outputs:
+      apk_name: ${{ steps.name.outputs.apk_name }}
+      app_version: ${{ steps.name.outputs.app_version }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -75,6 +78,7 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
 
       - name: Verify signature and name the APK
+        id: name
         run: |
           APK=apps/mobile/android/app/build/outputs/apk/release/app-release.apk
           VERSION=$(node -p "require('./apps/mobile/app.json').expo.version")
@@ -90,13 +94,74 @@ jobs:
           mkdir -p out && cp "$APK" "out/$NAME" && cp signature.txt out/
           echo "APK_NAME=$NAME" >> "$GITHUB_ENV"
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "apk_name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "app_version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APK_NAME }}
+          name: apk
           path: out/
           retention-days: 30
 
+  # Builds the same release APK for the emulator's x86_64 CPU and checks that it opens.
+  # A release is only published if this passes (v1.3.0 crashed at launch; this catches that).
+  launch-test:
+    name: Launch test on Android emulator
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm ci
+      - name: Generate native Android project
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform android --no-install
+        env:
+          CI: 1
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build release APK for x86_64 (test key)
+        working-directory: apps/mobile/android
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=x86_64
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install, open and check it stays open
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash .github/scripts/launch-check.sh apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+
+  publish:
+    name: Publish release
+    needs: [build, launch-test]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      HAS_SIGNING_KEY: ${{ secrets.FITMATE_KEYSTORE_BASE64 != '' }}
+      APK_NAME: ${{ needs.build.outputs.apk_name }}
+      APP_VERSION: ${{ needs.build.outputs.app_version }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk
+          path: out
       # Signed builds from main become a public release, so the newest APK is always at
       # https://github.com/kaveticharan1/fitmate-AI/releases/latest/download/FitMate.apk
       - name: Publish release
