@@ -213,6 +213,27 @@ export const workoutSessions = sqliteTable(
   (t) => [index('workout_sessions_done_on_idx').on(t.doneOn)],
 );
 
+/** AI coach chat. `flags` is a JSON list of local safety flags shown with a user message. */
+export const coachMessages = sqliteTable(
+  'coach_messages',
+  {
+    id: text('id').primaryKey(),
+    role: text('role', { enum: ['user', 'coach'] }).notNull(),
+    text: text('text').notNull(),
+    flags: text('flags').notNull().default('[]'),
+    ...syncColumns,
+  },
+  (t) => [index('coach_messages_created_idx').on(t.createdAt)],
+);
+
+/** Short facts the user (or the coach, visibly) saved for future chats. */
+export const coachMemory = sqliteTable('coach_memory', {
+  id: text('id').primaryKey(),
+  text: text('text').notNull(),
+  ...syncColumns,
+});
+
+export type CoachMessageRow = typeof coachMessages.$inferSelect;
 export type WorkoutSessionRow = typeof workoutSessions.$inferSelect;
 export type FoodLogEntryRow = typeof foodLogEntries.$inferSelect;
 export type RecipeRow = typeof recipes.$inferSelect;
@@ -239,4 +260,6 @@ export const BACKUP_TABLES = [
   'habit_definitions',
   'habit_logs',
   'workout_sessions',
+  'coach_messages',
+  'coach_memory',
 ] as const;

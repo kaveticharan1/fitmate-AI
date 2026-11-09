@@ -43,6 +43,8 @@ const tables = [
   schema.habitDefinitions,
   schema.habitLogs,
   schema.workoutSessions,
+  schema.coachMessages,
+  schema.coachMemory,
 ];
 
 describe('migrations', () => {

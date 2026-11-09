@@ -1,6 +1,6 @@
 # Testing report
 
-_Last run: 9 November 2026 (Phase 4), Node 22, in the development workspace and on GitHub Actions._
+_Last run: 9 November 2026 (Phase 3), Node 22, in the development workspace and on GitHub Actions._
 
 ## Summary
 
@@ -12,13 +12,14 @@ _Last run: 9 November 2026 (Phase 4), Node 22, in the development workspace and 
 | Food data tests | `npm test -w @fitmate/food-data` | 30 / 30 pass |
 | Validation tests | `npm test -w @fitmate/validation` | 13 / 13 pass |
 | Workout tests | `npm test -w @fitmate/workouts` | 12 / 12 pass |
-| App tests | `npm test -w @fitmate/mobile` | 56 / 56 pass |
-| Android JS bundle | `npx expo export --platform android` | Pass (5.4 MB Hermes bytecode) |
-| Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true` and `android:allowBackup="false"` |
+| Coach tests | `npm test -w @fitmate/coach` | 14 / 14 pass |
+| App tests | `npm test -w @fitmate/mobile` | 74 / 74 pass |
+| Android JS bundle | `npx expo export --platform android` | Pass (5.5 MB Hermes bytecode) |
+| Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true`, `android:allowBackup="false"`, `RECORD_AUDIO` and the speech-recognition service query |
 | Release APK build | GitHub Actions `android` job | Pass; signed with the release key (verified) |
 | On-device testing | Poco X5 (Android 14) | v0.1.x installed by the owner; Phase 2 not yet tried on device |
 
-**Total automated tests: 148, all passing.**
+**Total automated tests: 180, all passing.**
 
 ## What the tests cover
 
@@ -59,7 +60,30 @@ _Last run: 9 November 2026 (Phase 4), Node 22, in the development workspace and 
 - Screens: tab filters, week summary and resume card; detail swaps exercises for knee pain and starts a session; full session run with rest, easier swap and save; rest and timed-set countdowns finishing on their own; nothing saved when ended before any set; voice cues only when switched on.
 - Migration v6 columns match the Drizzle schema.
 
+### Phase 3 (AI coach and voice)
+- `@fitmate/coach`:
+  - The prompt includes the useful facts and none of the identifying ones, with eating-disorder, pregnancy and injury rules; it hides calorie numbers for eating-disorder history.
+  - Memory tags and history trimming.
+  - Crisis and emergency detection (English and Telugu), with no false alarms on gym talk; Markdown removal.
+  - Model choice (stable Flash over Lite, preview and image models).
+  - The key is sent in a header, not the URL.
+  - Error mapping (bad key, quota, busy, offline, timeout, blocked, empty).
+- Coach service:
+  - Context leaves out the name, date of birth and health notes.
+  - The request contains the conversation and summary; the reply is saved and remembered facts are stored.
+  - Crisis messages are flagged; nothing is sent without both consent and a key.
+  - The key is stored only after Google accepts it, and consent is recorded and withdrawn.
+- Screens:
+  - Setup prompt, suggestions, sending, plain-text replies, helpline call buttons, error and retry, unanswered message.
+  - Voice: Telugu recognition into the box (never auto-sent); unavailable and denied cases; read-aloud in the coach language.
+  - Settings: agreement before the key field, a hidden key field, failure reasons, memory and turning the coach off.
+- Migration v7 columns match the Drizzle schema.
+
 ## Not yet tested (needs a real phone)
+
+Phase 3: a real Gemini key and real replies (the development workspace can't reach Google), the free-tier limits in practice, the Telugu quality of replies, Android speech recognition in Telugu (needs the Google app and the Telugu language pack), and the microphone permission prompt.
+
+
 
 Phase 4: text-to-speech voices (Telugu voice availability varies by phone), screen staying awake during a workout, 6 tabs fitting on small screens.
 
@@ -75,3 +99,4 @@ Phase 2 screens on a phone, SQLCipher encryption on device, Keystore/biometric p
 | Ref updated during render | Lint | Moved to an effect |
 | Jest mock factory read a constant before it was initialised | Screen tests | Getter in the `expo-router` mock |
 | Rest timer showed one extra second right after a set | Workout screen test | Clock refreshed on every workout action |
+| "How to end my workout" was flagged as a crisis message | Coach safety test | Narrowed the pattern to "end it all" / "end my life" |

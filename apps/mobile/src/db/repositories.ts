@@ -118,11 +118,32 @@ export function recentWeights(limit = 30) {
     .all();
 }
 
-export function recordConsent(kind: 'privacy_notice' | 'age_18_plus'): void {
+export type ConsentKind = 'privacy_notice' | 'age_18_plus' | 'ai_coach';
+
+export function recordConsent(kind: ConsentKind): void {
   const now = nowIso();
   getDb()
     .insert(consents)
     .values({ id: randomUUID(), kind, noticeVersion: PRIVACY_NOTICE_VERSION, grantedAt: now, createdAt: now, updatedAt: now })
+    .run();
+}
+
+export function hasConsent(kind: ConsentKind): boolean {
+  return (
+    getDb()
+      .select()
+      .from(consents)
+      .where(and(eq(consents.kind, kind), isNull(consents.withdrawnAt)))
+      .get() != null
+  );
+}
+
+export function withdrawConsent(kind: ConsentKind): void {
+  const now = nowIso();
+  getDb()
+    .update(consents)
+    .set({ withdrawnAt: now, updatedAt: now })
+    .where(and(eq(consents.kind, kind), isNull(consents.withdrawnAt)))
     .run();
 }
 

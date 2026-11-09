@@ -22,3 +22,7 @@
 | 18 | Spoken cues use the phone's own text-to-speech. Many phones have no Telugu voice installed. | Telugu cues may be read in an English voice or not at all. | Install a Telugu voice in Android's text-to-speech settings, or keep cues in English. |
 | 19 | A workout in progress is kept in memory only. | If Android closes the app mid-workout, that workout is lost. | Acceptable for 10–40 minute sessions. |
 | 20 | Calorie burn is a MET estimate. | Can be off by 20–30 %. | Shown as "~" and explained on the screen; weight trend is the real check. |
+| 21 | The AI coach needs internet and the user's own Gemini key; the free tier has daily limits that Google sets and can change. | No coach replies offline, or after the limit until it resets. | Clear error message; everything else in the app works offline. |
+| 22 | On Google's free tier, what is sent to Gemini may be used by Google to improve its products. | Privacy trade-off. | Said plainly on the consent screen; only a minimal summary is sent (no name, date of birth or health notes); the coach can be turned off any time. |
+| 23 | Voice typing uses the Google app's speech recogniser, which may send audio to Google, and Telugu needs the Telugu language pack. | Voice may not work, or works only online, on some phones. | A clear message is shown; typing always works. |
+| 24 | The AI can be wrong. | Bad advice is possible. | Safety rules in the prompt, local crisis and emergency checks, and a "not medical advice" note on screen. |

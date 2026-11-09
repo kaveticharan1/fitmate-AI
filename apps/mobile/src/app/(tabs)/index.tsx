@@ -33,6 +33,7 @@ export default function Dashboard() {
         <AppText variant="title">{t('dashboard.hello', { name: profile.name })}</AppText>
       </View>
 
+      <CoachCard />
       <TodayCard targets={targets} />
       <WaterCard targetMl={targets.waterMl} />
       <CalorieCard targets={targets} />
@@ -47,6 +48,19 @@ export default function Dashboard() {
         {t('dashboard.estimatesNote')}
       </AppText>
     </Screen>
+  );
+}
+
+function CoachCard() {
+  const { t } = useTranslation();
+  return (
+    <Card testID="coach-card" tone="accent">
+      <AppText variant="heading">{t('coach.homeTitle')}</AppText>
+      <AppText variant="label" tone="secondary">
+        {t('coach.homeBody')}
+      </AppText>
+      <Button testID="open-coach-home" label={t('coach.homeButton')} onPress={() => router.push('/coach')} />
+    </Card>
   );
 }
 

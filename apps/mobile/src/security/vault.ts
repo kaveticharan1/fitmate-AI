@@ -172,5 +172,7 @@ export async function destroyVault(): Promise<void> {
     SecureStore.deleteItemAsync(K.bio, { ...DEVICE_ONLY, requireAuthentication: true }),
     SecureStore.deleteItemAsync(K.failures, DEVICE_ONLY),
     SecureStore.deleteItemAsync(K.prefs, DEVICE_ONLY),
+    // The AI coach's API key (features/coach/aiKey.ts).
+    SecureStore.deleteItemAsync('fm.ai.gemini.v1', DEVICE_ONLY),
   ]);
 }

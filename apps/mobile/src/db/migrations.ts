@@ -195,6 +195,26 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX workout_sessions_done_on_idx ON workout_sessions (done_on);
   `,
+  // v7 — Phase 3: AI coach chat and memory
+  `
+  CREATE TABLE coach_messages (
+    id TEXT PRIMARY KEY NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('user','coach')),
+    text TEXT NOT NULL,
+    flags TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE INDEX coach_messages_created_idx ON coach_messages (created_at);
+  CREATE TABLE coach_memory (
+    id TEXT PRIMARY KEY NOT NULL,
+    text TEXT NOT NULL CHECK (length(text) BETWEEN 1 AND 200),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  `,
 ];
 
 export interface MigratableDb {

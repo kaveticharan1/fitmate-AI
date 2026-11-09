@@ -1,0 +1,16 @@
+{
+  "name": "@fitmate/coach",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI coach: prompts, safety checks and the Gemini client",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vitest": "^3.2.0"
+  }
+}

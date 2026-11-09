@@ -87,6 +87,8 @@ function Root() {
           <Stack.Screen name="food/grocery" />
           <Stack.Screen name="workout/detail" />
           <Stack.Screen name="workout/session" />
+          <Stack.Screen name="coach" />
+          <Stack.Screen name="settings/ai" />
         </Stack.Protected>
       </Stack>
     );

@@ -10,7 +10,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | --- | --- | --- |
 | 1 | Foundation: encrypted storage, app lock, consent, onboarding, calculations, dashboard, backup | **Done (v0.1.1), installed on device** |
 | 2 | Nutrition: Indian food database, food diary, oil/family-pot logging, meal planner, grocery list | **Done (v0.2.0), automated tests passing; awaiting on-device test** |
-| 3 | AI coach: chat, personalities, memory, Telugu, voice | Not started |
+| 3 | AI coach: chat, personalities, memory, Telugu, voice | **Done (v0.7.0)**, automated tests passing; committed locally, not pushed yet. Needs a real Gemini key test on the phone |
 | 4 | Workouts: exercise library, plans, timers | **Done (v0.6.0)**, automated tests passing; committed locally, not pushed yet |
 | 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Done (v0.4.0 + v0.5.0)**: weight/waist charts, water, sleep, habits with forgiving streaks, weekly/monthly report |
 | 6 | Health: step counter, Activity Recognition, Health Connect, step validation | Not started |
@@ -120,4 +120,25 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - New packages: `expo-speech`, `expo-keep-awake`.
 - Tests: 148 passing (56 app, 37 core, 30 food data, 13 validation, 12 workouts). Lint and type check clean; Android bundle exports. Not yet tested on a phone.
 - Bug found by testing and fixed: the rest timer showed one extra second right after a set until the first tick.
+
+## Phase 3a + 3b — AI coach and voice (v0.7.0)
+- **Free, your own key:** the coach uses Google Gemini with the user's own free API key from Google AI Studio. The key is checked with Google before saving and kept only in SecureStore (Android Keystore); it is never in the database, backups or exports, and it is erased with "Delete all data". It goes in a request header, never in a URL.
+- **Consent first:** a plain-language screen says exactly what is sent (messages, recent chat, a short summary: age, height, weight, goal, diet, today's food, water, sleep and workouts) and what is not (name, date of birth, health notes). It also notes that Google's free tier may use what is sent to improve its products. Consent is recorded and withdrawn in the consents table.
+- **Model choice:** the app asks Google which models the key can use and picks the newest stable Flash model, so it keeps working when Google renames models.
+- **Coach chat** (Home card → chat; You → AI coach):
+  - Shows suggested questions, plain-text replies and a "typing…" state.
+  - Errors are explained (bad key, free limit used up, busy, offline, timeout), with a retry button, and a message left unanswered is noticed when the chat is reopened.
+- **Personalities and language:** five personalities (friendly, strict, trainer, motivational, military) and replies in English or Telugu, both taken from the profile.
+- **Safety rules in the prompt:** no diagnosis or medicines, no eating below the calorie target, no shaming, injuries respected. With eating-disorder history, calorie numbers are hidden from the coach entirely. Pregnancy and breastfeeding are handled. Pain means stop; chest pain or fainting means call 112.
+- **Local safety check (on the phone, before anything is sent):** self-harm messages show a Tele-MANAS 14416 call button, and emergency symptoms show a 112 call button. Both work even offline. Ordinary gym talk ("killing it", "chest press") is not flagged.
+- **Memory:** the coach can save short facts with a visible tag; you can see and delete them under You → AI coach (30 maximum). You can delete the chat history or turn the coach off at any time.
+- **Voice (3b):**
+  - A mic button uses Android's own speech recogniser (Google app) in Indian English or Telugu. The transcript goes into the message box for you to check; it is never sent automatically.
+  - Replies can be read aloud (speaker toggle, or per message) with the phone's voice, Markdown and emoji removed.
+- **Database:** migration v7 adds `coach_messages` and `coach_memory` (both in encrypted backups).
+- **New code and packages:** new package `@fitmate/coach` (prompt, safety, Gemini client). New dependency: `expo-speech-recognition` (adds RECORD_AUDIO and the speech-service query to the manifest, verified with prebuild).
+- **Testing:**
+  - 180 tests passing (74 app, 37 core, 30 food data, 14 coach, 13 validation, 12 workouts); lint and type check clean; the Android bundle exports.
+  - Not tested against the real Gemini service from here: the development workspace cannot reach Google. The client follows the documented v1beta REST format and is covered by tests with recorded-shape responses. The first real check is on your phone with your key.
+  - Bug found by testing and fixed: "end my workout" was wrongly flagged as a crisis message.
 

@@ -1,7 +1,7 @@
 # Database schema
 
 Engine: SQLite 3 with SQLCipher 4 (AES-256), one encrypted file `fitmate.db` in the app's private storage.
-Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **6**.
+Migrations: `apps/mobile/src/db/migrations.ts`, tracked with `PRAGMA user_version`. Current version: **7**.
 ORM definitions: `apps/mobile/src/db/schema.ts`. A test checks that the migration SQL and the Drizzle schema have identical columns.
 
 Conventions: UUID text primary keys (except the single profile row `id = 'me'`); `created_at`, `updated_at`, `deleted_at` as ISO-8601 UTC text; calendar dates (`measured_on`) as the user's local `YYYY-MM-DD`; booleans as 0/1; lists as JSON text.
@@ -125,6 +125,12 @@ id, logged_on (local date), ml (0 < ml ≤ 3000), timestamps; index on logged_on
 
 id, workout_id (id from `packages/workouts`), done_on (local date), started_at, duration_s, completed_sets, total_sets, est_kcal (all ≥ 0), exercises (JSON list of exercise ids done), timestamps. Index on done_on.
 
+## coach_messages, coach_memory (v7)
+
+`coach_messages`: id, role ('user' | 'coach'), text, flags (JSON list of local safety flags: 'crisis', 'emergency'), timestamps. Index on created_at.
+`coach_memory`: id, text (1–200 characters), timestamps. At most 30 facts, managed in You → AI coach.
+The Gemini API key is **not** in the database: it is in SecureStore under `fm.ai.gemini.v1`.
+
 ## Food database
 
 Not stored in SQLite: the 133 foods (and the exercises and workouts in `packages/workouts`) ship with the app in `packages/food-data` (read-only), so updates arrive with app updates.
@@ -137,8 +143,9 @@ Not stored in SQLite: the 133 foods (and the exercises and workouts in `packages
 | SecureStore (Keystore, biometric-bound) | `fm.vault.bio.v1` | database key for biometric unlock (optional) |
 | SecureStore | `fm.vault.failures.v1` | wrong-PIN counter, lock-out time |
 | SecureStore | `fm.security.prefs.v1` | biometric on/off, auto-lock seconds, screenshot blocking, auto-wipe |
+| SecureStore | `fm.ai.gemini.v1` | the user's Gemini API key and chosen model (optional) |
 | AsyncStorage | `fm.appLanguage`, `fm.theme` | non-sensitive UI preferences, needed before unlock |
 
 ## Planned tables (later phases)
 
-coach_conversations, coach_messages, coach_memory, ai_usage, training_modes, coach_preferences (Phase 3); health_permissions, health_sync_records, step_samples, activity_segments (Phase 6); notification_preferences (Phase 7).
+health_permissions, health_sync_records, step_samples, activity_segments (Phase 6); notification_preferences (Phase 7).
