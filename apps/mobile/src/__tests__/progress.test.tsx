@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import Progress from '../app/(tabs)/progress';
+import Report from '../app/report';
 import i18n from '../i18n';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
@@ -10,13 +11,25 @@ jest.mock('../features/progress/hooks', () => ({
   useWaistHistory: () => ({ data: [{ date: '2026-11-01', value: 96 }, { date: '2026-11-08', value: 94.5 }] }),
   useWeekFood: () => ({ data: [{ date: '2026-11-08', kcal: 1750, protein: 115 }, { date: '2026-11-09', kcal: 2300, protein: 70 }] }),
   useLogWaist: () => ({ mutateAsync: async (v: number) => mockLogWaist(v), isPending: false, isError: false }),
+  useSleepHistory: () => ({ data: [{ wokeOn: '2026-11-08', minutes: 400, bedTime: '23:00', wakeTime: '05:40' }, { wokeOn: '2026-11-09', minutes: 440, bedTime: '23:00', wakeTime: '06:20' }] }),
+  useLogSleep: () => ({ mutateAsync: async (v: unknown) => mockLogSleep(v), isPending: false }),
+  useHabits: () => ({ data: mockHabits }),
+  useHabitActions: () => ({ add: { mutateAsync: async (v: string) => mockAddHabit(v) }, remove: { mutate: jest.fn() }, toggle: { mutate: mockToggle } }),
+  useWaterHistory: () => ({ data: [{ date: '2026-11-09', ml: 2000 }, { date: '2026-11-08', ml: 3000 }] }),
+  useFoodHistory: () => ({ data: [{ date: '2026-11-08', kcal: 1750, protein: 115 }, { date: '2026-11-09', kcal: 2300, protein: 70 }] }),
 }));
+const mockLogSleep = jest.fn();
+const mockAddHabit = jest.fn();
+const mockToggle = jest.fn();
+let mockHabits: { id: string; name: string; doneDates: string[] }[] = [];
+jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn(), canGoBack: () => true } }));
 jest.mock('../features/profile/hooks', () => ({ useProfile: () => ({ data: { targetWeightKg: 75 } }) }));
-jest.mock('../features/food/hooks', () => ({ useTargets: () => ({ targetKcal: 1800, proteinG: 120 }) }));
+jest.mock('../features/food/hooks', () => ({ useTargets: () => ({ targetKcal: 1800, proteinG: 120, waterMl: 3000 }) }));
 
 beforeEach(async () => {
   jest.clearAllMocks();
   mockWeights = [];
+  mockHabits = [];
   await i18n.changeLanguage('en');
 });
 
@@ -50,5 +63,38 @@ describe('Progress', () => {
     await fireEvent.changeText(screen.getByTestId('waist-input'), '93.5');
     await fireEvent.press(screen.getByTestId('waist-save'));
     await waitFor(() => expect(mockLogWaist).toHaveBeenCalledWith(93.5));
+  });
+
+  it('validates and saves last night’s sleep', async () => {
+    await wrap();
+    expect(screen.getByTestId('sleep-avg')).toHaveTextContent('Avg 7h 00m (2 nights)');
+    await fireEvent.changeText(screen.getByTestId('sleep-bed'), '11pm');
+    await fireEvent.press(screen.getByTestId('sleep-save'));
+    expect(screen.getByText('Use HH:MM, e.g. 08:30')).toBeTruthy();
+    expect(mockLogSleep).not.toHaveBeenCalled();
+    await fireEvent.changeText(screen.getByTestId('sleep-bed'), '23:15');
+    await fireEvent.changeText(screen.getByTestId('sleep-wake'), '06:30');
+    await fireEvent.press(screen.getByTestId('sleep-save'));
+    await waitFor(() => expect(mockLogSleep).toHaveBeenCalledWith({ bed: '23:15', wake: '06:30' }));
+  });
+
+  it('adds habits and ticks them off', async () => {
+    mockHabits = [{ id: 'h1', name: 'Walk 30 min', doneDates: [] }];
+    await wrap();
+    await fireEvent.press(screen.getByTestId('habit-Walk 30 min'));
+    expect(mockToggle).toHaveBeenCalledWith({ id: 'h1', done: true });
+    await fireEvent.changeText(screen.getByTestId('habit-name'), 'No sugar');
+    await fireEvent.press(screen.getByTestId('habit-add'));
+    await waitFor(() => expect(mockAddHabit).toHaveBeenCalledWith('No sugar'));
+  });
+});
+
+describe('Report', () => {
+  it('summarises calories, water, sleep and habits', async () => {
+    mockHabits = [{ id: 'h1', name: 'Walk', doneDates: [] }];
+    await render(<ThemeProvider><Report /></ThemeProvider>);
+    expect(screen.getByText('2025 / 1800 kcal')).toBeTruthy();
+    expect(screen.getByText('2.5 L / 3.0 L')).toBeTruthy();
+    expect(screen.getByText('0%')).toBeTruthy();
   });
 });

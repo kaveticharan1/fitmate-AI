@@ -12,7 +12,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | 2 | Nutrition: Indian food database, food diary, oil/family-pot logging, meal planner, grocery list | **Done (v0.2.0), automated tests passing; awaiting on-device test** |
 | 3 | AI coach: chat, personalities, memory, Telugu, voice | Not started |
 | 4 | Workouts: exercise library, plans, timers | Not started |
-| 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Part 1 done (v0.4.0): weight/waist charts, water counter, weekly food summary.** Sleep, habits and reports later |
+| 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Done (v0.4.0 + v0.5.0)**: weight/waist charts, water, sleep, habits with forgiving streaks, weekly/monthly report |
 | 6 | Health: step counter, Activity Recognition, Health Connect, step validation | Not started |
 | 7 | Advanced: food photos, kitchen assistant, barcode, notifications | Not started |
 
@@ -100,3 +100,11 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - DB migration v3: `water_logs` (included in backups).
 - `@fitmate/core/trends`: rolling average, weekly rate, week summary (6 new tests). App tests: 43.
 - Not yet tested on a phone.
+
+## Phase 5, part 2 (v0.5.0)
+- Sleep log (bedtime/wake time, crosses midnight; one entry per morning, re-saving updates it) with 7-night average.
+- Custom daily habits with forgiving streaks (one missed day is forgiven, two in a row end the streak).
+- Report screen (last 7 or 30 days): weight change (period average vs previous period), food days, average calories/protein vs targets, average water and sleep, habit completion %.
+- DB migration v4: `sleep_logs`, `habit_definitions`, `habit_logs` (cascade delete; in backups).
+- Tests: 126 passing (46 app, 37 core, 30 food data, 13 validation). Not yet tested on a phone.
+- Not included (optional, later): hip/chest/arm measurements.

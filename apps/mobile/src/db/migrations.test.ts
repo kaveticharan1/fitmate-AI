@@ -39,6 +39,9 @@ const tables = [
   schema.recipeIngredients,
   schema.mealPlanChoices,
   schema.waterLogs,
+  schema.sleepLogs,
+  schema.habitDefinitions,
+  schema.habitLogs,
 ];
 
 describe('migrations', () => {

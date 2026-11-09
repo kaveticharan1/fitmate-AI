@@ -73,3 +73,13 @@ export function undoWater(day: string = localDate()): void {
   const now = nowIso();
   getDb().update(waterLogs).set({ deletedAt: now, updatedAt: now }).where(eq(waterLogs.id, last.id)).run();
 }
+
+/** Daily water totals, for reports. */
+export function dailyWater(sinceDate: string) {
+  return getDb()
+    .select({ date: waterLogs.loggedOn, ml: sql<number>`sum(${waterLogs.ml})` })
+    .from(waterLogs)
+    .where(and(isNull(waterLogs.deletedAt), gte(waterLogs.loggedOn, sinceDate)))
+    .groupBy(waterLogs.loggedOn)
+    .all();
+}

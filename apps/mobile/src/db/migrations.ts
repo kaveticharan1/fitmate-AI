@@ -144,6 +144,34 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX water_logs_logged_on_idx ON water_logs (logged_on);
   `,
+  // v4 — Phase 5 part 2: sleep and habits
+  `
+  CREATE TABLE sleep_logs (
+    id TEXT PRIMARY KEY NOT NULL,
+    woke_on TEXT NOT NULL,
+    bed_time TEXT NOT NULL,
+    wake_time TEXT NOT NULL,
+    minutes INTEGER NOT NULL CHECK (minutes > 0 AND minutes < 1440),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE UNIQUE INDEX sleep_logs_woke_on_idx ON sleep_logs (woke_on);
+  CREATE TABLE habit_definitions (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE TABLE habit_logs (
+    id TEXT PRIMARY KEY NOT NULL,
+    habit_id TEXT NOT NULL REFERENCES habit_definitions (id) ON DELETE CASCADE,
+    done_on TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX habit_logs_habit_day_idx ON habit_logs (habit_id, done_on);
+  `,
 ];
 
 export interface MigratableDb {

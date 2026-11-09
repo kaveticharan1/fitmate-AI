@@ -162,6 +162,37 @@ export const waterLogs = sqliteTable(
   (t) => [index('water_logs_logged_on_idx').on(t.loggedOn)],
 );
 
+/** One night's sleep, filed under the morning you woke up. */
+export const sleepLogs = sqliteTable(
+  'sleep_logs',
+  {
+    id: text('id').primaryKey(),
+    wokeOn: text('woke_on').notNull(),
+    bedTime: text('bed_time').notNull(),
+    wakeTime: text('wake_time').notNull(),
+    minutes: integer('minutes').notNull(),
+    ...syncColumns,
+  },
+  (t) => [uniqueIndex('sleep_logs_woke_on_idx').on(t.wokeOn)],
+);
+
+export const habitDefinitions = sqliteTable('habit_definitions', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  ...syncColumns,
+});
+
+export const habitLogs = sqliteTable(
+  'habit_logs',
+  {
+    id: text('id').primaryKey(),
+    habitId: text('habit_id').notNull(),
+    doneOn: text('done_on').notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (t) => [uniqueIndex('habit_logs_habit_day_idx').on(t.habitId, t.doneOn)],
+);
+
 export type FoodLogEntryRow = typeof foodLogEntries.$inferSelect;
 export type RecipeRow = typeof recipes.$inferSelect;
 export type RecipeIngredientRow = typeof recipeIngredients.$inferSelect;
@@ -183,4 +214,7 @@ export const BACKUP_TABLES = [
   'recipe_ingredients',
   'meal_plan_choices',
   'water_logs',
+  'sleep_logs',
+  'habit_definitions',
+  'habit_logs',
 ] as const;
