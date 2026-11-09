@@ -1,4 +1,4 @@
-import { estimateKcal, estimateMinutes, getExercise, getWorkout, personalise, totalSets } from '@fitmate/workouts';
+import { estimateKcal, estimateMinutes, getExercise, getWorkout, personalise, totalSets, exerciseText } from '@fitmate/workouts';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,7 @@ import { usePersonalisation, useWorkoutText } from '../../features/workouts/hook
 import { space } from '../../theme/tokens';
 
 export default function WorkoutDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = usePersonalisation();
   const { workoutName, exerciseName, amount } = useWorkoutText();
@@ -67,10 +67,10 @@ export default function WorkoutDetail() {
             </Pressable>
             {expanded ? (
               <View style={{ gap: space.xs }}>
-                {ex.steps.map((line, n) => (
+                {exerciseText(ex, i18n.language).steps.map((line, n) => (
                   <AppText key={n}>{`${n + 1}. ${line}`}</AppText>
                 ))}
-                <AppText tone="warning">{`⚠ ${ex.safety}`}</AppText>
+                <AppText tone="warning">{`⚠ ${exerciseText(ex, i18n.language).safety}`}</AppText>
               </View>
             ) : null}
           </Card>

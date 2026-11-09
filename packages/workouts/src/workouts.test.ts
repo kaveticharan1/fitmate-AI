@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   EXERCISES,
+  EXERCISE_TE,
+  exerciseText,
   WORKOUTS,
   canDo,
   estimateKcal,
@@ -160,5 +162,22 @@ describe('session', () => {
     expect(sessionReducer(w, s, { type: 'endRest' })).toBe(s);
     const resting = sessionReducer(w, s, { type: 'completeSet', now: 0 });
     expect(sessionReducer(w, resting, { type: 'completeSet', now: 0 })).toBe(resting);
+  });
+});
+
+describe('Telugu exercise text', () => {
+  it('covers every exercise with the same number of steps', () => {
+    for (const e of EXERCISES) {
+      const te = EXERCISE_TE[e.id];
+      expect(te, e.id).toBeDefined();
+      expect(te!.steps.length, e.id).toBe(e.steps.length);
+      expect(te!.safety.length).toBeGreaterThan(5);
+    }
+    expect(Object.keys(EXERCISE_TE).length).toBe(EXERCISES.length);
+  });
+  it('picks the language and falls back to English', () => {
+    const e = EXERCISES[0]!;
+    expect(exerciseText(e, 'te').steps[0]).toMatch(/గోడ/);
+    expect(exerciseText(e, 'en')).toEqual({ steps: e.steps, safety: e.safety });
   });
 });

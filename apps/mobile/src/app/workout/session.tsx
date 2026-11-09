@@ -1,4 +1,4 @@
-import { getExercise, restSecondsLeft, sessionReducer, totalSets, type SessionAction } from '@fitmate/workouts';
+import { getExercise, restSecondsLeft, sessionReducer, totalSets, type SessionAction, exerciseText } from '@fitmate/workouts';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
 import * as Speech from 'expo-speech';
@@ -173,10 +173,10 @@ export default function WorkoutSession() {
             {workLeft != null ? clock(workLeft) : amount(ex.id, step.amount)}
           </AppText>
           <View style={{ gap: space.xs }}>
-            {ex.steps.map((line, n) => (
+            {exerciseText(ex, i18n.language).steps.map((line, n) => (
               <AppText key={n} tone="secondary">{`${n + 1}. ${line}`}</AppText>
             ))}
-            <AppText tone="warning">{`⚠ ${ex.safety}`}</AppText>
+            <AppText tone="warning">{`⚠ ${exerciseText(ex, i18n.language).safety}`}</AppText>
           </View>
           {ex.mode === 'time' && workLeft == null ? (
             <Button testID="start-timer" label={t('workouts.startTimer')} onPress={() => {
