@@ -7,3 +7,4 @@ export * from './templates';
 export * from './planner';
 export * from './grocery';
 export * from './packaged';
+export * from './kitchen';

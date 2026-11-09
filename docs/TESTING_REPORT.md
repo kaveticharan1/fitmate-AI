@@ -1,6 +1,6 @@
 # Testing report
 
-_Last run: 10 November 2026 (Phase 7b), Node 22, in the development workspace and on GitHub Actions._
+_Last run: 10 November 2026 (Phase 7c), Node 22, in the development workspace and on GitHub Actions._
 
 ## Summary
 
@@ -9,17 +9,17 @@ _Last run: 10 November 2026 (Phase 7b), Node 22, in the development workspace an
 | Type check (all packages) | `npm run typecheck` | Pass, 0 errors |
 | Lint (app) | `npm run lint` | Pass, 0 errors, 0 warnings |
 | Core tests | `npm test -w @fitmate/core` | 43 / 43 pass |
-| Food data tests | `npm test -w @fitmate/food-data` | 36 / 36 pass |
+| Food data tests | `npm test -w @fitmate/food-data` | 42 / 42 pass |
 | Validation tests | `npm test -w @fitmate/validation` | 13 / 13 pass |
 | Workout tests | `npm test -w @fitmate/workouts` | 12 / 12 pass |
 | Coach tests | `npm test -w @fitmate/coach` | 19 / 19 pass |
-| App tests | `npm test -w @fitmate/mobile` | 118 / 118 pass |
+| App tests | `npm test -w @fitmate/mobile` | 123 / 123 pass |
 | Android JS bundle | `npx expo export --platform android` | Pass (5.7 MB Hermes bytecode) |
 | Native project generation | `npx expo prebuild --platform android` | Pass; verified `expo.sqlite.useSQLCipher=true`, `android:allowBackup="false"`, `RECORD_AUDIO`, the speech-recognition service query, the Health Connect read permissions, rationale intent and permission-usage alias, minSdk 26, and CAMERA |
 | Release APK build | GitHub Actions `android` job | Pass; signed with the release key (verified) |
 | On-device testing | Poco X5 (Android 14) | v0.1.x installed by the owner; Phase 2 not yet tried on device |
 
-**Total automated tests: 241, all passing.**
+**Total automated tests: 252, all passing.**
 
 ## What the tests cover
 

@@ -14,7 +14,7 @@ Stage 1 (personal, ₹0, Android APK) in 7 phases, then optional Stage 2 (public
 | 4 | Workouts: exercise library, plans, timers | **Done (v0.6.0)**, automated tests passing; committed locally, not pushed yet |
 | 5 | Progress: weight/waist trends, water, sleep, habits, weekly reports | **Done (v0.4.0 + v0.5.0)**: weight/waist charts, water, sleep, habits with forgiving streaks, weekly/monthly report |
 | 6 | Health: step counter, Activity Recognition, Health Connect, step validation | **Done (v0.8.0)**, automated tests passing; committed locally, not pushed yet. Needs a real-phone check of Health Connect |
-| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | **In progress**: 7a barcode scanning (v0.9.0) and 7b food photo (v0.10.0) done, local |
+| 7 | Advanced: food photos, kitchen assistant, barcode, notifications | **In progress**: 7a barcode (v0.9.0), 7b food photo (v0.10.0), 7c kitchen assistant (v0.11.0) done, local |
 
 ## Phase 1 report
 
@@ -205,4 +205,16 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - **You correct it before anything is saved:** a confidence banner (high, medium or low) and the AI's note are shown. Each item's portion can be changed (nutrients scale with it) or the item removed. Then pick the meal and "Add to …".
 - **Saving:** each item becomes its own 'photo' diary entry. Tapping one shows what was saved, with a remove button.
 - **Tests:** 241 passing (118 app, 43 core, 36 food data, 19 coach, 13 validation, 12 workouts), including the prompt and request shape, reading and checking the estimate, scaling, the key in a header, error mapping, shrinking and deleting the photo, the no-key and no-consent refusals, and the photo screen (needs the coach, privacy note, portion fixing, removing, impossible portions, no food, denied camera, AI errors, cancelled picking).
+
+## Phase 7c — Kitchen assistant (v0.11.0)
+- **"What can I cook with what I have?"** Open it from Add food or the Plan tab.
+  - Tap the ingredients you have (about 45, searchable in English and Telugu, remembered for next time).
+  - Oil, sugar, salt and spices are assumed.
+- **Works offline:**
+  - Matches against the ingredient lists of the 63 dishes in the food database.
+  - Any vegetable counts for "mixed vegetables" dishes.
+  - Follows the profile's diet, allergies and dislikes.
+  - Shows "You can cook now" and "With one more thing (needs …)", sorted by protein per 100 kcal. Tap a dish to log it.
+- **AI coach option:** "Ask the AI coach for a recipe" opens the chat with a ready-made question listing your ingredients (English or Telugu). You can edit it before sending; it's never sent automatically.
+- **Tests:** 252 passing (123 app, 43 core, 42 food data, 19 coach, 13 validation, 12 workouts), covering the ingredient list without staples, dishes now and missing one, vegetables, diet/allergy/dislike filters, the coach question, the kitchen screen (remembering the selection, logging a dish, search, coach button) and the coach's prefilled question.
 

@@ -7,7 +7,11 @@ import i18n from '../i18n';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({ router: { push: (...a: unknown[]) => mockPush(...a), back: jest.fn(), canGoBack: () => true } }));
+let mockParams: Record<string, string> = {};
+jest.mock('expo-router', () => ({
+  router: { push: (...a: unknown[]) => mockPush(...a), back: jest.fn(), canGoBack: () => true },
+  useLocalSearchParams: () => mockParams,
+}));
 
 const mockSpeak = jest.fn();
 jest.mock('expo-speech', () => ({ speak: (...a: unknown[]) => mockSpeak(...a), stop: jest.fn() }));
@@ -64,6 +68,7 @@ beforeEach(async () => {
   mockAvailable = true;
   mockGranted = true;
   mockReadAloud = false;
+  mockParams = {};
   await i18n.changeLanguage('en');
 });
 
@@ -87,6 +92,13 @@ describe('Coach chat', () => {
     await fireEvent.press(screen.getByTestId('send'));
     expect(mockSend).toHaveBeenCalledWith({ text: 'eggs or paneer?' }, expect.anything());
     expect(screen.getByTestId('coach-input').props.value).toBe('');
+  });
+
+  it('starts with a prefilled question from the kitchen assistant', async () => {
+    mockParams = { prefill: 'I have: Egg. Suggest one easy dish.' };
+    await wrap(<CoachScreen />);
+    expect(screen.getByTestId('coach-input').props.value).toBe('I have: Egg. Suggest one easy dish.');
+    expect(mockSend).not.toHaveBeenCalled();
   });
 
   it('shows replies as plain text', async () => {

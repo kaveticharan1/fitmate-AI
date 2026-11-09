@@ -711,6 +711,21 @@ const en = {
     entrySummary: 'About {{grams}} g · {{kcal}} kcal · {{protein}} g protein',
     estimateNote: 'Estimated from a photo by the AI coach. Treat it as a rough guide.',
   },
+  kitchen: {
+    open: 'What can I cook with what I have?',
+    title: 'What can I cook?',
+    intro: 'Tap what you have at home. Oil, sugar, salt and spices are assumed. Dishes follow your diet, allergies and dislikes.',
+    search: 'Find an ingredient',
+    clear: 'Clear ({{count}} selected)',
+    pickFirst: 'Pick a few ingredients to see dishes.',
+    canMake: 'You can cook now',
+    missingOne: 'With one more thing',
+    need: 'needs {{item}}',
+    none: 'Nothing yet with just these. Add a few more ingredients.',
+    per100: '{{kcal}} kcal · {{protein}} g protein per 100 g',
+    note: 'Sorted by protein for the calories. Tap a dish to log it.',
+    askCoach: 'Ask the AI coach for a recipe',
+  },
 };
 
 export default en;

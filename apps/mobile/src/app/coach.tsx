@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { HELPLINES, plainText } from '@fitmate/coach';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, ScrollView, TextInput, View } from 'react-native';
@@ -26,7 +26,8 @@ export default function CoachScreen() {
   const { data: readAloud = false } = useReadAloud();
   const setReadAloud = useSetReadAloud();
   const send = useSendMessage();
-  const [draft, setDraft] = useState('');
+  const { prefill } = useLocalSearchParams<{ prefill?: string }>();
+  const [draft, setDraft] = useState(prefill ?? '');
   const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const lang: VoiceLang = profile?.aiLanguage === 'te' ? 'te' : 'en';
   const voice = useVoiceInput(lang, (text) => setDraft((d) => (d.trim() ? `${d.trim()} ${text}` : text)));

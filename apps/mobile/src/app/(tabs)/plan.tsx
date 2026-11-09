@@ -88,6 +88,7 @@ export default function PlanTab() {
             />
           ))}
           <Button testID="open-grocery" variant="secondary" label={t('plan.grocery')} onPress={() => router.push('/food/grocery')} />
+          <Button testID="open-kitchen-plan" variant="ghost" label={t('kitchen.open')} onPress={() => router.push({ pathname: '/food/kitchen', params: { date } })} />
         </>
       ) : (
         <AppText tone="secondary">{t('plan.noPlan')}</AppText>

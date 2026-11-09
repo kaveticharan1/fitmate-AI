@@ -78,6 +78,7 @@ export default function AddFood() {
           <Button testID="open-photo" variant="secondary" label={t('photo.button')} onPress={() => router.push({ pathname: '/food/photo', params: { meal, date } })} />
         </View>
       </View>
+      <Button testID="open-kitchen" variant="ghost" label={t('kitchen.open')} onPress={() => router.push({ pathname: '/food/kitchen', params: { meal, date } })} />
       {packagedSection}
       {query.trim() ? (
         results.length || packagedShown.length ? (
