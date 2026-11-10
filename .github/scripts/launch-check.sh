@@ -10,6 +10,8 @@ sleep 30
 adb logcat -d -b crash > crash.txt || true
 if adb shell pidof "$PKG" >/dev/null && ! grep -q "FATAL EXCEPTION" crash.txt; then
   echo "App opened and is still running."
+  # Screenshot as base64 between markers, so it can be read from the job log.
+  adb exec-out screencap -p > screen.png && echo "SCREENSHOT-BEGIN" && base64 -w0 screen.png && echo && echo "SCREENSHOT-END"
   adb logcat -d -s ReactNativeJS:V | tail -20
   exit 0
 fi
