@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import { totalsOf } from '../../db/foodRepo';
 import { useDiary } from '../../features/food/hooks';
 import { AgentCard } from '../../features/agent/AgentCard';
+import { useBuddySync } from '../../features/buddies/hooks';
 import { DayCard } from '../../features/agent/DayCard';
 import { DailySummary } from '../../features/agent/DailySummary';
 import { AskCoachBar } from '../../features/coach/AskCoachBar';
@@ -26,6 +27,7 @@ const weightField = requiredNumber(25, 350);
 
 export default function Dashboard() {
   useSmartReminderSync();
+  useBuddySync();
   const { t } = useTranslation();
   const { data: profile } = useProfile();
   const targets = useMemo(() => (profile ? targetsForProfile(profile) : null), [profile]);
@@ -57,6 +59,7 @@ export default function Dashboard() {
           { testID: 'home-plan', icon: 'calendar-outline', label: t('tabs.plan'), onPress: () => router.navigate('/plan') },
           { testID: 'home-progress', icon: 'trending-down-outline', label: t('tabs.progress'), onPress: () => router.navigate('/progress') },
           { testID: 'home-wellness', icon: 'happy-outline', label: t('wellness.title'), onPress: () => router.push('/wellness') },
+          { testID: 'home-buddies', icon: 'people-outline', label: t('buddies.title'), onPress: () => router.push('/buddies') },
         ]}
       />
 

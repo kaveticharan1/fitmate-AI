@@ -118,7 +118,7 @@ export function recentWeights(limit = 30) {
     .all();
 }
 
-export type ConsentKind = 'privacy_notice' | 'age_18_plus' | 'ai_coach' | 'face_ai';
+export type ConsentKind = 'privacy_notice' | 'age_18_plus' | 'ai_coach' | 'face_ai' | 'buddies';
 
 export function recordConsent(kind: ConsentKind): void {
   const now = nowIso();

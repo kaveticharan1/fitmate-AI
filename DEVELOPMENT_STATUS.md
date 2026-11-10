@@ -242,6 +242,14 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
 - Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
 
+## Buddy mode (v1.5.0)
+- Small friend groups (up to 20) with an 8-letter invite code; create or join from You → Buddies or Home.
+- Each member chooses what to share: steps today, workouts this week, water, logging streak, and (off by default, never in gentle mode) a weight direction ↓ → ↑. Never shared: food logs, calories, exact weight, photos, face & skin, coach chats.
+- See each friend's day with progress bars and chips; send cheers (👏 🔥 💪 💧 🚶); cheers you received in the last week.
+- Summary syncs quietly from Home at most every 15 minutes; the group screen refreshes every minute while open.
+- Server: free Supabase project `fitmate-buddies` (Mumbai). Tables are in a private schema with RLS; the app can call only six functions, each checking a per-member secret kept in the phone's secure storage (bcrypt-hashed on the server). Inputs are cleaned and clamped server-side. Leaving deletes your member record, summary and cheers; "Delete all data" and auto-wipe leave the group too. Schema in `supabase/migrations/`.
+- Cost: ₹0 on the free plan. Free projects pause after 7 days with no activity; daily use keeps it awake.
+
 ## Fix (v1.4.1) — coach busy / too slow
 - Backup models: FitMate saves a chain of Gemini models for your key — newest stable Flash, then Flash-Lite (faster, its own free quota), then an older Flash. If one is busy (503), slow, out of its quota, or retired, the next is tried automatically; a busy model gets one quick retry first. Keys saved by older versions get their backups on the next question.
 - Shorter waits per model (35 s, then 30 s) so a backup starts sooner. Used by chat, food photos, face photos and ingredient labels.
