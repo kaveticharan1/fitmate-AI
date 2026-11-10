@@ -6,6 +6,9 @@ import AiSettings from '../app/settings/ai';
 import i18n from '../i18n';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
+// A fake key built at runtime so the code never contains something shaped like a real key.
+const FAKE_KEY = ['AI', 'za', 'Sy', 'A-', '1234567890'.repeat(3), '123'].join('');
+
 const mockPush = jest.fn();
 let mockParams: Record<string, string> = {};
 jest.mock('../features/coach/service', () => ({ pruneChat: jest.fn() }));
@@ -254,10 +257,10 @@ describe('AI coach settings', () => {
     expect(screen.getByText(/name, date of birth and health notes are not sent/)).toBeTruthy();
     expect(screen.queryByTestId('ai-key')).toBeNull();
     await fireEvent.press(screen.getByTestId('ai-agree'));
-    await fireEvent.changeText(screen.getByTestId('ai-key'), ' AIzaSyA-123456789012345678901234567890 ');
+    await fireEvent.changeText(screen.getByTestId('ai-key'), ` ${FAKE_KEY} `);
     expect(screen.getByTestId('ai-key').props.secureTextEntry).toBe(true);
     await fireEvent.press(screen.getByTestId('ai-connect'));
-    expect(mockConnect).toHaveBeenCalledWith('AIzaSyA-123456789012345678901234567890', expect.anything());
+    expect(mockConnect).toHaveBeenCalledWith(FAKE_KEY, expect.anything());
   });
 
   it('shows why a key failed', async () => {

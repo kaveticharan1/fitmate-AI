@@ -66,6 +66,10 @@ jest.mock('./aiKey', () => ({
   },
 }));
 
+// Fake keys built at runtime so they never look like a real leaked key in the code.
+const FAKE_GOOD_KEY = ['AI', 'za', 'G'.repeat(35)].join('');
+const FAKE_BAD_KEY = ['AI', 'za', 'B'.repeat(35)].join('');
+
 const fetchMock = jest.fn();
 beforeEach(() => {
   mockMessages.length = 0;
@@ -144,13 +148,13 @@ describe('coach service', () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 400, json: async () => ({ error: { status: 'INVALID_ARGUMENT', message: 'API key not valid.' } }) });
     await expect(connectAi('bad')).rejects.toMatchObject({ kind: 'invalid_key' });
     expect(fetchMock).not.toHaveBeenCalled();
-    await expect(connectAi('AIzaBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB')).rejects.toMatchObject({ kind: 'invalid_key' });
+    await expect(connectAi(FAKE_BAD_KEY)).rejects.toMatchObject({ kind: 'invalid_key' });
     expect(mockStored).toBeNull();
 
     mockConsent = false;
     fetchMock.mockResolvedValueOnce(ok({ models: [{ name: 'models/gemini-3.6-flash', supportedGenerationMethods: ['generateContent'] }] }));
-    expect(await connectAi('AIzaGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG')).toBe('gemini-3.6-flash');
-    expect(mockStored).toEqual({ apiKey: 'AIzaGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG', model: 'gemini-3.6-flash', fallbacks: [] });
+    expect(await connectAi(FAKE_GOOD_KEY)).toBe('gemini-3.6-flash');
+    expect(mockStored).toEqual({ apiKey: FAKE_GOOD_KEY, model: 'gemini-3.6-flash', fallbacks: [] });
     expect(mockRecordConsent).toHaveBeenCalledWith('ai_coach');
 
     await disconnectAi();
