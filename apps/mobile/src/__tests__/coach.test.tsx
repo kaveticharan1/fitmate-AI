@@ -270,7 +270,7 @@ describe('AI coach settings', () => {
 
   it('manages memory and turns the coach off', async () => {
     await wrap(<AiSettings />);
-    expect(screen.getByText('Model: gemini-3.6-flash')).toBeTruthy();
+    expect(screen.getByTestId('ai-provider')).toHaveTextContent('Google Gemini · gemini-3.6-flash');
     await fireEvent.press(screen.getByTestId('forget-m1'));
     expect(mockForget).toHaveBeenCalledWith('m1');
     await fireEvent.press(screen.getByTestId('disconnect-ai'));

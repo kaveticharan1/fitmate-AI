@@ -66,9 +66,9 @@ describe('Food photo', () => {
     expect(mockPush).toHaveBeenCalledWith('/settings/ai');
   });
 
-  it('says the photo goes to Google and is not kept', async () => {
+  it('says where the photo goes and that it is not kept', async () => {
     await wrap();
-    expect(screen.getByText(/sent to Google Gemini.*isn’t saved on this phone/)).toBeTruthy();
+    expect(screen.getByText(/sent to your AI service \(Groq or Google Gemini\).*isn’t saved on this phone/)).toBeTruthy();
   });
 
   it('shows the estimate, lets you fix portions and remove items, then saves', async () => {

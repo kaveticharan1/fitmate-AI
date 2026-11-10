@@ -5,3 +5,4 @@ export * from './photo';
 export * from './actions';
 export * from './face';
 export * from './label';
+export * from './groq';

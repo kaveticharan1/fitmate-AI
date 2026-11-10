@@ -1,4 +1,4 @@
-import { withModels } from '../coach/model';
+import { providerOf, withModels } from '../coach/model';
 import { CoachError, estimateFromPhoto, type FetchFn, type PhotoEstimate } from '@fitmate/coach';
 import { useMutation } from '@tanstack/react-query';
 import { File } from 'expo-file-system';
@@ -37,7 +37,7 @@ export async function analyzePhoto(uri: string): Promise<PhotoEstimate> {
   if (!stored || !hasConsent('ai_coach')) throw new CoachError('invalid_key', 'AI coach is not set up');
   const jpegBase64 = await preparePhoto(uri);
   const language = getProfile()?.aiLanguage === 'te' ? 'te' : 'en';
-  return withModels(stored, (model, timeoutMs) => estimateFromPhoto({ apiKey: stored.apiKey, model, jpegBase64, language, fetchFn, timeoutMs: timeoutMs + 20000 }));
+  return withModels(stored, (model, timeoutMs) => estimateFromPhoto({ apiKey: stored.apiKey, model, jpegBase64, language, fetchFn, timeoutMs: timeoutMs + 20000, provider: providerOf(stored) }), 'vision');
 }
 
 export const useAnalyzePhoto = () => useMutation({ mutationFn: (uri: string) => analyzePhoto(uri) });

@@ -1,4 +1,4 @@
-import { cleanKey } from '@fitmate/coach';
+import { cleanKey, providerForKey } from '@fitmate/coach';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,7 @@ import { Linking, View } from 'react-native';
 import { AppText } from '../../components/AppText';
 import { Header } from '../../components/Header';
 import { Banner, Button, Card, CheckRow, ChoiceGroup, Screen, TextField, ToggleRow } from '../../components/ui';
-import { AI_STUDIO_KEYS_URL, coachErrorKey } from '../../features/coach/errors';
+import { AI_STUDIO_KEYS_URL, coachErrorKey, GROQ_KEYS_URL } from '../../features/coach/errors';
 import { useAgentSettings, useAiStatus, useClearChat, useCoachMemory, useConnectAi, useDeleteMemory, useDisconnectAi, useSetAgentSetting } from '../../features/coach/hooks';
 import { space } from '../../theme/tokens';
 
@@ -38,7 +38,9 @@ export default function AiSettings() {
         <>
           <Card tone="accent" testID="ai-connected">
             <AppText variant="heading">{t('coach.connected')}</AppText>
-            <AppText tone="secondary">{t('coach.model', { model: status.model })}</AppText>
+            <AppText tone="secondary" testID="ai-provider">
+              {t('coach.providerModel', { provider: status.provider === 'groq' ? 'Groq' : 'Google Gemini', model: status.model })}
+            </AppText>
             <Button testID="open-coach" label={t('coach.openChat')} onPress={() => router.push('/coach')} />
           </Card>
           <Card>
@@ -123,6 +125,7 @@ export default function AiSettings() {
               {(['keyStep1', 'keyStep2', 'keyStep3'] as const).map((k, i) => (
                 <AppText key={k} variant="label" tone="secondary">{`${i + 1}. ${t(`coach.${k}`)}`}</AppText>
               ))}
+              <Button testID="open-groq" label={t('coach.openGroq')} onPress={() => Linking.openURL(GROQ_KEYS_URL)} />
               <Button testID="open-ai-studio" variant="secondary" label={t('coach.openStudio')} onPress={() => Linking.openURL(AI_STUDIO_KEYS_URL)} />
               <TextField
                 testID="ai-key"
@@ -134,7 +137,8 @@ export default function AiSettings() {
                 autoCorrect={false}
                 hint={t('coach.keyHint')}
               />
-              <Button testID="ai-connect" label={t('coach.connect')} onPress={doConnect} disabled={cleanKey(key).length < 20} loading={connect.isPending} />
+              {cleanKey(key).length >= 20 && !providerForKey(cleanKey(key)) ? <Banner tone="warning" text={t('coach.keyUnknown')} /> : null}
+              <Button testID="ai-connect" label={t('coach.connect')} onPress={doConnect} disabled={!providerForKey(cleanKey(key))} loading={connect.isPending} />
               {connect.isError ? <Banner tone="danger" text={t(coachErrorKey(connect.error))} /> : null}
             </Card>
           ) : null}

@@ -57,3 +57,26 @@ describe('withModels', () => {
     await expect(withModels(stored, async () => Promise.reject(new CoachError('quota', 'limit')))).rejects.toMatchObject({ kind: 'quota' });
   });
 });
+
+describe('Groq keys', () => {
+  const GSK = 'gsk_' + 'a'.repeat(52);
+  const groqList = { data: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'].map((id) => ({ id })) };
+
+  it('saves the chat chain and the photo model when connecting', async () => {
+    global.fetch = jest.fn(async () => ({ ok: true, status: 200, json: async () => groqList })) as unknown as typeof fetch;
+    const { refreshModels } = jest.requireActual('./model') as typeof import('./model');
+    expect(await refreshModels(GSK)).toEqual(['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b']);
+    expect(mockSet).toHaveBeenCalledWith({ provider: 'groq', apiKey: GSK, model: 'openai/gpt-oss-120b', fallbacks: ['openai/gpt-oss-20b', 'qwen/qwen3.8-27b'], visionModels: ['qwen/qwen3.8-27b'] });
+  });
+
+  it('uses the saved chains for chat and photos', async () => {
+    const stored = { provider: 'groq' as const, apiKey: GSK, model: 'openai/gpt-oss-120b', fallbacks: ['openai/gpt-oss-20b'], visionModels: ['qwen/qwen3.8-27b'] };
+    expect(await modelChain(stored)).toEqual(['openai/gpt-oss-120b', 'openai/gpt-oss-20b']);
+    expect(await modelChain(stored, 'vision')).toEqual(['qwen/qwen3.8-27b']);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('says clearly when Groq has no photo model', async () => {
+    await expect(modelChain({ provider: 'groq', apiKey: GSK, model: 'openai/gpt-oss-120b', fallbacks: [], visionModels: [] }, 'vision')).rejects.toMatchObject({ kind: 'no_model' });
+  });
+});

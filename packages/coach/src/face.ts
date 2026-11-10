@@ -1,3 +1,4 @@
+import { groqVision, type AiProvider } from './groq';
 import { CoachError, generate, parseReply, type FetchFn } from './gemini';
 
 /**
@@ -79,8 +80,13 @@ export async function analyzeFace(opts: {
   language: 'en' | 'te';
   fetchFn: FetchFn;
   timeoutMs?: number;
+  provider?: AiProvider;
 }): Promise<FaceAnalysis> {
   if (opts.jpegsBase64.length < 1 || opts.jpegsBase64.length > 2) throw new CoachError('bad_response', 'One or two photos');
+  if (opts.provider === 'groq') {
+    const prompt = buildFacePrompt(opts.language, opts.jpegsBase64.length === 2);
+    return parseFaceAnalysis(await groqVision({ apiKey: opts.apiKey, model: opts.model, prompt, jpegsBase64: opts.jpegsBase64, fetchFn: opts.fetchFn, json: true, timeoutMs: opts.timeoutMs, maxTokens: 1024 }));
+  }
   const body = buildFaceRequest(buildFacePrompt(opts.language, opts.jpegsBase64.length === 2), opts.jpegsBase64);
   const json = await generate(opts.fetchFn, opts.apiKey, opts.model, body, 'low', opts.timeoutMs ?? 60000);
   return parseFaceAnalysis(parseReply(json));

@@ -6,6 +6,9 @@ import {
   CoachError,
   extractMemory,
   generateReply,
+  groqChat,
+  providerForKey,
+  type AiProvider,
   safetyFlags,
   trimHistory,
   type CoachContext,
@@ -23,7 +26,7 @@ import { workoutHistory } from '../../db/workoutRepo';
 import { addDays, localDate } from '../../lib/time';
 import { targetsForProfile } from '../profile/targets';
 import { deleteAiKey, getAiKey } from './aiKey';
-import { refreshModels, withModels } from './model';
+import { providerOf, refreshModels, withModels } from './model';
 import { faceSkinContext, knowledgeFor, WELLNESS_RULES } from './wellnessContext';
 
 const fetchFn: FetchFn = (url, init) => fetch(url, init);
@@ -102,11 +105,15 @@ export async function requestCoachReply(): Promise<CoachMessage> {
   if (!stored || !hasConsent('ai_coach')) throw new CoachError('invalid_key', 'AI coach is not set up');
   const setup = buildCoachContext();
   if (!setup) throw new CoachError('bad_response', 'No profile');
-  const turns = trimHistory(recentMessages(40).map((m) => ({ role: m.role, text: m.text })));
+  const groq = providerOf(stored) === 'groq';
+  // Groq's free plan allows 8,000 tokens a minute, so send a shorter history there.
+  const turns = trimHistory(recentMessages(40).map((m) => ({ role: m.role, text: m.text })), 12, groq ? 4000 : 6000);
   if (turns.length === 0) throw new CoachError('bad_response', 'Nothing to answer');
   const actionsOn = getSetting<'confirm' | 'off'>('coachActions', 'confirm') === 'confirm';
   const system = buildSystemPrompt({ ...setup, memory: listMemory().map((m) => m.text), extra: [...extraContext(turns.filter((x) => x.role === 'user').at(-1)?.text ?? ''), ...(actionsOn ? [ACTIONS_PROMPT] : [])] });
-  const raw = await withModels(stored, (model, timeoutMs) => generateReply({ apiKey: stored.apiKey, model, system, turns, fetchFn, timeoutMs }));
+  const raw = await withModels(stored, (model, timeoutMs) =>
+    groq ? groqChat({ apiKey: stored.apiKey, model, system, turns, fetchFn, timeoutMs }) : generateReply({ apiKey: stored.apiKey, model, system, turns, fetchFn, timeoutMs }),
+  );
   const { text: withoutMemory, remember } = extractMemory(raw);
   for (const fact of remember) addMemory(fact);
   const { text, actions } = extractActions(withoutMemory);
@@ -120,9 +127,11 @@ export function pruneChat(now: Date = new Date()): number {
   return deleteMessagesBefore(new Date(now.getTime() - days * 86400000).toISOString());
 }
 
-/** Checks a key with Google, then stores it and records consent. */
+/** Checks a Groq or Gemini key with its provider, then stores it and records consent. */
 export async function connectAi(apiKey: string): Promise<string> {
-  const [model] = await refreshModels(apiKey);
+  const provider = providerForKey(apiKey);
+  if (!provider) throw new CoachError('invalid_key', 'Not a Groq (gsk_…) or Gemini (AIza…) key');
+  const [model] = await refreshModels(apiKey, provider);
   if (!hasConsent('ai_coach')) recordConsent('ai_coach');
   return model!;
 }
@@ -133,8 +142,8 @@ export async function disconnectAi(): Promise<void> {
   withdrawConsent('ai_coach');
 }
 
-export async function aiStatus(): Promise<{ connected: boolean; model: string | null }> {
+export async function aiStatus(): Promise<{ connected: boolean; model: string | null; provider: AiProvider | null }> {
   const stored = await getAiKey();
   const connected = !!stored && hasConsent('ai_coach');
-  return { connected, model: connected ? stored!.model : null };
+  return { connected, model: connected ? stored!.model : null, provider: connected ? providerOf(stored!) : null };
 }

@@ -1,4 +1,4 @@
-import { withModels } from '../coach/model';
+import { providerOf, withModels } from '../coach/model';
 import { analyzeFace, CoachError, type FaceAnalysis, type FetchFn } from '@fitmate/coach';
 import { checkinHistory, getPhoto, listPhotos, updatePhoto, type Checkin } from '../../db/faceRepo';
 import { foodLogEntries } from '../../db/schema';
@@ -47,7 +47,7 @@ export async function analyzePhotos(ids: string[]): Promise<FaceAnalysis> {
     images.push(b64);
   }
   const language = getProfile()?.aiLanguage === 'te' ? 'te' : 'en';
-  const result = await withModels(stored, (model, timeoutMs) => analyzeFace({ apiKey: stored.apiKey, model, jpegsBase64: images, language, fetchFn, timeoutMs: timeoutMs + 20000 }));
+  const result = await withModels(stored, (model, timeoutMs) => analyzeFace({ apiKey: stored.apiKey, model, jpegsBase64: images, language, fetchFn, timeoutMs: timeoutMs + 20000, provider: providerOf(stored) }), 'vision');
   const newest = rows[rows.length - 1]!;
   updatePhoto(newest.id, {
     aiQuality: JSON.stringify({ usable: result.usable, issues: result.issues }),

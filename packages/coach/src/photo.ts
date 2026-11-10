@@ -1,3 +1,4 @@
+import { groqVision, type AiProvider } from './groq';
 import { CoachError, generate, parseReply, type FetchFn } from './gemini';
 
 /**
@@ -103,7 +104,12 @@ export async function estimateFromPhoto(opts: {
   language: 'en' | 'te';
   fetchFn: FetchFn;
   timeoutMs?: number;
+  provider?: AiProvider;
 }): Promise<PhotoEstimate> {
+  if (opts.provider === 'groq') {
+    const text = await groqVision({ apiKey: opts.apiKey, model: opts.model, prompt: buildPhotoPrompt(opts.language), jpegsBase64: [opts.jpegBase64], fetchFn: opts.fetchFn, json: true, timeoutMs: opts.timeoutMs, maxTokens: 2048 });
+    return parsePhotoEstimate(text);
+  }
   const body = buildPhotoRequest(buildPhotoPrompt(opts.language), opts.jpegBase64);
   const json = await generate(opts.fetchFn, opts.apiKey, opts.model, body, 'low', opts.timeoutMs ?? 60000);
   return parsePhotoEstimate(parseReply(json));

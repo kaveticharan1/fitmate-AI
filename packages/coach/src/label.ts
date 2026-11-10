@@ -1,3 +1,4 @@
+import { groqVision, type AiProvider } from './groq';
 import { CoachError, generate, parseReply, type FetchFn } from './gemini';
 
 /**
@@ -31,7 +32,10 @@ export function parseLabelReading(text: string): LabelReading {
   return { found, ingredients: found ? ingredients : '', productName: typeof raw.product_name === 'string' && raw.product_name.trim() ? raw.product_name.trim().slice(0, 120) : null };
 }
 
-export async function readIngredientLabel(opts: { apiKey: string; model: string; jpegBase64: string; fetchFn: FetchFn; timeoutMs?: number }): Promise<LabelReading> {
+export async function readIngredientLabel(opts: { apiKey: string; model: string; jpegBase64: string; fetchFn: FetchFn; timeoutMs?: number; provider?: AiProvider }): Promise<LabelReading> {
+  if (opts.provider === 'groq') {
+    return parseLabelReading(await groqVision({ apiKey: opts.apiKey, model: opts.model, prompt: LABEL_PROMPT, jpegsBase64: [opts.jpegBase64], fetchFn: opts.fetchFn, json: true, timeoutMs: opts.timeoutMs, maxTokens: 2048 }));
+  }
   const body = {
     contents: [{ role: 'user', parts: [{ inlineData: { mimeType: 'image/jpeg', data: opts.jpegBase64 } }, { text: LABEL_PROMPT }] }],
     generationConfig: { temperature: 0, maxOutputTokens: 2048, responseMimeType: 'application/json' },

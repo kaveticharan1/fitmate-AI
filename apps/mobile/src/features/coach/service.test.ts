@@ -143,12 +143,14 @@ describe('coach service', () => {
     mockStored = null;
     fetchMock.mockResolvedValueOnce({ ok: false, status: 400, json: async () => ({ error: { status: 'INVALID_ARGUMENT', message: 'API key not valid.' } }) });
     await expect(connectAi('bad')).rejects.toMatchObject({ kind: 'invalid_key' });
+    expect(fetchMock).not.toHaveBeenCalled();
+    await expect(connectAi('AIzaBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB')).rejects.toMatchObject({ kind: 'invalid_key' });
     expect(mockStored).toBeNull();
 
     mockConsent = false;
     fetchMock.mockResolvedValueOnce(ok({ models: [{ name: 'models/gemini-3.6-flash', supportedGenerationMethods: ['generateContent'] }] }));
-    expect(await connectAi('AIzaGOOD')).toBe('gemini-3.6-flash');
-    expect(mockStored).toEqual({ apiKey: 'AIzaGOOD', model: 'gemini-3.6-flash', fallbacks: [] });
+    expect(await connectAi('AIzaGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG')).toBe('gemini-3.6-flash');
+    expect(mockStored).toEqual({ apiKey: 'AIzaGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG', model: 'gemini-3.6-flash', fallbacks: [] });
     expect(mockRecordConsent).toHaveBeenCalledWith('ai_coach');
 
     await disconnectAi();
