@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme/ThemeProvider';
+import { Gradient, GlowBackdrop } from './glow';
 import { radius, space, TOUCH } from '../theme/tokens';
 import { AppText } from './AppText';
 
@@ -42,6 +43,7 @@ export function Screen({
   );
   return (
     <SafeAreaView testID={testID} style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
+      <GlowBackdrop />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {body}
         {footer ? (
@@ -75,9 +77,10 @@ export function Card({
   testID?: string;
 }) {
   const { colors } = useTheme();
-  const bg = { default: colors.surface, accent: colors.accentSoft, warning: colors.warningSoft, danger: colors.dangerSoft }[tone];
+  const bg = { default: colors.glass, accent: colors.accentSoft, warning: colors.warningSoft, danger: colors.dangerSoft }[tone];
+  const edge = { default: colors.glassBorder, accent: colors.accent + '55', warning: colors.warning + '44', danger: colors.danger + '44' }[tone];
   return (
-    <View testID={testID} style={[{ backgroundColor: bg, borderRadius: radius.lg, padding: space.lg, gap: space.md }, style]}>
+    <View testID={testID} style={[{ backgroundColor: bg, borderRadius: radius.lg, borderWidth: 1, borderColor: edge, padding: space.lg, gap: space.md }, style]}>
       {children}
     </View>
   );
@@ -104,8 +107,8 @@ export function Button({
 }) {
   const { colors } = useTheme();
   const inactive = disabled || loading;
-  const bg = { primary: colors.accent, secondary: colors.surfaceRaised, ghost: 'transparent', danger: colors.danger }[variant];
-  const pressedBg = { primary: colors.accentPressed, secondary: colors.border, ghost: colors.surfaceRaised, danger: colors.danger }[variant];
+  const bg = { primary: colors.gradFrom, secondary: colors.surfaceRaised, ghost: 'transparent', danger: colors.danger }[variant];
+  const pressedBg = { primary: colors.gradFrom, secondary: colors.border, ghost: colors.surfaceRaised, danger: colors.danger }[variant];
   const tone = variant === 'primary' ? 'onAccent' : variant === 'danger' ? 'onAccent' : variant === 'ghost' ? 'accent' : 'primary';
   return (
     <Pressable
@@ -122,9 +125,14 @@ export function Button({
         flexDirection: 'row',
         gap: space.sm,
         backgroundColor: pressed && !inactive ? pressedBg : bg,
-        opacity: inactive && !loading ? 0.5 : 1,
+        opacity: inactive && !loading ? 0.5 : pressed && variant === 'primary' ? 0.85 : 1,
+        overflow: 'hidden',
+        borderWidth: variant === 'secondary' ? 1 : 0,
+        borderColor: colors.glassBorder,
+        ...(variant === 'primary' ? { shadowColor: colors.gradTo, shadowOpacity: 0.5, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: inactive ? 0 : 6 } : null),
       })}
     >
+      {variant === 'primary' ? <Gradient from={colors.gradFrom} to={colors.gradTo} angle="horizontal" /> : null}
       {loading ? <ActivityIndicator color={variant === 'primary' ? colors.onAccent : colors.text} /> : icon}
       <AppText variant="body" weight="bold" tone={tone}>
         {label}
@@ -347,7 +355,7 @@ export function CheckRow({ label, value, onChange, testID }: { label: string; va
   );
 }
 
-export function ProgressBar({ value, testID }: { value: number; testID?: string }) {
+export function ProgressBar({ value, testID, color }: { value: number; testID?: string; color?: string }) {
   const { colors } = useTheme();
   const pct = Math.max(0, Math.min(1, value));
   return (
@@ -355,9 +363,11 @@ export function ProgressBar({ value, testID }: { value: number; testID?: string 
       testID={testID}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(pct * 100) }}
-      style={{ height: 6, borderRadius: 3, backgroundColor: colors.track, overflow: 'hidden' }}
+      style={{ height: 8, borderRadius: 4, backgroundColor: colors.track, overflow: 'hidden' }}
     >
-      <View style={{ width: `${pct * 100}%`, height: 6, backgroundColor: colors.accent, borderRadius: 3 }} />
+      <View style={{ width: `${pct * 100}%`, height: 8, borderRadius: 4, overflow: 'hidden', backgroundColor: color ?? colors.gradTo }}>
+        {color ? null : <Gradient from={colors.gradFrom} to={colors.accent} angle="horizontal" />}
+      </View>
     </View>
   );
 }
@@ -405,13 +415,13 @@ export function Banner({ text, tone = 'warning' }: { text: string; tone?: 'warni
   );
 }
 
-export type ChipTone = 'accent' | 'warning' | 'danger' | 'neutral';
+export type ChipTone = 'accent' | 'warning' | 'danger' | 'neutral' | 'info' | 'success';
 
 /** Small status label, e.g. "Done" or "To do". */
 export function Chip({ label, tone = 'neutral', testID }: { label: string; tone?: ChipTone; testID?: string }) {
   const { colors } = useTheme();
-  const bg = { accent: colors.accentSoft, warning: colors.warningSoft, danger: colors.dangerSoft, neutral: colors.surfaceRaised }[tone];
-  const fg = { accent: colors.accent, warning: colors.warning, danger: colors.danger, neutral: colors.textSecondary }[tone];
+  const bg = { accent: colors.accentSoft, warning: colors.warningSoft, danger: colors.dangerSoft, neutral: colors.surfaceRaised, info: colors.info + '22', success: colors.successSoft }[tone];
+  const fg = { accent: colors.accent, warning: colors.warning, danger: colors.danger, neutral: colors.textSecondary, info: colors.info, success: colors.success }[tone];
   return (
     <View testID={testID} style={{ backgroundColor: bg, borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: 3 }}>
       <AppText variant="caption" weight="bold" style={{ color: fg }}>
@@ -424,8 +434,8 @@ export function Chip({ label, tone = 'neutral', testID }: { label: string; tone?
 /** Rounded square with an icon, used at the start of summary rows. */
 export function IconTile({ name, tone = 'accent', size = 44 }: { name: React.ComponentProps<typeof Ionicons>['name']; tone?: ChipTone; size?: number }) {
   const { colors } = useTheme();
-  const bg = { accent: colors.accentSoft, warning: colors.warningSoft, danger: colors.dangerSoft, neutral: colors.surfaceRaised }[tone];
-  const fg = { accent: colors.accent, warning: colors.warning, danger: colors.danger, neutral: colors.textSecondary }[tone];
+  const bg = { accent: colors.accentSoft, warning: colors.warningSoft, danger: colors.dangerSoft, neutral: colors.surfaceRaised, info: colors.info + '22', success: colors.successSoft }[tone];
+  const fg = { accent: colors.accent, warning: colors.warning, danger: colors.danger, neutral: colors.textSecondary, info: colors.info, success: colors.success }[tone];
   return (
     <View style={{ width: size, height: size, borderRadius: radius.md, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
       <Ionicons name={name} size={Math.round(size * 0.5)} color={fg} />
@@ -467,7 +477,9 @@ export function SummaryRow({
         paddingVertical: space.sm,
         paddingHorizontal: space.md,
         borderRadius: radius.lg,
-        backgroundColor: pressed ? colors.surfaceRaised : colors.surface,
+        borderWidth: 1,
+        borderColor: colors.glassBorder,
+        backgroundColor: pressed ? colors.surfaceRaised : colors.glass,
       })}
     >
       <IconTile name={icon} tone={tone} />
@@ -505,9 +517,9 @@ export function QuickLinks({ links }: { links: { testID: string; icon: React.Com
             minHeight: TOUCH,
             paddingHorizontal: space.md,
             borderRadius: radius.pill,
-            backgroundColor: pressed ? colors.surfaceRaised : colors.surface,
+            backgroundColor: pressed ? colors.surfaceRaised : colors.glass,
             borderWidth: 1,
-            borderColor: colors.border,
+            borderColor: colors.glassBorder,
           })}
         >
           <Ionicons name={l.icon} size={18} color={colors.accent} />

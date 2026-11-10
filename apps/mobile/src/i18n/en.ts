@@ -1043,6 +1043,38 @@ const en = {
     kitchen: 'Kitchen',
     photoShort: 'Photo log',
   },
+  agentCard: {
+    active: 'Coach active',
+    off: 'Coach off',
+    title: 'Your AI coach',
+    bodyOn: 'Watching your day and adjusting your plan as you log.',
+    bodyOff: 'Connect the coach to get a plan that adapts through the day.',
+    viewPlan: 'View today’s plan',
+  },
+  today: {
+    title: 'Today’s plan',
+    heroTitle: 'Your adaptive plan',
+    progress: '{{done}} of {{total}} done today',
+    status: { done: 'Done', next: 'Next', open: 'Still open' },
+    kind: { face: 'Face check-in', breakfast: 'Breakfast', lunch: 'Lunch', snack: 'Snack', workout: 'Workout', dinner: 'Dinner', bed: 'Wind down for bed' },
+    hint: {
+      face: 'Under a minute — how your face looks and feels.',
+      breakfast: 'Log what you ate, or snap a photo.',
+      lunch: 'A protein source and vegetables keep you full.',
+      snack: 'Fruit, sprouts, buttermilk or a handful of nuts.',
+      workout: 'Even 15 minutes counts today.',
+      dinner: 'Keep it lighter if it’s late.',
+      bed: 'Screens away, lights low.',
+      ai: '',
+    },
+    aiAdjusted: 'AI adjustment',
+    logMeal: 'Log meal',
+    startWorkout: 'Start workout',
+    checkIn: 'Check in',
+    adjust: 'Ask the coach to adjust the rest of today',
+    adjustPrompt: 'Look at what I’ve logged so far today and adjust the rest of my day: meals, water, workout and anything else I should focus on.',
+    note: 'Times come from your reminder settings. Steps marked “still open” can be logged any time.',
+  },
 };
 
 export default en;

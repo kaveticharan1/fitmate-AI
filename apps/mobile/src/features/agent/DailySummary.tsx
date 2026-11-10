@@ -78,6 +78,7 @@ export function DailySummary() {
       {!gentle ? (
         <SummaryRow
           testID="sum-protein"
+          tone="warning"
           icon="egg-outline"
           title={t('home.protein')}
           subtitle={t('home.gramsOf', { g: protein, target: targets.proteinG })}
@@ -87,6 +88,7 @@ export function DailySummary() {
       ) : null}
       <SummaryRow
         testID="sum-water"
+          tone="info"
         icon="water-outline"
         title={t('home.water')}
         subtitle={t('water.glasses', { count: glasses, target: Math.round(targets.waterMl / 250) })}
@@ -103,6 +105,7 @@ export function DailySummary() {
       {health?.enabled || stepsToday > 0 ? (
         <SummaryRow
           testID="sum-steps"
+          tone="success"
           icon="walk-outline"
           title={t('home.steps')}
           subtitle={t('home.stepsOf', { steps: stepsToday.toLocaleString('en-IN'), goal: stepGoal.toLocaleString('en-IN') })}
@@ -111,6 +114,7 @@ export function DailySummary() {
       ) : null}
       <SummaryRow
         testID="sum-face"
+          tone="info"
         icon="happy-outline"
         title={t('home.face')}
         subtitle={face ? t('home.faceDone') : t('home.faceTodo')}

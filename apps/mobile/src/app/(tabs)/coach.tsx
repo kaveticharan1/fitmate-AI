@@ -1,16 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
-import { HELPLINES, plainText, type CoachAction, type StoredAction } from '@fitmate/coach';
+import { HELPLINES, plainText, type StoredAction } from '@fitmate/coach';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { AppText } from '../../components/AppText';
-import { Banner, Button, Card, IconTile, Screen } from '../../components/ui';
+import { Gradient } from '../../components/glow';
+import { Mascot } from '../../components/Mascot';
+import { Banner, Button, Card, Screen } from '../../components/ui';
 import type { CoachMessage } from '../../db/coachRepo';
 import { coachErrorKey } from '../../features/coach/errors';
-import { resolveFoodItems } from '../../features/coach/actionRunner';
+import { useActionSummary } from '../../features/coach/useActionSummary';
 import { useActionDecision, useAiStatus, useCoachMessages, useReadAloud, useSendMessage, useSetReadAloud } from '../../features/coach/hooks';
-import { useFoodName, useQuantityLabel } from '../../features/food/ui';
 import { pruneChat } from '../../features/coach/service';
 import { speakReply, stopSpeaking, useVoiceInput, type VoiceLang } from '../../features/coach/voice';
 import { useProfile } from '../../features/profile/hooks';
@@ -58,6 +59,9 @@ export default function CoachScreen() {
     return (
       <Screen testID="coach">
         <CoachHeader online={false} />
+        <View style={{ alignItems: 'center' }}>
+          <Mascot size={140} mood="happy" />
+        </View>
         <Card testID="coach-setup">
           <AppText variant="heading">{t('coach.setupTitle')}</AppText>
           <AppText tone="secondary">{t('coach.setupBody')}</AppText>
@@ -149,6 +153,9 @@ export default function CoachScreen() {
         </AppText>
         {messages.length === 0 ? (
           <View style={{ gap: space.sm }} testID="suggestions">
+            <View style={{ alignItems: 'center' }}>
+              <Mascot size={120} mood="cheer" />
+            </View>
             <AppText tone="secondary">{t('coach.emptyIntro')}</AppText>
             {SUGGESTIONS.map((s) => (
               <Button key={s} testID={`suggest-${s}`} variant="secondary" label={t(`coach.suggest.${s}`)} onPress={() => submit(t(`coach.suggest.${s}`))} />
@@ -159,9 +166,12 @@ export default function CoachScreen() {
           <MessageBubble key={m.id} m={m} onSpeak={() => speakReply(m.text, lang)} />
         ))}
         {send.isPending ? (
-          <AppText tone="secondary" testID="typing">
-            {t('coach.typing')}
-          </AppText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+            <Mascot size={36} mood="thinking" />
+            <AppText tone="secondary" testID="typing">
+              {t('coach.typing')}
+            </AppText>
+          </View>
         ) : null}
         {send.isError || awaitingReply ? (
           <View style={{ gap: space.sm }} testID="send-error">
@@ -179,7 +189,7 @@ function CoachHeader({ online, right }: { online: boolean; right?: React.ReactNo
   const { colors } = useTheme();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, paddingTop: space.sm }}>
-      <IconTile name="sparkles" size={44} />
+      <Mascot size={52} mood={online ? 'happy' : 'thinking'} />
       <View style={{ flex: 1 }}>
         <AppText variant="heading">{t('coach.title')}</AppText>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
@@ -214,13 +224,19 @@ function MessageBubble({ m, onSpeak }: { m: CoachMessage; onSpeak: () => void })
         style={{
           alignSelf: mine ? 'flex-end' : 'flex-start',
           maxWidth: '88%',
-          backgroundColor: mine ? colors.accentSoft : colors.surface,
+          backgroundColor: mine ? colors.gradFrom : colors.glass,
+          borderWidth: mine ? 0 : 1,
+          borderColor: colors.glassBorder,
           borderRadius: radius.lg,
+          borderBottomRightRadius: mine ? 6 : radius.lg,
+          borderTopLeftRadius: mine ? radius.lg : 6,
           padding: space.md,
           gap: space.xs,
+          overflow: 'hidden',
         }}
       >
-        <AppText selectable>{mine ? m.text : plainText(m.text)}</AppText>
+        {mine ? <Gradient from={colors.gradFrom} to={colors.gradTo} /> : null}
+        <AppText selectable style={mine ? { color: colors.onAccent } : undefined}>{mine ? m.text : plainText(m.text)}</AppText>
         {!mine && m.actions.length ? (
           <View style={{ gap: space.sm }} testID="action-list">
             {m.actions.length > 1 ? (
@@ -280,31 +296,6 @@ function ApplyAll({ m }: { m: CoachMessage }) {
     }
   };
   return <Button testID="apply-all" label={t('agent.applyAll')} loading={busy} onPress={apply} />;
-}
-
-function useActionSummary() {
-  const { t } = useTranslation();
-  const name = useFoodName();
-  const qty = useQuantityLabel();
-  return (a: CoachAction): string[] => {
-    switch (a.type) {
-      case 'log_food':
-        return [
-          t('agent.logFood', { meal: t(`meals.${a.meal}`) }),
-          ...resolveFoodItems(a.items).map((r) =>
-            r.food && r.measureKey ? `• ${name(r.food, r.food.name)} — ${qty(r.measureKey, r.count ?? 1)} · ${r.kcal} kcal` : `• ${r.name} — ${t('agent.notFound')}`,
-          ),
-        ];
-      case 'log_water':
-        return [t('agent.logWater', { ml: a.ml })];
-      case 'log_weight':
-        return [t('agent.logWeight', { kg: a.kg })];
-      case 'log_sleep':
-        return [t('agent.logSleep', { bed: a.bed, wake: a.wake })];
-      case 'set_reminder':
-        return [t('agent.setReminder', { label: a.label, time: a.time })];
-    }
-  };
 }
 
 function ActionCard({ messageId, index, stored }: { messageId: string; index: number; stored: StoredAction }) {

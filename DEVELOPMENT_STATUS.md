@@ -242,6 +242,12 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
 - Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
 
+## Glow design (v1.4.0) — FitPilot look
+- New violet "glow" theme (dark and light): deep night background with soft violet/blue light, glass cards with a faint violet edge, gradient primary buttons and progress bars. All text colours checked for ≥ 4.5:1 contrast.
+- Pilo, an original robot coach mascot drawn in SVG (no image files): on the Home hero card ("Coach active"), in the coach header, empty chat, setup and while the coach is typing; moods happy / thinking / cheer.
+- Today's plan (adaptive timeline): face check-in, meals, snack, workout and bedtime at your reminder times, marked Done / Next / Still open, with the coach's confirmed changes shown as "AI adjustment" steps at the time they were made; water and steps progress; "Ask the coach to adjust the rest of today".
+- Chat: gradient bubbles for your messages, glass bubbles for the coach.
+
 ## Fix (v1.3.2) — coach timing out
 - Newer Gemini Flash models think before answering by default, which could take longer than the app waited ("The AI took too long to answer"). Chat now asks for minimal thinking (photo, face and label reading use low), using thinkingLevel on Gemini 3+ and thinkingBudget on 2.5, with an automatic retry without it if a model rejects the setting. Chat waits up to 60 s.
 - The model picker now skips slow or specialised variants (thinking/deep-think/research/agent, Gemma, image models). A saved choice like that is replaced automatically; a retired model is re-picked and the question retried once.

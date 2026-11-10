@@ -1,6 +1,7 @@
 /**
- * Dark, muted design with one calm green accent (approved 9 Nov 2026).
- * Status colours appear only where they carry meaning.
+ * "Glow" design (v1.4, after the FitPilot concept): deep violet night background,
+ * glass cards with a faint violet edge, and a violet gradient for primary actions.
+ * Every text colour is checked for at least 4.5:1 contrast on cards.
  */
 export interface Palette {
   bg: string;
@@ -10,60 +11,89 @@ export interface Palette {
   text: string;
   textSecondary: string;
   textMuted: string;
+  /** Accent for text, icons and outlines. */
   accent: string;
   accentPressed: string;
+  /** Text on the gradient / accent fill. */
   onAccent: string;
   accentSoft: string;
+  /** Primary button gradient (white text reads ≥ 4.8:1 on both ends). */
+  gradFrom: string;
+  gradTo: string;
+  /** Glass cards. */
+  glass: string;
+  glassBorder: string;
+  /** Background glow blobs. */
+  glowA: string;
+  glowB: string;
+  info: string;
   warning: string;
   warningSoft: string;
   danger: string;
   dangerSoft: string;
   success: string;
+  successSoft: string;
   track: string;
 }
 
 export const dark: Palette = {
-  bg: '#0F1113',
-  surface: '#171A1D',
-  surfaceRaised: '#1F2327',
-  border: '#2A2F34',
-  text: '#ECEFF1',
-  textSecondary: '#A3ACB3',
-  textMuted: '#6E777E',
-  accent: '#2BB38A',
-  accentPressed: '#24996F',
-  onAccent: '#04261A',
-  accentSoft: '#173A2F',
-  warning: '#E3AA4C',
-  warningSoft: '#3A2D14',
-  danger: '#EB6F66',
-  dangerSoft: '#3C1D1B',
-  success: '#5FC79B',
-  track: '#2A2F34',
+  bg: '#0C0A1C',
+  surface: '#171433',
+  surfaceRaised: '#211D45',
+  border: '#2E2960',
+  text: '#F3F1FF',
+  textSecondary: '#BDB7DE',
+  textMuted: '#8E87B8',
+  accent: '#A48CFF',
+  accentPressed: '#5A36E6',
+  onAccent: '#FFFFFF',
+  accentSoft: '#2A2160',
+  gradFrom: '#6A3DF0',
+  gradTo: '#7A4DFF',
+  glass: 'rgba(30, 25, 70, 0.72)',
+  glassBorder: 'rgba(164, 140, 255, 0.22)',
+  glowA: '#6A3DF0',
+  glowB: '#2B7BFF',
+  info: '#5CD6FF',
+  warning: '#F2B65A',
+  warningSoft: '#3A2A12',
+  danger: '#FF7A8A',
+  dangerSoft: '#3F1726',
+  success: '#4FD8A4',
+  successSoft: '#123A33',
+  track: '#2E2960',
 };
 
 export const light: Palette = {
-  bg: '#F5F7F6',
+  bg: '#F6F4FF',
   surface: '#FFFFFF',
-  surfaceRaised: '#EEF2F0',
-  border: '#DCE2DF',
-  text: '#14191C',
-  textSecondary: '#4D585E',
-  textMuted: '#7C878D',
-  accent: '#0F8A66',
-  accentPressed: '#0B7055',
+  surfaceRaised: '#EEEAFF',
+  border: '#DDD7FA',
+  text: '#16123A',
+  textSecondary: '#4E4880',
+  textMuted: '#6F6A99',
+  accent: '#5B3BE8',
+  accentPressed: '#4A2BD0',
   onAccent: '#FFFFFF',
-  accentSoft: '#DDF2EA',
-  warning: '#A86A0C',
+  accentSoft: '#E9E3FF',
+  gradFrom: '#6A3DF0',
+  gradTo: '#7A4DFF',
+  glass: 'rgba(255, 255, 255, 0.86)',
+  glassBorder: 'rgba(91, 59, 232, 0.16)',
+  glowA: '#B9A6FF',
+  glowB: '#9FD0FF',
+  info: '#0A6F99',
+  warning: '#9A5B00',
   warningSoft: '#FBEFD9',
-  danger: '#C2392F',
-  dangerSoft: '#FBE7E5',
-  success: '#1E8A5C',
-  track: '#DCE2DF',
+  danger: '#C4304A',
+  dangerSoft: '#FBE4E8',
+  success: '#137A55',
+  successSoft: '#DDF4EA',
+  track: '#DDD7FA',
 };
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
-export const radius = { sm: 8, md: 12, lg: 16, pill: 999 } as const;
+export const radius = { sm: 8, md: 14, lg: 20, xl: 28, pill: 999 } as const;
 
 export const type = {
   display: { fontSize: 34, lineHeight: 40 },

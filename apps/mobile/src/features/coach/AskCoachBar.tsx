@@ -11,7 +11,7 @@ import { mealForTime, openCoach } from './open';
 export function AskCoachBar() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const round = { width: TOUCH + 4, height: TOUCH + 4, borderRadius: (TOUCH + 4) / 2, alignItems: 'center' as const, justifyContent: 'center' as const, backgroundColor: colors.surfaceRaised };
+  const round = { width: TOUCH + 4, height: TOUCH + 4, borderRadius: (TOUCH + 4) / 2, alignItems: 'center' as const, justifyContent: 'center' as const, backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.glassBorder };
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }} testID="ask-coach-bar">
       <Pressable
@@ -28,8 +28,11 @@ export function AskCoachBar() {
           paddingHorizontal: space.md,
           borderRadius: radius.pill,
           borderWidth: 1,
-          borderColor: colors.border,
-          backgroundColor: pressed ? colors.surfaceRaised : colors.surface,
+          borderColor: colors.accent + '66',
+          backgroundColor: pressed ? colors.surfaceRaised : colors.glass,
+          shadowColor: colors.accent,
+          shadowOpacity: 0.35,
+          shadowRadius: 10,
         })}
       >
         <Ionicons name="sparkles-outline" size={20} color={colors.accent} />

@@ -8,6 +8,7 @@ import { Banner, Button, Card, ProgressBar, QuickLinks, Screen, TextField, useEr
 import { router } from 'expo-router';
 import { totalsOf } from '../../db/foodRepo';
 import { useDiary } from '../../features/food/hooks';
+import { AgentCard } from '../../features/agent/AgentCard';
 import { DayCard } from '../../features/agent/DayCard';
 import { DailySummary } from '../../features/agent/DailySummary';
 import { AskCoachBar } from '../../features/coach/AskCoachBar';
@@ -34,6 +35,7 @@ export default function Dashboard() {
     <Screen testID="dashboard">
       <Greeting name={profile.name} />
       <AskCoachBar />
+      <AgentCard />
       <DayCard />
       <DailySummary />
       <WaterCard targetMl={targets.waterMl} />

@@ -12,6 +12,7 @@ const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), navig
 // A getter, because jest.mock factories run before this file's constants are initialised.
 jest.mock('../features/agent/DayCard', () => ({ DayCard: () => null }));
 jest.mock('../features/agent/DailySummary', () => ({ DailySummary: () => null }));
+jest.mock('../features/agent/AgentCard', () => ({ AgentCard: () => null }));
 jest.mock('../features/reminders/smartSync', () => ({ useSmartReminderSync: () => undefined }));
 jest.mock('../features/health/hooks', () => ({
   useHealthSettings: () => ({ data: { enabled: false, importWeight: true, importSleep: true, lastSync: null, stepGoal: null } }),
