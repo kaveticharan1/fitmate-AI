@@ -242,6 +242,11 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
 - Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
 
+## Fix (v1.4.1) — coach busy / too slow
+- Backup models: FitMate saves a chain of Gemini models for your key — newest stable Flash, then Flash-Lite (faster, its own free quota), then an older Flash. If one is busy (503), slow, out of its quota, or retired, the next is tried automatically; a busy model gets one quick retry first. Keys saved by older versions get their backups on the next question.
+- Shorter waits per model (35 s, then 30 s) so a backup starts sooner. Used by chat, food photos, face photos and ingredient labels.
+- Clearer messages when every model fails.
+
 ## Glow design (v1.4.0) — FitPilot look
 - New violet "glow" theme (dark and light): deep night background with soft violet/blue light, glass cards with a faint violet edge, gradient primary buttons and progress bars. All text colours checked for ≥ 4.5:1 contrast.
 - Pilo, an original robot coach mascot drawn in SVG (no image files): on the Home hero card ("Coach active"), in the coach header, empty chat, setup and while the coach is typing; moods happy / thinking / cheer.

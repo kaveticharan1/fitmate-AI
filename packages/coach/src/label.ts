@@ -31,10 +31,10 @@ export function parseLabelReading(text: string): LabelReading {
   return { found, ingredients: found ? ingredients : '', productName: typeof raw.product_name === 'string' && raw.product_name.trim() ? raw.product_name.trim().slice(0, 120) : null };
 }
 
-export async function readIngredientLabel(opts: { apiKey: string; model: string; jpegBase64: string; fetchFn: FetchFn }): Promise<LabelReading> {
+export async function readIngredientLabel(opts: { apiKey: string; model: string; jpegBase64: string; fetchFn: FetchFn; timeoutMs?: number }): Promise<LabelReading> {
   const body = {
     contents: [{ role: 'user', parts: [{ inlineData: { mimeType: 'image/jpeg', data: opts.jpegBase64 } }, { text: LABEL_PROMPT }] }],
     generationConfig: { temperature: 0, maxOutputTokens: 2048, responseMimeType: 'application/json' },
   };
-  return parseLabelReading(parseReply(await generate(opts.fetchFn, opts.apiKey, opts.model, body, 'low', 60000)));
+  return parseLabelReading(parseReply(await generate(opts.fetchFn, opts.apiKey, opts.model, body, 'low', opts.timeoutMs ?? 60000)));
 }

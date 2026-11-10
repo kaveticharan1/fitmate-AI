@@ -55,10 +55,10 @@ jest.mock('../../db/stepsRepo', () => ({ stepHistory: () => [{ day: '2026-11-09'
 jest.mock('../../db/habitsRepo', () => ({ sleepHistory: () => [{ wokeOn: '2026-11-09', minutes: 420 }] }));
 jest.mock('../../db/workoutRepo', () => ({ workoutHistory: () => [{ workoutId: 'walk_30', doneOn: '2026-11-08' }] }));
 
-let mockStored: { apiKey: string; model: string } | null = { apiKey: 'AIzaTEST', model: 'gemini-3.6-flash' };
+let mockStored: { apiKey: string; model: string; fallbacks?: string[] } | null = { apiKey: 'AIzaTEST', model: 'gemini-3.6-flash', fallbacks: [] };
 jest.mock('./aiKey', () => ({
   getAiKey: async () => mockStored,
-  setAiKey: async (v: { apiKey: string; model: string }) => {
+  setAiKey: async (v: { apiKey: string; model: string; fallbacks?: string[] }) => {
     mockStored = v;
   },
   deleteAiKey: async () => {
@@ -72,7 +72,7 @@ beforeEach(() => {
   mockMemory.length = 0;
   mockConsent = true;
   mockActionsOff = false;
-  mockStored = { apiKey: 'AIzaTEST', model: 'gemini-3.6-flash' };
+  mockStored = { apiKey: 'AIzaTEST', model: 'gemini-3.6-flash', fallbacks: [] };
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
 });
@@ -148,7 +148,7 @@ describe('coach service', () => {
     mockConsent = false;
     fetchMock.mockResolvedValueOnce(ok({ models: [{ name: 'models/gemini-3.6-flash', supportedGenerationMethods: ['generateContent'] }] }));
     expect(await connectAi('AIzaGOOD')).toBe('gemini-3.6-flash');
-    expect(mockStored).toEqual({ apiKey: 'AIzaGOOD', model: 'gemini-3.6-flash' });
+    expect(mockStored).toEqual({ apiKey: 'AIzaGOOD', model: 'gemini-3.6-flash', fallbacks: [] });
     expect(mockRecordConsent).toHaveBeenCalledWith('ai_coach');
 
     await disconnectAi();

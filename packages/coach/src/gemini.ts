@@ -134,6 +134,74 @@ export function pickModel(models: ModelInfo[]): string | null {
   return ids.sort((a, b) => score(b) - score(a))[0]!;
 }
 
+/**
+ * The models to try, best first: the newest stable Flash, then the best
+ * Flash-Lite (fast, separate free quota), then an older Flash as a last resort.
+ */
+export function pickModels(models: ModelInfo[]): string[] {
+  const ids = models
+    .filter((m) => (m.supportedGenerationMethods ?? []).includes('generateContent'))
+    .map((m) => m.name.replace(/^models\//, ''))
+    .filter((id) => /^gemini-/.test(id) && /flash/i.test(id) && !EXCLUDE.test(id))
+    .sort((a, b) => score(b) - score(a));
+  const version = (id: string) => /gemini-(\d+(?:\.\d+)?)/.exec(id)?.[1];
+  const main = ids.find((id) => !/lite/i.test(id)) ?? ids[0];
+  if (!main) return [];
+  const lite = ids.find((id) => /lite/i.test(id) && id !== main);
+  const older = ids.find((id) => !/lite/i.test(id) && version(id) !== version(main));
+  return [main, lite, older].filter((x, i, a): x is string => !!x && a.indexOf(x) === i);
+}
+
+/** Fetches the model list for this key and returns the models to try, best first. */
+export async function listChatModels(apiKey: string, fetchFn: FetchFn, timeoutMs = 15000): Promise<string[]> {
+  const json = (await call(fetchFn, `${GEMINI_BASE}/models?pageSize=200`, apiKey, undefined, timeoutMs)) as { models?: ModelInfo[] };
+  const chain = pickModels(json.models ?? []);
+  if (chain.length === 0) throw new CoachError('no_model', 'No suitable Gemini model is available for this key.');
+  return chain;
+}
+
+/** Errors worth trying again with another model: busy, slow, out of that model's quota, or retired. */
+export function isRetriable(e: unknown): boolean {
+  if (!(e instanceof CoachError)) return false;
+  if (e.kind === 'unavailable' || e.kind === 'timeout' || e.kind === 'quota') return true;
+  return e.kind === 'bad_response' && /not found|not supported|deprecated|overloaded/i.test(e.message);
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Runs `attempt` with each model in turn until one answers. A "busy" reply gets
+ * one quick retry on the same model first. Other errors (bad key, blocked,
+ * no internet) stop straight away.
+ */
+export async function withFallback<T>(
+  models: string[],
+  attempt: (model: string, timeoutMs: number) => Promise<T>,
+  opts: { firstTimeoutMs?: number; nextTimeoutMs?: number; retryDelayMs?: number } = {},
+): Promise<{ result: T; model: string }> {
+  const { firstTimeoutMs = 35000, nextTimeoutMs = 30000, retryDelayMs = 1500 } = opts;
+  let last: unknown = new CoachError('no_model', 'No model to try');
+  for (const [i, model] of models.entries()) {
+    const timeout = i === 0 ? firstTimeoutMs : nextTimeoutMs;
+    try {
+      return { result: await attempt(model, timeout), model };
+    } catch (e) {
+      last = e;
+      if (!isRetriable(e)) throw e;
+      if (e instanceof CoachError && e.kind === 'unavailable') {
+        await sleep(retryDelayMs);
+        try {
+          return { result: await attempt(model, timeout), model };
+        } catch (e2) {
+          last = e2;
+          if (!isRetriable(e2)) throw e2;
+        }
+      }
+    }
+  }
+  throw last;
+}
+
 /** True if this model id is one FitMate would pick for chat (fast, general Flash). */
 export function isChatModel(id: string): boolean {
   return pickModel([{ name: id, supportedGenerationMethods: ['generateContent'] }]) === id;

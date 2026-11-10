@@ -10,6 +10,8 @@ const OPTS: SecureStore.SecureStoreOptions = { keychainAccessible: SecureStore.W
 export interface StoredAiKey {
   apiKey: string;
   model: string;
+  /** Backup models to try when the main one is busy or slow (best first). */
+  fallbacks?: string[];
 }
 
 export async function getAiKey(): Promise<StoredAiKey | null> {
@@ -17,7 +19,9 @@ export async function getAiKey(): Promise<StoredAiKey | null> {
   if (!raw) return null;
   try {
     const v = JSON.parse(raw) as Partial<StoredAiKey>;
-    return typeof v.apiKey === 'string' && typeof v.model === 'string' ? { apiKey: v.apiKey, model: v.model } : null;
+    if (typeof v.apiKey !== 'string' || typeof v.model !== 'string') return null;
+    const fallbacks = Array.isArray(v.fallbacks) ? v.fallbacks.filter((m): m is string => typeof m === 'string') : undefined;
+    return { apiKey: v.apiKey, model: v.model, ...(fallbacks ? { fallbacks } : {}) };
   } catch {
     return null;
   }

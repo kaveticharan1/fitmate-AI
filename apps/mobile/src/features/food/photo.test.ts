@@ -37,14 +37,14 @@ jest.mock('expo-image-manipulator', () => ({
 }));
 let mockConsent = true;
 jest.mock('../../db/repositories', () => ({ hasConsent: () => mockConsent, getProfile: () => ({ aiLanguage: 'te' }) }));
-let mockKey: { apiKey: string; model: string } | null = { apiKey: 'K', model: 'gemini-3.6-flash' };
+let mockKey: { apiKey: string; model: string; fallbacks?: string[] } | null = { apiKey: 'K', model: 'gemini-3.6-flash', fallbacks: [] };
 jest.mock('../coach/aiKey', () => ({ getAiKey: async () => mockKey }));
 
 const fetchMock = jest.fn();
 beforeEach(() => {
   mockDeleted.length = 0;
   mockConsent = true;
-  mockKey = { apiKey: 'K', model: 'gemini-3.6-flash' };
+  mockKey = { apiKey: 'K', model: 'gemini-3.6-flash', fallbacks: [] };
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
 });

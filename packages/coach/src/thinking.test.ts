@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { generateReply, thinkingConfig, type FetchFn } from './index';
+import { generateReply, pickModels, thinkingConfig, type FetchFn } from './index';
 
 const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
 const reply = { candidates: [{ content: { parts: [{ text: 'Plan: dal, 3 L water, 30-min walk.' }] } }] };
@@ -36,5 +36,16 @@ describe('generateReply speed settings', () => {
     const fetchFn = vi.fn().mockResolvedValue({ ok: false, status: 429, json: async () => ({ error: { status: 'RESOURCE_EXHAUSTED', message: 'quota' } }) });
     await expect(generateReply({ apiKey: 'k', model: 'gemini-3.5-flash', system: 's', turns: [{ role: 'user', text: 'hi' }], fetchFn: fetchFn as unknown as FetchFn })).rejects.toMatchObject({ kind: 'quota' });
     expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('pickModels', () => {
+  const m = (ids: string[]) => ids.map((id) => ({ name: `models/${id}`, supportedGenerationMethods: ['generateContent'] }));
+  it('orders main Flash, then Flash-Lite, then an older Flash', () => {
+    expect(pickModels(m(['gemini-3-flash', 'gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.5-flash-deep-think', 'gemini-3.6-flash-preview']))).toEqual(['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3-flash']);
+  });
+  it('copes with only one model', () => {
+    expect(pickModels(m(['gemini-3.5-flash']))).toEqual(['gemini-3.5-flash']);
+    expect(pickModels(m(['gemma-4']))).toEqual([]);
   });
 });
