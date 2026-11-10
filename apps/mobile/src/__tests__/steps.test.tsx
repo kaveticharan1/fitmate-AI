@@ -5,6 +5,19 @@ import i18n from '../i18n';
 import { localDate, addDays } from '../lib/time';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
+let mockStepSrc: { source: 'phone' | 'health_connect'; sensor: boolean } = { source: 'health_connect', sensor: false };
+let mockPermitted: boolean | undefined = true;
+let mockLive: number | null = null;
+const mockAllow = jest.fn();
+jest.mock('../features/steps/hooks', () => ({
+  useStepSource: () => ({ data: mockStepSrc }),
+  useActivityPermission: () => ({ data: mockPermitted }),
+  useRequestActivityPermission: () => ({ mutate: mockAllow, isPending: false, data: undefined }),
+  useLiveSteps: () => mockLive,
+  usePhoneStepsSync: () => undefined,
+}));
+
+
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: (...a: unknown[]) => mockPush(...a), back: jest.fn(), canGoBack: () => true } }));
 jest.mock('../features/profile/hooks', () => ({ useProfile: () => ({ data: { heightCm: 175, weightKg: 86, activityLevel: 'light' } }) }));
@@ -42,12 +55,52 @@ const wrap = (el: React.ReactElement) => render(<ThemeProvider>{el}</ThemeProvid
 const today = localDate();
 
 beforeEach(async () => {
+  mockStepSrc = { source: 'health_connect', sensor: false };
+  mockPermitted = true;
+  mockLive = null;
   jest.clearAllMocks();
   mockSettings = { enabled: false, importWeight: true, importSleep: true, lastSync: null, stepGoal: null };
   mockDays = [];
   mockAvailability = 'available';
   mockConnectData = undefined;
   await i18n.changeLanguage('en');
+});
+
+describe('Steps card — this phone counts', () => {
+  it('shows the live count from the phone sensor, with no sync button', async () => {
+    mockStepSrc = { source: 'phone', sensor: true };
+    mockLive = 4321;
+    mockDays = [{ day: today, steps: 4000, source: 'phone', flags: [] }] as never;
+    await wrap(<StepsCard />);
+    expect(screen.getByTestId('steps-today')).toHaveTextContent('4,321');
+    expect(screen.getByTestId('steps-phone')).toHaveTextContent('Counted by this phone · live');
+    expect(screen.queryByTestId('steps-sync')).toBeNull();
+    expect(screen.queryByTestId('steps-connect')).toBeNull();
+  });
+
+  it('asks for the activity permission before counting', async () => {
+    mockStepSrc = { source: 'phone', sensor: true };
+    mockPermitted = false;
+    await wrap(<StepsCard />);
+    expect(screen.getByTestId('steps-permission')).toHaveTextContent(/Physical activity/);
+    await fireEvent.press(screen.getByTestId('steps-allow'));
+    expect(mockAllow).toHaveBeenCalled();
+  });
+
+  it('keeps a typed-in total over the live count', async () => {
+    mockStepSrc = { source: 'phone', sensor: true };
+    mockLive = 9000;
+    mockDays = [{ day: today, steps: 5000, source: 'manual', flags: [] }] as never;
+    await wrap(<StepsCard />);
+    expect(screen.getByTestId('steps-today')).toHaveTextContent('5,000');
+    expect(screen.getByTestId('steps-use-sync')).toHaveTextContent('Use this phone’s count instead');
+  });
+
+  it('explains when the phone has no step sensor', async () => {
+    mockStepSrc = { source: 'health_connect', sensor: false };
+    await wrap(<StepsCard />);
+    expect(screen.getByTestId('steps-no-sensor')).toBeTruthy();
+  });
 });
 
 describe('Steps card', () => {

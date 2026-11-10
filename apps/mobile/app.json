@@ -3,7 +3,7 @@
     "name": "FitMate AI",
     "slug": "fitmate-ai",
     "scheme": "fitmate",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.kaveticharan.fitmate",
-      "versionCode": 21,
+      "versionCode": 22,
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#0F1113",
@@ -29,6 +29,7 @@
         "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.health.READ_STEPS",
         "android.permission.health.READ_WEIGHT",
         "android.permission.health.READ_SLEEP",

@@ -16,6 +16,8 @@ export interface StepsSnapshot {
   params: Record<string, number>;
   stepGoal: number;
   lang: 'en' | 'te';
+  /** Where live steps come from in the background (older snapshots: Health Connect). */
+  source?: 'phone' | 'health_connect';
 }
 
 export type StepsDecision =

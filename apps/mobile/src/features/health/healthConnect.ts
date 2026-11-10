@@ -3,6 +3,7 @@ import * as HC from 'react-native-health-connect';
 import { getSetting, logWeight, setSetting } from '../../db/repositories';
 import { addSleepIfMissing, hasWeightOn, saveSyncedSteps } from '../../db/stepsRepo';
 import { addDays, localDate } from '../../lib/time';
+import { getStepSource } from '../steps/phoneSteps';
 import { saveStepsSnapshot, setStepsTask } from './background';
 
 /**
@@ -108,36 +109,41 @@ export async function syncHealth(opts: { force?: boolean; now?: Date } = {}): Pr
   if ((await healthAvailability()) !== 'available') return { status: 'unavailable' };
   await HC.initialize();
   const granted = grantedFrom(await HC.getGrantedPermissions());
-  if (!granted.steps) return { status: 'no_permission' };
+  // When FitMate counts steps itself, Health Connect is only used for weight and sleep.
+  const phoneSteps = getStepSource() === 'phone';
+  if (!granted.steps && !phoneSteps) return { status: 'no_permission' };
 
   const today = localDate(now);
   const from = localMidnight(addDays(today, -(SYNC_DAYS - 1)));
   const range = { operator: 'between' as const, startTime: from.toISOString(), endTime: now.toISOString() };
 
   // Daily totals: Health Connect merges phone and watch so steps aren't counted twice.
-  const groups = await HC.aggregateGroupByPeriod({ recordType: 'Steps', timeRangeFilter: range, timeRangeSlicer: { period: 'DAYS', length: 1 } });
-  const days = daysFromAggregate(groups as { startTime: string; result: { COUNT_TOTAL?: number } }[]);
-
-  // Check the last two days' raw records for impossible data.
-  const recentFrom = localMidnight(addDays(today, -1));
-  const raw = await HC.readRecords('Steps', {
-    timeRangeFilter: { operator: 'between', startTime: recentFrom.toISOString(), endTime: now.toISOString() },
-    pageSize: 1000,
-  });
-  const byDay = new Map<string, { start: string; end: string; count: number; origin?: string }[]>();
-  for (const r of raw.records) {
-    const day = localDate(new Date(r.startTime));
-    const list = byDay.get(day) ?? [];
-    list.push({ start: r.startTime, end: r.endTime, count: r.count, origin: r.metadata?.dataOrigin });
-    byDay.set(day, list);
-  }
   const allFlags: StepFlag[] = [];
-  const toSave = days.map((d) => {
-    const flags = d.date >= addDays(today, -1) ? validateStepRecords(byDay.get(d.date) ?? [], d.steps) : [];
-    allFlags.push(...flags);
-    return { day: d.date, steps: d.steps, flags };
-  });
-  saveSyncedSteps(toSave.filter((d) => d.steps > 0 || d.day === today));
+  let toSave: { day: string; steps: number; flags: StepFlag[] }[] = [];
+  if (!phoneSteps) {
+    const groups = await HC.aggregateGroupByPeriod({ recordType: 'Steps', timeRangeFilter: range, timeRangeSlicer: { period: 'DAYS', length: 1 } });
+    const days = daysFromAggregate(groups as { startTime: string; result: { COUNT_TOTAL?: number } }[]);
+
+    // Check the last two days' raw records for impossible data.
+    const recentFrom = localMidnight(addDays(today, -1));
+    const raw = await HC.readRecords('Steps', {
+      timeRangeFilter: { operator: 'between', startTime: recentFrom.toISOString(), endTime: now.toISOString() },
+      pageSize: 1000,
+    });
+    const byDay = new Map<string, { start: string; end: string; count: number; origin?: string }[]>();
+    for (const r of raw.records) {
+      const day = localDate(new Date(r.startTime));
+      const list = byDay.get(day) ?? [];
+      list.push({ start: r.startTime, end: r.endTime, count: r.count, origin: r.metadata?.dataOrigin });
+      byDay.set(day, list);
+    }
+    toSave = days.map((d) => {
+      const flags = d.date >= addDays(today, -1) ? validateStepRecords(byDay.get(d.date) ?? [], d.steps) : [];
+      allFlags.push(...flags);
+      return { day: d.date, steps: d.steps, flags };
+    });
+    saveSyncedSteps(toSave.filter((d) => d.steps > 0 || d.day === today));
+  }
 
   let weights = 0;
   if (settings.importWeight && granted.weight) {

@@ -10,6 +10,7 @@ import { totalsOf } from '../../db/foodRepo';
 import { useDiary } from '../../features/food/hooks';
 import { AgentCard } from '../../features/agent/AgentCard';
 import { useBuddySync } from '../../features/buddies/hooks';
+import { usePhoneStepsSync } from '../../features/steps/hooks';
 import { DayCard } from '../../features/agent/DayCard';
 import { DailySummary } from '../../features/agent/DailySummary';
 import { AskCoachBar } from '../../features/coach/AskCoachBar';
@@ -28,6 +29,7 @@ const weightField = requiredNumber(25, 350);
 export default function Dashboard() {
   useSmartReminderSync();
   useBuddySync();
+  usePhoneStepsSync();
   const { t } = useTranslation();
   const { data: profile } = useProfile();
   const targets = useMemo(() => (profile ? targetsForProfile(profile) : null), [profile]);

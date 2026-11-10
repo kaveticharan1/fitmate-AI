@@ -144,6 +144,9 @@ Health Connect settings live in `app_settings`: `healthEnabled`, `healthImportWe
 ## coach_messages.actions (v10)
 `actions` — JSON list of actions the coach proposed in that reply (log food/water/weight/sleep, set a reminder) with status `pending` / `done` / `declined` / `failed`. Nothing runs until the user taps Confirm.
 
+## step_days.source (v12)
+`step_days` rebuilt so `source` can be `health_connect`, `manual` or `phone` (FitMate's own counter). Existing rows are copied unchanged.
+
 ## Face & skin (v11)
 - `face_checkins` — one row per day (`day` PK): `puffiness` 0–3 (user-reported), `areas` (JSON), `time_of_day`, `symptoms` (JSON), `stress` 0–2, `salty_yesterday`, `alcohol_yesterday` (null = skipped), `note`.
 - `face_photos` — metadata only (`taken_on`, `file_name`, `note`, `ai_quality`, `ai_observation` JSON, `ai_compared_with`, `user_verdict`). The image itself is an AES-256-GCM file in app storage (`face-photos/*.fmp`); the key is in `app_settings.photoKey` inside the encrypted database. **Not included in backups.**

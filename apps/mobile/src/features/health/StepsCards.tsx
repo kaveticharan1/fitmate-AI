@@ -2,13 +2,14 @@ import { averageSteps, stepsToKcal, stepsToKm } from '@fitmate/core';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { AppText } from '../../components/AppText';
 import { Banner, Button, Card, ProgressBar, TextField } from '../../components/ui';
 import { addDays, localDate } from '../../lib/time';
 import { useTheme } from '../../theme/ThemeProvider';
 import { radius, space } from '../../theme/tokens';
 import { useProfile } from '../profile/hooks';
+import { useActivityPermission, useLiveSteps, useRequestActivityPermission, useStepSource } from '../steps/hooks';
 import { useAutoSync, useHealthSettings, useManualSteps, useStepGoal, useStepHistory } from './hooks';
 
 const fmt = (n: number) => n.toLocaleString('en-IN');
@@ -23,7 +24,12 @@ export function StepsCard() {
   const { data: days = [] } = useStepHistory(7);
   const { data: profile } = useProfile();
   const goal = useStepGoal(settings);
-  const sync = useAutoSync(settings?.enabled);
+  const { data: src } = useStepSource();
+  const phone = src?.source === 'phone' && src.sensor;
+  const { data: permitted } = useActivityPermission();
+  const allow = useRequestActivityPermission();
+  const live = useLiveSteps(!!phone && permitted === true);
+  const sync = useAutoSync(settings?.enabled && !phone);
   const manual = useManualSteps();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
@@ -31,7 +37,8 @@ export function StepsCard() {
 
   const today = localDate();
   const row = days.find((d) => d.day === today);
-  const steps = row?.steps ?? 0;
+  // Typed-in totals win; otherwise the live phone count, then whatever is saved.
+  const steps = row?.source === 'manual' ? row.steps : (live ?? row?.steps ?? 0);
   const ago = syncedAgo(settings?.lastSync ?? null, now);
   const parsed = Number(value.replace(/[,\s]/g, ''));
   const valid = Number.isInteger(parsed) && parsed >= 0 && parsed <= 200000 && value.trim() !== '';
@@ -63,12 +70,35 @@ export function StepsCard() {
         <AppText variant="caption" tone="secondary">
           {t('steps.typedIn')}
         </AppText>
+      ) : phone ? (
+        permitted === false ? null : (
+          <AppText variant="caption" tone="success" testID="steps-phone">
+            {live != null ? t('steps.phoneLive') : t('steps.phoneCounting')}
+          </AppText>
+        )
       ) : settings?.enabled ? (
         <AppText variant="caption" tone="secondary" testID="steps-synced">
           {sync.isPending ? t('steps.syncing') : ago == null ? t('steps.notSynced') : ago < 1 ? t('steps.syncedNow') : t('steps.syncedAgo', { minutes: ago })}
         </AppText>
       ) : null}
       {sync.data?.status === 'no_permission' ? <Banner tone="warning" text={t('steps.noPermission')} /> : null}
+      {phone && permitted === false ? (
+        <View style={{ gap: space.sm }} testID="steps-permission">
+          <AppText variant="label" tone="secondary">
+            {allow.data === false ? t('steps.permissionDenied') : t('steps.permissionWhy')}
+          </AppText>
+          {allow.data === false ? (
+            <Button testID="steps-open-settings" variant="secondary" label={t('steps.openSettings')} onPress={() => Linking.openSettings()} />
+          ) : (
+            <Button testID="steps-allow" label={t('steps.allow')} onPress={() => allow.mutate()} loading={allow.isPending} />
+          )}
+        </View>
+      ) : null}
+      {src && !src.sensor && !settings?.enabled ? (
+        <AppText variant="caption" tone="secondary" testID="steps-no-sensor">
+          {t('steps.noSensor')}
+        </AppText>
+      ) : null}
 
       {editing ? (
         <View style={{ gap: space.sm }}>
@@ -84,7 +114,7 @@ export function StepsCard() {
         </View>
       ) : (
         <View style={{ flexDirection: 'row', gap: space.sm }}>
-          {settings?.enabled ? (
+          {phone ? null : settings?.enabled ? (
             <View style={{ flex: 1 }}>
               <Button testID="steps-sync" variant="secondary" label={t('steps.sync')} onPress={() => sync.mutate(true)} loading={sync.isPending} />
             </View>
@@ -106,8 +136,13 @@ export function StepsCard() {
           </View>
         </View>
       )}
-      {row?.source === 'manual' && settings?.enabled ? (
-        <Button testID="steps-use-sync" variant="ghost" label={t('steps.useSynced')} onPress={() => manual.clear.mutate(today, { onSuccess: () => sync.mutate(true) })} />
+      {row?.source === 'manual' && (settings?.enabled || phone) ? (
+        <Button
+          testID="steps-use-sync"
+          variant="ghost"
+          label={phone ? t('steps.usePhone') : t('steps.useSynced')}
+          onPress={() => manual.clear.mutate(today, { onSuccess: () => (phone ? allow.mutate() : sync.mutate(true)) })}
+        />
       ) : null}
     </Card>
   );

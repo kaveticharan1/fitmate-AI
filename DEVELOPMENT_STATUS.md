@@ -242,6 +242,14 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
 - Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
 
+## Own step counter + Groq AI (v1.6.0)
+- **FitMate's own step counter.** A small native module (`apps/mobile/modules/fitmate-steps`, Kotlin) reads Android's hardware step counter (TYPE_STEP_COUNTER) — the same low-power chip step apps use — with the "Physical activity" permission. No other app or sync involved.
+  - Live: the Steps card updates on every step while it's on screen.
+  - While closed: the chip keeps counting; the background check takes a reading about every 30 minutes, and the app reads it again when opened, so no steps are lost.
+  - A step ledger turns readings into steps per day: splits walks across midnight by time, handles phone restarts (counter resets to 0), ignores impossible jumps (> 4 steps/s). Kept in secure storage so it works while the database is PIN-locked; copied into the database (source `phone`, migration v12) on opening.
+  - Typed-in totals still win for that day. When the phone counts steps, Health Connect is used only for weight and sleep. Phones without a step sensor fall back to Health Connect or typing.
+- **Groq for the AI coach** (recommended; Gemini still works). Keys are recognised automatically (gsk_ / AIza). Chat uses `openai/gpt-oss-120b` with low reasoning effort (fast and accurate), falling back to `openai/gpt-oss-20b` then `qwen/qwen3.8-27b`; photos (food, labels, face) use `qwen/qwen3.8-27b`, Groq's free vision model (preview). Free plan per model: 30 requests/min, 1,000/day, 8,000 tokens/min — history is trimmed shorter on Groq.
+
 ## Buddy mode (v1.5.0)
 - Small friend groups (up to 20) with an 8-letter invite code; create or join from You → Buddies or Home.
 - Each member chooses what to share: steps today, workouts this week, water, logging streak, and (off by default, never in gentle mode) a weight direction ↓ → ↑. Never shared: food logs, calories, exact weight, photos, face & skin, coach chats.

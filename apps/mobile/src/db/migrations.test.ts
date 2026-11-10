@@ -126,6 +126,20 @@ describe('migrations', () => {
     expect(() => db.exec("INSERT INTO custom_foods (id, name, kcal_100g, protein_100g, carbs_100g, fat_100g, source, created_at, updated_at) VALUES ('c', 'Bad', 1200, 1, 1, 1, 'label', 't', 't')")).toThrow();
   });
 
+  it('rebuild step days in v12 without losing history, and allow phone-counted days', () => {
+    const db = new DatabaseSync(':memory:');
+    runMigrations(adapter(db), MIGRATIONS.slice(0, 11));
+    db.exec(`INSERT INTO step_days (day, steps, source, flags, created_at, updated_at) VALUES ('2026-11-09', 7200, 'health_connect', '[]', 't', 't'), ('2026-11-10', 5000, 'manual', '[]', 't', 't')`);
+    expect(runMigrations(adapter(db))).toBe(MIGRATIONS.length);
+    expect(db.prepare('SELECT day, steps, source FROM step_days ORDER BY day').all()).toEqual([
+      { day: '2026-11-09', steps: 7200, source: 'health_connect' },
+      { day: '2026-11-10', steps: 5000, source: 'manual' },
+    ]);
+    expect(() => db.exec(`INSERT INTO step_days (day, steps, source, created_at, updated_at) VALUES ('2026-11-11', 3000, 'phone', 't', 't')`)).not.toThrow();
+    expect(() => db.exec(`INSERT INTO step_days (day, steps, source, created_at, updated_at) VALUES ('2026-11-12', 3000, 'watch', 't', 't')`)).toThrow();
+    expect(() => db.exec(`INSERT INTO step_days (day, steps, source, created_at, updated_at) VALUES ('2026-11-13', 300000, 'phone', 't', 't')`)).toThrow();
+  });
+
   it('refuse to open data from a newer app version', () => {
     const db = new DatabaseSync(':memory:');
     db.exec(`PRAGMA user_version = ${MIGRATIONS.length + 1}`);

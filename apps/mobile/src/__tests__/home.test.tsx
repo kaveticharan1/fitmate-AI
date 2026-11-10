@@ -5,6 +5,19 @@ import { mealForTime } from '../features/coach/open';
 import i18n from '../i18n';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
+let mockStepSrc: { source: 'phone' | 'health_connect'; sensor: boolean } = { source: 'health_connect', sensor: false };
+let mockPermitted: boolean | undefined = true;
+let mockLive: number | null = null;
+const mockAllow = jest.fn();
+jest.mock('../features/steps/hooks', () => ({
+  useStepSource: () => ({ data: mockStepSrc }),
+  useActivityPermission: () => ({ data: mockPermitted }),
+  useRequestActivityPermission: () => ({ mutate: mockAllow, isPending: false, data: undefined }),
+  useLiveSteps: () => mockLive,
+  usePhoneStepsSync: () => undefined,
+}));
+
+
 const mockPush = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: (...a: unknown[]) => mockPush(...a), navigate: (...a: unknown[]) => mockNavigate(...a) } }));

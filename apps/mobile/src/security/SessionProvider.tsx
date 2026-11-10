@@ -5,6 +5,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { closeDatabase, deleteDatabaseFile, EncryptionUnavailableError, openEncryptedDatabase } from '../db/client';
 import { getProfile } from '../db/repositories';
 import { leaveGroupQuietly } from '../features/buddies/service';
+import { clearLedger } from '../features/steps/phoneSteps';
 import {
   createVault,
   destroyVault,
@@ -115,6 +116,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const wipeEverything = useCallback(async () => {
     // Removes you from any buddy group on the server first (best effort, never blocks the wipe).
     await leaveGroupQuietly();
+    await clearLedger();
     deleteDatabaseFile();
     await destroyVault();
     queryClient.clear();

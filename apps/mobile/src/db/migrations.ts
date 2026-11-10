@@ -344,6 +344,22 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (day, slot)
   );
   `,
+  // v12 — FitMate's own step counter: step days can now come from this phone's sensor.
+  // SQLite can't change a CHECK constraint, so step_days is rebuilt with its data copied over.
+  `
+  CREATE TABLE step_days_new (
+    day TEXT PRIMARY KEY NOT NULL,
+    steps INTEGER NOT NULL CHECK (steps BETWEEN 0 AND 200000),
+    source TEXT NOT NULL CHECK (source IN ('health_connect','manual','phone')),
+    flags TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  INSERT INTO step_days_new (day, steps, source, flags, created_at, updated_at)
+    SELECT day, steps, source, flags, created_at, updated_at FROM step_days;
+  DROP TABLE step_days;
+  ALTER TABLE step_days_new RENAME TO step_days;
+  `,
 ];
 
 export interface MigratableDb {

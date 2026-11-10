@@ -6,7 +6,7 @@ import { type, type TypeVariant } from '../theme/tokens';
 export const TELUGU_FONT = 'NotoSansTelugu';
 export const TELUGU_FONT_BOLD = 'NotoSansTelugu-SemiBold';
 
-type Tone = 'primary' | 'secondary' | 'muted' | 'accent' | 'danger' | 'warning' | 'onAccent';
+type Tone = 'primary' | 'secondary' | 'muted' | 'accent' | 'danger' | 'warning' | 'success' | 'onAccent';
 
 interface Props extends TextProps {
   variant?: TypeVariant;
@@ -28,6 +28,7 @@ export function AppText({ variant = 'body', tone = 'primary', weight, center, st
     danger: colors.danger,
     warning: colors.warning,
     onAccent: colors.onAccent,
+    success: colors.success,
   };
   const telugu = i18n.language === 'te';
   const s: TextStyle = {

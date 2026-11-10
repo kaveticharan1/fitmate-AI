@@ -8,7 +8,7 @@ import { sleepLogs, stepDays, weightLogs } from './schema';
 export interface StepDay {
   day: string;
   steps: number;
-  source: 'health_connect' | 'manual';
+  source: 'health_connect' | 'manual' | 'phone';
   flags: StepFlag[];
 }
 
@@ -31,8 +31,8 @@ export function stepHistory(sinceDay: string): StepDay[] {
     .map((r) => ({ day: r.day, steps: r.steps, source: r.source, flags: parseFlags(r.flags) }));
 }
 
-/** Saves synced days. Days the user typed in themselves are left alone. */
-export function saveSyncedSteps(days: { day: string; steps: number; flags?: StepFlag[] }[]): number {
+/** Saves counted or synced days. Days the user typed in themselves are left alone. */
+export function saveSyncedSteps(days: { day: string; steps: number; flags?: StepFlag[] }[], source: 'health_connect' | 'phone' = 'health_connect'): number {
   const db = getDb();
   const now = nowIso();
   let changed = 0;
@@ -41,8 +41,8 @@ export function saveSyncedSteps(days: { day: string; steps: number; flags?: Step
       const flags = JSON.stringify(d.flags ?? []);
       const res = tx
         .insert(stepDays)
-        .values({ day: d.day, steps: d.steps, source: 'health_connect', flags, createdAt: now, updatedAt: now })
-        .onConflictDoUpdate({ target: stepDays.day, set: { steps: d.steps, flags, updatedAt: now }, setWhere: ne(stepDays.source, 'manual') })
+        .values({ day: d.day, steps: d.steps, source, flags, createdAt: now, updatedAt: now })
+        .onConflictDoUpdate({ target: stepDays.day, set: { steps: d.steps, source, flags, updatedAt: now }, setWhere: ne(stepDays.source, 'manual') })
         .run();
       changed += res.changes;
     }

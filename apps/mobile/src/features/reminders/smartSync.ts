@@ -23,6 +23,7 @@ import { applySmart } from './notifications';
 import { REMINDERS_KEY, withDefaults, type ReminderConfig } from './schedule';
 import { buildSmartNudges, findGaps, type DayStatus, type SmartNudge } from './smart';
 import { saveStepsSnapshot, setStepsTask } from '../health/background';
+import { getStepSource, hasActivityPermission, sensorAvailable } from '../steps/phoneSteps';
 
 /** Notification text for a nudge. Lock-screen visibility is PRIVATE, so this only shows once unlocked. */
 export function smartText(t: TFunction, n: SmartNudge, targets: { proteinG: number; waterMl: number; steps: number; gentle: boolean }) {
@@ -79,9 +80,11 @@ async function keepStepsCheck(status: DayStatus, nudges: SmartNudge[]) {
   const today = localDate(status.now);
   const tonight = checkIn && 'date' in checkIn.when && localDate(checkIn.when.date) === today && !checkIn.generic ? checkIn : null;
   const behind = status.steps != null && status.steps < status.stepGoal * 0.7;
+  // Phone counting needs the background check all day, to keep counting while FitMate is closed.
+  const phone = getStepSource() === 'phone' && sensorAvailable() && (await hasActivityPermission());
   if (!tonight || !behind || !('date' in tonight.when)) {
     await saveStepsSnapshot(null);
-    await setStepsTask(false);
+    await setStepsTask(phone);
     return;
   }
   await saveStepsSnapshot({
@@ -92,6 +95,7 @@ async function keepStepsCheck(status: DayStatus, nudges: SmartNudge[]) {
     params: Object.fromEntries(Object.entries(tonight.params ?? {}).map(([k, v]) => [k, Number(v)])),
     stepGoal: status.stepGoal,
     lang: i18n.language === 'te' ? 'te' : 'en',
+    source: phone ? 'phone' : 'health_connect',
   });
   await setStepsTask(true);
 }

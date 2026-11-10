@@ -6,6 +6,7 @@ import * as HC from 'react-native-health-connect';
 import i18n from '../../i18n';
 import { localDate } from '../../lib/time';
 import { CATEGORY, CHANNEL } from '../reminders/notifications';
+import { recordReading } from '../steps/phoneSteps';
 import { decideCheckIn, type StepsSnapshot } from './stepsCheck';
 
 /**
@@ -62,17 +63,25 @@ export async function requestBackgroundAccess(): Promise<boolean> {
 
 /** One run of the check. Exported for tests. */
 export async function runStepsCheck(now: Date = new Date()): Promise<'none' | 'cancel' | 'update' | 'skipped'> {
+  // FitMate's own counter: record a reading every run so no steps are missed while the app is closed.
+  const ledger = await recordReading(undefined, now.getTime()).catch(() => null);
   const snap = await loadSnapshot();
   const today = localDate(now);
   if (!snap || snap.day !== today) return 'skipped';
-  if (!(await hasBackgroundAccess())) return 'skipped';
-  const midnight = new Date(now);
-  midnight.setHours(0, 0, 0, 0);
-  const res = await HC.aggregateRecord({
-    recordType: 'Steps',
-    timeRangeFilter: { operator: 'between', startTime: midnight.toISOString(), endTime: now.toISOString() },
-  });
-  const steps = (res as { COUNT_TOTAL?: number }).COUNT_TOTAL ?? 0;
+  let steps: number;
+  if (snap.source === 'phone') {
+    if (!ledger) return 'skipped';
+    steps = ledger.days[today] ?? 0;
+  } else {
+    if (!(await hasBackgroundAccess())) return 'skipped';
+    const midnight = new Date(now);
+    midnight.setHours(0, 0, 0, 0);
+    const res = await HC.aggregateRecord({
+      recordType: 'Steps',
+      timeRangeFilter: { operator: 'between', startTime: midnight.toISOString(), endTime: now.toISOString() },
+    });
+    steps = (res as { COUNT_TOTAL?: number }).COUNT_TOTAL ?? 0;
+  }
   const d = decideCheckIn(snap, steps, now, today);
   if (d.action === 'cancel') {
     await Notifications.cancelScheduledNotificationAsync('smart-checkin');
@@ -104,7 +113,7 @@ TaskManager.defineTask(STEPS_TASK, async () => {
   }
 });
 
-/** Turns the background check on (about every 30 minutes, when Android allows) or off. */
+/** Turns the background check on (about every 30 minutes, when Android allows) or off. Also used by phone step counting. */
 export async function setStepsTask(on: boolean) {
   try {
     const registered = await TaskManager.isTaskRegisteredAsync(STEPS_TASK);

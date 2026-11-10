@@ -10,6 +10,7 @@ import { useFaceToday } from '../face/hooks';
 import { useDiary } from '../food/hooks';
 import { useHealthSettings, useStepGoal, useStepHistory } from '../health/hooks';
 import { useProfile } from '../profile/hooks';
+import { useStepSource } from '../steps/hooks';
 import { targetsForProfile } from '../profile/targets';
 import { useWaterToday } from '../progress/hooks';
 import { usePersonalisation, useWorkoutHistory, useWorkoutText } from '../workouts/hooks';
@@ -40,6 +41,7 @@ export function DailySummary() {
   const { data: health } = useHealthSettings();
   const { data: steps = [] } = useStepHistory(1);
   const stepGoal = useStepGoal(health);
+  const { data: src } = useStepSource();
   const { data: workouts = [] } = useWorkoutHistory(0);
   const me = usePersonalisation();
   const { workoutName } = useWorkoutText();
@@ -102,7 +104,7 @@ export function DailySummary() {
         chip={chip(workoutDone ? 'done' : 'todo')}
         onPress={() => router.navigate('/workout')}
       />
-      {health?.enabled || stepsToday > 0 ? (
+      {health?.enabled || stepsToday > 0 || src?.source === 'phone' ? (
         <SummaryRow
           testID="sum-steps"
           tone="success"

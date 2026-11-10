@@ -8,6 +8,19 @@ import { EMPTY_PROFILE, ProfileWizard } from '../features/profile/ProfileWizard'
 import { LockScreen } from '../security/LockScreen';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
+let mockStepSrc: { source: 'phone' | 'health_connect'; sensor: boolean } = { source: 'health_connect', sensor: false };
+let mockPermitted: boolean | undefined = true;
+let mockLive: number | null = null;
+const mockAllow = jest.fn();
+jest.mock('../features/steps/hooks', () => ({
+  useStepSource: () => ({ data: mockStepSrc }),
+  useActivityPermission: () => ({ data: mockPermitted }),
+  useRequestActivityPermission: () => ({ mutate: mockAllow, isPending: false, data: undefined }),
+  useLiveSteps: () => mockLive,
+  usePhoneStepsSync: () => undefined,
+}));
+
+
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), navigate: jest.fn(), canGoBack: () => true };
 // A getter, because jest.mock factories run before this file's constants are initialised.
 jest.mock('../features/agent/DayCard', () => ({ DayCard: () => null }));

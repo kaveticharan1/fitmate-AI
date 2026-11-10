@@ -257,7 +257,7 @@ export type CustomFoodRow = typeof customFoods.$inferSelect;
 export const stepDays = sqliteTable('step_days', {
   day: text('day').primaryKey(),
   steps: integer('steps').notNull(),
-  source: text('source', { enum: ['health_connect', 'manual'] }).notNull(),
+  source: text('source', { enum: ['health_connect', 'manual', 'phone'] }).notNull(),
   flags: text('flags').notNull().default('[]'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
