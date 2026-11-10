@@ -242,6 +242,10 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
 - Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
 
+## Fix (v1.3.2) — coach timing out
+- Newer Gemini Flash models think before answering by default, which could take longer than the app waited ("The AI took too long to answer"). Chat now asks for minimal thinking (photo, face and label reading use low), using thinkingLevel on Gemini 3+ and thinkingBudget on 2.5, with an automatic retry without it if a model rejects the setting. Chat waits up to 60 s.
+- The model picker now skips slow or specialised variants (thinking/deep-think/research/agent, Gemma, image models). A saved choice like that is replaced automatically; a retired model is re-picked and the question retried once.
+
 ## Fix (v1.3.1)
 - v1.3.0 closed immediately on opening: the release build's code shrinker removed a class WorkManager (used by the background step check) needs at startup. Keep rules added.
 - CI now builds the release APK for an Android emulator too and opens it there; a release is only published if the app opens and stays running.

@@ -24,6 +24,7 @@ import { workoutHistory } from '../../db/workoutRepo';
 import { addDays, localDate } from '../../lib/time';
 import { targetsForProfile } from '../profile/targets';
 import { deleteAiKey, getAiKey, setAiKey } from './aiKey';
+import { refreshModel, usableModel } from './model';
 import { faceSkinContext, knowledgeFor, WELLNESS_RULES } from './wellnessContext';
 
 const fetchFn: FetchFn = (url, init) => fetch(url, init);
@@ -106,7 +107,16 @@ export async function requestCoachReply(): Promise<CoachMessage> {
   if (turns.length === 0) throw new CoachError('bad_response', 'Nothing to answer');
   const actionsOn = getSetting<'confirm' | 'off'>('coachActions', 'confirm') === 'confirm';
   const system = buildSystemPrompt({ ...setup, memory: listMemory().map((m) => m.text), extra: [...extraContext(turns.filter((x) => x.role === 'user').at(-1)?.text ?? ''), ...(actionsOn ? [ACTIONS_PROMPT] : [])] });
-  const raw = await generateReply({ apiKey: stored.apiKey, model: stored.model, system, turns, fetchFn });
+  let model = await usableModel(stored);
+  let raw: string;
+  try {
+    raw = await generateReply({ apiKey: stored.apiKey, model, system, turns, fetchFn });
+  } catch (e) {
+    // Google retires model versions; if ours is gone, pick the current one and try once more.
+    if (!(e instanceof CoachError && e.kind === 'bad_response' && /not found|not supported|deprecated/i.test(e.message))) throw e;
+    model = await refreshModel(stored.apiKey);
+    raw = await generateReply({ apiKey: stored.apiKey, model, system, turns, fetchFn });
+  }
   const { text: withoutMemory, remember } = extractMemory(raw);
   for (const fact of remember) addMemory(fact);
   const { text, actions } = extractActions(withoutMemory);

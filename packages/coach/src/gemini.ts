@@ -65,6 +65,45 @@ export async function call(fetchFn: FetchFn, url: string, apiKey: string, body: 
   return json;
 }
 
+// ── Thinking ────────────────────────────────────────────────────────────────
+
+export type ThinkLevel = 'minimal' | 'low';
+
+/**
+ * Newer Gemini models "think" before answering, which by default can take
+ * longer than a phone app should wait. Gemini 3+ takes a thinking level;
+ * Gemini 2.5 takes a token budget (0 turns it off on Flash).
+ */
+export function thinkingConfig(model: string, level: ThinkLevel): Record<string, unknown> | undefined {
+  const version = Number(/gemini-(\d+(?:\.\d+)?)/.exec(model)?.[1] ?? 0);
+  if (version >= 3) return { thinkingLevel: level };
+  if (version >= 2.5) return { thinkingBudget: /pro/i.test(model) ? 128 : level === 'minimal' ? 0 : 512 };
+  return undefined;
+}
+
+/**
+ * Sends a generateContent request with a light thinking setting. If the model
+ * rejects that setting (older or unusual model), sends it again without.
+ */
+export async function generate(
+  fetchFn: FetchFn,
+  apiKey: string,
+  model: string,
+  body: { generationConfig?: Record<string, unknown> } & Record<string, unknown>,
+  level: ThinkLevel,
+  timeoutMs: number,
+): Promise<unknown> {
+  const url = `${GEMINI_BASE}/models/${encodeURIComponent(model)}:generateContent`;
+  const thinking = thinkingConfig(model, level);
+  if (!thinking) return call(fetchFn, url, apiKey, body, timeoutMs);
+  try {
+    return await call(fetchFn, url, apiKey, { ...body, generationConfig: { ...body.generationConfig, thinkingConfig: thinking } }, timeoutMs);
+  } catch (e) {
+    if (e instanceof CoachError && e.kind === 'bad_response' && /think/i.test(e.message)) return call(fetchFn, url, apiKey, body, timeoutMs);
+    throw e;
+  }
+}
+
 // ── Models ──────────────────────────────────────────────────────────────────
 
 interface ModelInfo {
@@ -72,7 +111,8 @@ interface ModelInfo {
   supportedGenerationMethods?: string[];
 }
 
-const EXCLUDE = /(image|tts|audio|live|embedding|aqa|vision|robotics|computer|native|veo|imagen|lyria)/i;
+// Specialised or slow variants that aren't meant for quick chat.
+const EXCLUDE = /(image|tts|audio|live|embedding|aqa|vision|robotics|computer|native|veo|imagen|lyria|think|deep|research|agent|gemma|nano|banana)/i;
 
 /** Score a model id: prefer stable Flash (not Lite) with the highest version. */
 function score(id: string): number {
@@ -92,6 +132,11 @@ export function pickModel(models: ModelInfo[]): string | null {
     .filter((id) => /^gemini-/.test(id) && /flash/i.test(id) && !EXCLUDE.test(id));
   if (ids.length === 0) return null;
   return ids.sort((a, b) => score(b) - score(a))[0]!;
+}
+
+/** True if this model id is one FitMate would pick for chat (fast, general Flash). */
+export function isChatModel(id: string): boolean {
+  return pickModel([{ name: id, supportedGenerationMethods: ['generateContent'] }]) === id;
 }
 
 /** Checks the key and returns the model to use. Throws CoachError('invalid_key') for a bad key. */
@@ -141,8 +186,8 @@ export async function generateReply(opts: {
   fetchFn: FetchFn;
   timeoutMs?: number;
 }): Promise<string> {
-  const url = `${GEMINI_BASE}/models/${encodeURIComponent(opts.model)}:generateContent`;
-  const json = await call(opts.fetchFn, url, opts.apiKey, buildRequest(opts.system, opts.turns), opts.timeoutMs ?? 45000);
+  // Chat: minimal thinking keeps replies quick; the coach's job is guidance, not puzzles.
+  const json = await generate(opts.fetchFn, opts.apiKey, opts.model, buildRequest(opts.system, opts.turns), 'minimal', opts.timeoutMs ?? 60000);
   return parseReply(json);
 }
 

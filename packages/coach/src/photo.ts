@@ -1,4 +1,4 @@
-import { call, CoachError, GEMINI_BASE, parseReply, type FetchFn } from './gemini';
+import { CoachError, generate, parseReply, type FetchFn } from './gemini';
 
 /**
  * Food photo → estimated items, using the user's own Gemini key.
@@ -104,8 +104,7 @@ export async function estimateFromPhoto(opts: {
   fetchFn: FetchFn;
   timeoutMs?: number;
 }): Promise<PhotoEstimate> {
-  const url = `${GEMINI_BASE}/models/${encodeURIComponent(opts.model)}:generateContent`;
   const body = buildPhotoRequest(buildPhotoPrompt(opts.language), opts.jpegBase64);
-  const json = await call(opts.fetchFn, url, opts.apiKey, body, opts.timeoutMs ?? 60000);
+  const json = await generate(opts.fetchFn, opts.apiKey, opts.model, body, 'low', opts.timeoutMs ?? 60000);
   return parsePhotoEstimate(parseReply(json));
 }

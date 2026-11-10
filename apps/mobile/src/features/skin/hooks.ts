@@ -1,3 +1,4 @@
+import { usableModel } from '../coach/model';
 import { CoachError, readIngredientLabel, type FetchFn } from '@fitmate/coach';
 import { buildRoutine } from '@fitmate/skin';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -78,7 +79,7 @@ export function useReadLabel() {
     mutationFn: async (uri: string) => {
       const stored = await getAiKey();
       if (!stored || !hasConsent('ai_coach')) throw new CoachError('invalid_key', 'AI coach is not set up');
-      return readIngredientLabel({ apiKey: stored.apiKey, model: stored.model, jpegBase64: await preparePhoto(uri), fetchFn });
+      return readIngredientLabel({ apiKey: stored.apiKey, model: await usableModel(stored), jpegBase64: await preparePhoto(uri), fetchFn });
     },
   });
 }

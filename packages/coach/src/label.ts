@@ -1,4 +1,4 @@
-import { call, CoachError, GEMINI_BASE, parseReply, type FetchFn } from './gemini';
+import { CoachError, generate, parseReply, type FetchFn } from './gemini';
 
 /**
  * Reads the ingredient list printed on a product label photo. The model only
@@ -32,10 +32,9 @@ export function parseLabelReading(text: string): LabelReading {
 }
 
 export async function readIngredientLabel(opts: { apiKey: string; model: string; jpegBase64: string; fetchFn: FetchFn }): Promise<LabelReading> {
-  const url = `${GEMINI_BASE}/models/${encodeURIComponent(opts.model)}:generateContent`;
   const body = {
     contents: [{ role: 'user', parts: [{ inlineData: { mimeType: 'image/jpeg', data: opts.jpegBase64 } }, { text: LABEL_PROMPT }] }],
     generationConfig: { temperature: 0, maxOutputTokens: 2048, responseMimeType: 'application/json' },
   };
-  return parseLabelReading(parseReply(await call(opts.fetchFn, url, opts.apiKey, body, 60000)));
+  return parseLabelReading(parseReply(await generate(opts.fetchFn, opts.apiKey, opts.model, body, 'low', 60000)));
 }

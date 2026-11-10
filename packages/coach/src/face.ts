@@ -1,4 +1,4 @@
-import { call, CoachError, GEMINI_BASE, parseReply, type FetchFn } from './gemini';
+import { CoachError, generate, parseReply, type FetchFn } from './gemini';
 
 /**
  * Face photo observations: appearance only, cautious wording, never a diagnosis.
@@ -81,8 +81,7 @@ export async function analyzeFace(opts: {
   timeoutMs?: number;
 }): Promise<FaceAnalysis> {
   if (opts.jpegsBase64.length < 1 || opts.jpegsBase64.length > 2) throw new CoachError('bad_response', 'One or two photos');
-  const url = `${GEMINI_BASE}/models/${encodeURIComponent(opts.model)}:generateContent`;
   const body = buildFaceRequest(buildFacePrompt(opts.language, opts.jpegsBase64.length === 2), opts.jpegsBase64);
-  const json = await call(opts.fetchFn, url, opts.apiKey, body, opts.timeoutMs ?? 60000);
+  const json = await generate(opts.fetchFn, opts.apiKey, opts.model, body, 'low', opts.timeoutMs ?? 60000);
   return parseFaceAnalysis(parseReply(json));
 }
