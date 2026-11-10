@@ -1,7 +1,7 @@
+import { usableModel } from './model';
+
 const mockSet = jest.fn();
 jest.mock('./aiKey', () => ({ setAiKey: (v: unknown) => mockSet(v) }));
-
-import { usableModel } from './model';
 
 const models = { models: [{ name: 'models/gemini-3.5-flash-deep-think', supportedGenerationMethods: ['generateContent'] }, { name: 'models/gemini-3.5-flash', supportedGenerationMethods: ['generateContent'] }] };
 
