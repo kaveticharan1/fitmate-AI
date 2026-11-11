@@ -16,6 +16,7 @@ import { DailySummary } from '../../features/agent/DailySummary';
 import { AskCoachBar } from '../../features/coach/AskCoachBar';
 import { StepsCard } from '../../features/health/StepsCards';
 import { useSmartReminderSync } from '../../features/reminders/smartSync';
+import { UpdateBanner } from '../../features/update/UpdateBanner';
 import { NutrientBar } from '../../features/food/ui';
 import { useLogWeight, useProfile, useRecentWeights } from '../../features/profile/hooks';
 import { useWaterActions, useWaterToday } from '../../features/progress/hooks';
@@ -38,6 +39,7 @@ export default function Dashboard() {
   return (
     <Screen testID="dashboard">
       <Greeting name={profile.name} />
+      <UpdateBanner />
       <AskCoachBar />
       <AgentCard />
       <DayCard />

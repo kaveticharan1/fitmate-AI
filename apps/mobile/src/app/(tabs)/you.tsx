@@ -29,6 +29,7 @@ export default function You() {
         <ListRow testID="row-ai" label={t('coach.settingsTitle')} onPress={() => router.push('/settings/ai')} />
         <ListRow testID="row-buddies" label={t('buddies.title')} onPress={() => router.push('/buddies')} />
         <ListRow testID="row-share" label={t('share.title')} onPress={() => router.push('/share')} />
+        <ListRow testID="row-update" label={t('update.title')} onPress={() => router.push('/update')} />
         <ListRow testID="row-wellness" label={t('wellness.title')} onPress={() => router.push('/wellness')} />
         <ListRow testID="row-health" label={t('health.title')} onPress={() => router.push('/settings/health')} />
         <ListRow testID="row-reminders" label={t('reminders.title')} onPress={() => router.push('/settings/reminders')} />

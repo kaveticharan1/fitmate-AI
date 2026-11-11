@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Lets FitMate open Android's own "Update" screen for a new version it downloaded. -->
+  <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
   <application>
     <!-- Lets FitMate hand a copy of its own installer to the app the user picks (WhatsApp, Bluetooth, …). -->
     <provider
