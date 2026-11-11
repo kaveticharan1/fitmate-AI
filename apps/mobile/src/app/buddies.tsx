@@ -11,6 +11,7 @@ import { useBuddyGroup, useCheer, useCreateGroup, useJoinGroup, useLeaveGroup, u
 import type { BuddyMember, CheerKind } from '../features/buddies/service';
 import { DEFAULT_SHARE, type ShareSettings } from '../features/buddies/summary';
 import { useProfile } from '../features/profile/hooks';
+import { canShareFile, DOWNLOAD_URL, shareAppFile } from '../features/share/shareApp';
 import { useTheme } from '../theme/ThemeProvider';
 import { space } from '../theme/tokens';
 
@@ -183,8 +184,18 @@ function GroupView() {
           testID="buddies-share-code"
           variant="secondary"
           label={t('buddies.invite')}
-          onPress={() => Share.share({ message: t('buddies.inviteMessage', { group: data.group.name, code: data.group.code }) }).catch(() => undefined)}
+          onPress={() => Share.share({ message: t('buddies.inviteMessage', { group: data.group.name, code: data.group.code, link: DOWNLOAD_URL }) }).catch(() => undefined)}
         />
+        {canShareFile() ? (
+          <Button
+            testID="buddies-share-app"
+            variant="ghost"
+            label={t('buddies.inviteWithApp')}
+            onPress={() =>
+              shareAppFile(t('buddies.inviteMessage', { group: data.group.name, code: data.group.code, link: DOWNLOAD_URL }), t('share.chooser')).catch(() => undefined)
+            }
+          />
+        ) : null}
       </Card>
 
       {data.cheers.length ? (

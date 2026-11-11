@@ -62,6 +62,7 @@ export default function Dashboard() {
           { testID: 'home-progress', icon: 'trending-down-outline', label: t('tabs.progress'), onPress: () => router.navigate('/progress') },
           { testID: 'home-wellness', icon: 'happy-outline', label: t('wellness.title'), onPress: () => router.push('/wellness') },
           { testID: 'home-buddies', icon: 'people-outline', label: t('buddies.title'), onPress: () => router.push('/buddies') },
+          { testID: 'home-share', icon: 'share-social-outline', label: t('share.short'), onPress: () => router.push('/share') },
         ]}
       />
 

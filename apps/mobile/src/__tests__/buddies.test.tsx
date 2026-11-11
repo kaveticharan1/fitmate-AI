@@ -109,6 +109,9 @@ describe('Buddies — in a group', () => {
     expect(screen.getByTestId('buddy-p')).toHaveTextContent(/Hasn’t shared anything yet/);
     await fireEvent.press(screen.getByTestId('buddies-share-code'));
     expect(share).toHaveBeenCalledWith({ message: expect.stringMatching(/ABCD2345/) });
+    expect(share.mock.calls[0]?.[0]).toEqual({ message: expect.stringContaining('https://github.com/kaveticharan1/fitmate-AI/releases/latest/download/FitMate.apk') });
+    // No native file sharing in tests, so the app-file invite button is hidden.
+    expect(screen.queryByTestId('buddies-share-app')).toBeNull();
   });
 
   it('sends cheers to friends but not to yourself', async () => {
