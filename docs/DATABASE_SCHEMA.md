@@ -144,6 +144,9 @@ Health Connect settings live in `app_settings`: `healthEnabled`, `healthImportWe
 ## coach_messages.actions (v10)
 `actions` — JSON list of actions the coach proposed in that reply (log food/water/weight/sleep, set a reminder) with status `pending` / `done` / `declined` / `failed`. Nothing runs until the user taps Confirm.
 
+## step_hours (v13)
+Steps per local hour from FitMate's own counter: `hour` ('YYYY-MM-DDTHH', primary key), `day`, `steps` (0–50,000), `updated_at`. Indexed by day. Backed up.
+
 ## step_days.source (v12)
 `step_days` rebuilt so `source` can be `health_connect`, `manual` or `phone` (FitMate's own counter). Existing rows are copied unchanged.
 

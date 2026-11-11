@@ -2,7 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { FitmateSteps, type StepReading } from '../../../modules/fitmate-steps';
 import { getSetting, setSetting } from '../../db/repositories';
-import { saveSyncedSteps } from '../../db/stepsRepo';
+import { saveStepHours, saveSyncedSteps } from '../../db/stepsRepo';
 import { applyReading, EMPTY_LEDGER, localDay, type StepLedger } from './ledger';
 
 /**
@@ -54,7 +54,8 @@ export async function loadLedger(): Promise<StepLedger> {
     const raw = await SecureStore.getItemAsync(LEDGER_KEY);
     if (!raw) return EMPTY_LEDGER;
     const v = JSON.parse(raw) as StepLedger;
-    return v && typeof v.days === 'object' ? v : EMPTY_LEDGER;
+    // Ledgers saved before v1.7 have no hourly counts yet.
+    return v && typeof v.days === 'object' ? { ...EMPTY_LEDGER, ...v, hours: v.hours ?? {} } : EMPTY_LEDGER;
   } catch {
     return EMPTY_LEDGER;
   }
@@ -87,16 +88,17 @@ export function recordReading(reading?: StepReading | null, at: number = Date.no
   });
 }
 
-/** Copies counted days into the database (days you typed in yourself are kept). */
+/** Copies counted days and hours into the database (days you typed in yourself are kept). */
 export function writeLedgerToDb(ledger: StepLedger): number {
   const days = Object.entries(ledger.days).map(([day, steps]) => ({ day, steps: Math.min(200000, Math.round(steps)) }));
+  saveStepHours(ledger.hours ?? {});
   return days.length ? saveSyncedSteps(days, 'phone') : 0;
 }
 
 /** Takes a reading and saves today's count. Returns today's steps, or null if phone counting is off/unavailable. */
 export async function syncPhoneSteps(now: Date = new Date()): Promise<number | null> {
   if (getStepSource() !== 'phone') return null;
-  const ledger = await recordReading();
+  const ledger = await recordReading(undefined, now.getTime());
   if (!ledger) return null;
   writeLedgerToDb(ledger);
   return ledger.days[localDay(now.getTime())] ?? 0;

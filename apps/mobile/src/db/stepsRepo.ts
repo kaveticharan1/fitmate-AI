@@ -3,7 +3,7 @@ import { and, asc, eq, gte, isNull, ne } from 'drizzle-orm';
 import { randomUUID } from 'expo-crypto';
 import { nowIso } from '../lib/time';
 import { getDb } from './client';
-import { sleepLogs, stepDays, weightLogs } from './schema';
+import { sleepLogs, stepDays, stepHours, weightLogs } from './schema';
 
 export interface StepDay {
   day: string;
@@ -48,6 +48,35 @@ export function saveSyncedSteps(days: { day: string; steps: number; flags?: Step
     }
   });
   return changed;
+}
+
+/** Saves hourly counts (hour = YYYY-MM-DDTHH). The phone's newest count for an hour replaces the old one. */
+export function saveStepHours(hours: Record<string, number>): number {
+  const entries = Object.entries(hours).filter(([h, n]) => /^\d{4}-\d{2}-\d{2}T\d{2}$/.test(h) && n >= 0);
+  if (!entries.length) return 0;
+  const now = nowIso();
+  let changed = 0;
+  getDb().transaction((tx) => {
+    for (const [hour, n] of entries) {
+      const steps = Math.min(50000, Math.round(n));
+      changed += tx
+        .insert(stepHours)
+        .values({ hour, day: hour.slice(0, 10), steps, updatedAt: now })
+        .onConflictDoUpdate({ target: stepHours.hour, set: { steps, updatedAt: now } })
+        .run().changes;
+    }
+  });
+  return changed;
+}
+
+/** 24 numbers: steps in each hour of `day` (0 = midnight–1 AM). */
+export function stepHoursFor(day: string): number[] {
+  const out = Array.from({ length: 24 }, () => 0);
+  for (const r of getDb().select().from(stepHours).where(eq(stepHours.day, day)).all()) {
+    const h = Number(r.hour.slice(11, 13));
+    if (h >= 0 && h < 24) out[h] = r.steps;
+  }
+  return out;
 }
 
 /** A typed-in total for a day; replaces whatever was there. */

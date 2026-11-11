@@ -263,6 +263,18 @@ export const stepDays = sqliteTable('step_days', {
   updatedAt: text('updated_at').notNull(),
 });
 
+/** Steps per local hour from FitMate's own counter (v13). */
+export const stepHours = sqliteTable(
+  'step_hours',
+  {
+    hour: text('hour').primaryKey(),
+    day: text('day').notNull(),
+    steps: integer('steps').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [index('step_hours_day_idx').on(t.day)],
+);
+
 // ── Face & Skin Wellness (v11) ─────────────────────────────────────────────
 
 /** One self-reported check-in per day. Lists are JSON text. Optional answers are NULL, never 0. */
@@ -374,6 +386,7 @@ export const BACKUP_TABLES = [
   'coach_messages',
   'coach_memory',
   'step_days',
+  'step_hours',
   'custom_foods',
   // Face photo rows are not backed up: the encrypted image files stay on this phone only.
   'face_checkins',

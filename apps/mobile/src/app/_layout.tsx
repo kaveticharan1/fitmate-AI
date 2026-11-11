@@ -85,6 +85,7 @@ function Root() {
           <Stack.Screen name="report" />
           <Stack.Screen name="today" />
           <Stack.Screen name="buddies" />
+          <Stack.Screen name="steps" />
           <Stack.Screen name="food/add" />
           <Stack.Screen name="food/item" />
           <Stack.Screen name="food/recipes" />

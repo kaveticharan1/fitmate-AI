@@ -3,7 +3,7 @@
     "name": "FitMate AI",
     "slug": "fitmate-ai",
     "scheme": "fitmate",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.kaveticharan.fitmate",
-      "versionCode": 22,
+      "versionCode": 23,
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#0F1113",

@@ -140,6 +140,15 @@ describe('migrations', () => {
     expect(() => db.exec(`INSERT INTO step_days (day, steps, source, created_at, updated_at) VALUES ('2026-11-13', 300000, 'phone', 't', 't')`)).toThrow();
   });
 
+  it('add the hourly step log in v13 with sane limits', () => {
+    const db = new DatabaseSync(':memory:');
+    runMigrations(adapter(db));
+    const ins = (hour: string, steps: number) => db.exec(`INSERT INTO step_hours (hour, day, steps, updated_at) VALUES ('${hour}', '${hour.slice(0, 10)}', ${steps}, 't')`);
+    expect(() => ins('2026-11-11T07', 1250)).not.toThrow();
+    expect(() => ins('2026-11-11T08', 60000)).toThrow();
+    expect(() => ins('2026-11-11', 10)).toThrow();
+  });
+
   it('refuse to open data from a newer app version', () => {
     const db = new DatabaseSync(':memory:');
     db.exec(`PRAGMA user_version = ${MIGRATIONS.length + 1}`);

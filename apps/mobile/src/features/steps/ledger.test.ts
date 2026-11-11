@@ -1,4 +1,4 @@
-import { applyReading, EMPTY_LEDGER, splitByDay, stepsOn } from './ledger';
+import { allocate, applyReading, EMPTY_LEDGER, hoursOf, splitByHour, stepsOn, type StepLedger } from './ledger';
 
 const t = (d: number, h: number, m = 0) => new Date(2026, 10, d, h, m).getTime();
 const boot = t(1, 6); // phone started on the 1st
@@ -48,7 +48,55 @@ describe('step ledger', () => {
   });
 
   it('splits by time share', () => {
-    expect(splitByDay(100, t(10, 22), t(11, 2))).toEqual({ '2026-11-10': 50, '2026-11-11': 50 });
-    expect(splitByDay(0, t(10, 1), t(10, 2))).toEqual({});
+    expect(splitByHour(100, t(10, 22, 30), t(10, 23, 30))).toEqual({ '2026-11-10T22': 50, '2026-11-10T23': 50 });
+    expect(splitByHour(0, t(10, 1), t(10, 2))).toEqual({});
+  });
+});
+
+describe('hourly steps', () => {
+  it('logs each hour exactly when readings are frequent (screen open)', () => {
+    let l = applyReading(EMPTY_LEDGER, { total: 1000, bootMs: boot, at: t(11, 7, 0) });
+    for (const [h, m, total] of [[7, 20, 1800], [7, 55, 2600], [8, 10, 3100], [9, 30, 3150]] as const) l = applyReading(l, { total, bootMs: boot, at: t(11, h, m) });
+    const hours = hoursOf(l.hours, '2026-11-11');
+    // 7:00–7:55 = 1,600; 7:55–8:10 = 500 split 5 min / 10 min; 8:10–9:30 is a long gap, so its 50 steps go just before 9:30.
+    expect(hours[7]).toBe(1600 + 167);
+    expect(hours[8]).toBe(333);
+    expect(hours[9]).toBe(50);
+    expect(hours.reduce((a, b) => a + b, 0)).toBe(stepsOn(l, '2026-11-11'));
+  });
+
+  it('never invents night-time walks after a long idle gap', () => {
+    let l = applyReading(EMPTY_LEDGER, { total: 5000, bootMs: boot, at: t(10, 22, 0) });
+    l = applyReading(l, { total: 7000, bootMs: boot, at: t(11, 8, 30) }); // 2,000 steps, last reading 10.5 h ago
+    expect(hoursOf(l.hours, '2026-11-11').slice(0, 8).reduce((a, b) => a + b, 0)).toBe(0);
+    expect(hoursOf(l.hours, '2026-11-11')[8]).toBe(2000); // placed 8:10–8:30 at walking pace
+    expect(stepsOn(l, '2026-11-10')).toBe(0);
+  });
+
+  it('places a long walk over the hours before the reading', () => {
+    // 9,000 steps at 100/min = 90 minutes before 10:00
+    expect(allocate(9000, t(11, 0), t(11, 10))).toEqual({ '2026-11-11T08': 3000, '2026-11-11T09': 6000 });
+  });
+
+  it('keeps day totals equal to the sum of hours', () => {
+    let l = applyReading(EMPTY_LEDGER, { total: 0, bootMs: boot, at: t(10, 23, 40) });
+    l = applyReading(l, { total: 600, bootMs: boot, at: t(11, 0, 20) });
+    expect(stepsOn(l, '2026-11-10') + stepsOn(l, '2026-11-11')).toBe(600);
+    expect(hoursOf(l.hours, '2026-11-10')[23]! + hoursOf(l.hours, '2026-11-11')[0]!).toBe(600);
+  });
+
+  it('upgrades a ledger saved before hourly logs', () => {
+    const old = { lastTotal: 100, lastAt: t(11, 9), bootMs: boot, days: { '2026-11-11': 50 } } as unknown as StepLedger;
+    const l = applyReading(old, { total: 300, bootMs: boot, at: t(11, 9, 30) });
+    expect(l.hours['2026-11-11T09']).toBe(200);
+    expect(stepsOn(l, '2026-11-11')).toBe(250);
+  });
+
+  it('keeps about a week of hours in the ledger', () => {
+    let l = applyReading(EMPTY_LEDGER, { total: 0, bootMs: boot, at: t(1, 8) });
+    l = applyReading(l, { total: 500, bootMs: boot, at: t(1, 8, 30) });
+    l = applyReading({ ...l, lastAt: t(20, 8) - 1000 }, { total: 510, bootMs: boot, at: t(20, 8) });
+    expect(l.hours['2026-11-01T08']).toBeUndefined();
+    expect(l.days['2026-11-01']).toBe(500);
   });
 });

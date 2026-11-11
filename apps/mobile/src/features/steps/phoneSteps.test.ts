@@ -30,7 +30,8 @@ jest.mock('../../db/repositories', () => ({
   },
 }));
 const mockSave = jest.fn((_days: unknown[], _src?: string) => 1);
-jest.mock('../../db/stepsRepo', () => ({ saveSyncedSteps: (d: unknown[], s?: string) => mockSave(d, s) }));
+const mockSaveHours = jest.fn();
+jest.mock('../../db/stepsRepo', () => ({ saveSyncedSteps: (d: unknown[], s?: string) => mockSave(d, s), saveStepHours: (h: unknown) => mockSaveHours(h) }));
 
 const boot = new Date(2026, 10, 1, 6).getTime();
 let check: jest.SpyInstance;
@@ -65,6 +66,7 @@ describe('phone step counting', () => {
     mockTotal = { total: 12400, bootMs: boot };
     await syncPhoneSteps(new Date(2026, 10, 10, 9, 1));
     expect(mockSave).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({ day: '2026-11-10' })]), 'phone');
+    expect(mockSaveHours).toHaveBeenCalledWith(expect.objectContaining({ '2026-11-10T08': 2345, '2026-11-10T09': 55 }));
   });
 
   it('applies live readings in order, never losing one', async () => {

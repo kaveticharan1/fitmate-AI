@@ -136,6 +136,7 @@ export function StepsCard() {
           </View>
         </View>
       )}
+      {phone ? <Button testID="steps-log" variant="ghost" label={t('stepLog.open')} onPress={() => router.push('/steps')} /> : null}
       {row?.source === 'manual' && (settings?.enabled || phone) ? (
         <Button
           testID="steps-use-sync"

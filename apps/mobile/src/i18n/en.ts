@@ -1171,6 +1171,27 @@ const en = {
       server: 'Something went wrong on the buddy server. Try again later.',
     },
   },
+  stepLog: {
+    title: 'Step log',
+    open: 'View hour-by-hour log',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    prevDay: 'Previous day',
+    nextDay: 'Next day',
+    busiest: 'Busiest: {{hour}} · {{steps}}',
+    activeHours_one: '{{count}} active hour',
+    activeHours_other: '{{count}} active hours',
+    byHour: 'Steps by hour',
+    chartLabel: 'Bar chart of steps for each hour, {{total}} in total',
+    hourRange: '{{from}} – {{to}}: {{steps}} steps',
+    tapBar: 'Tap a bar to see that hour.',
+    hourByHour: 'Hour by hour',
+    empty: 'No steps logged on this day.',
+    emptyToday: 'No steps yet today. Start walking — this updates live.',
+    typedNote: 'You typed in a total for this day; the hours show what the phone counted.',
+    needsPhone: 'The hourly log comes from FitMate’s own step counter, which isn’t on for this phone.',
+    note: 'Counted by this phone’s step sensor. Live while this screen is open; when FitMate is closed, steps are added about every 30 minutes, and after a long gap they’re placed just before the next reading.',
+  },
 };
 
 export default en;

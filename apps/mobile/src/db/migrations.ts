@@ -360,6 +360,16 @@ export const MIGRATIONS: readonly string[] = [
   DROP TABLE step_days;
   ALTER TABLE step_days_new RENAME TO step_days;
   `,
+  // v13 — Hourly step log from FitMate's own counter (hour = 'YYYY-MM-DDTHH', local time).
+  `
+  CREATE TABLE step_hours (
+    hour TEXT PRIMARY KEY NOT NULL CHECK (length(hour) = 13),
+    day TEXT NOT NULL,
+    steps INTEGER NOT NULL CHECK (steps BETWEEN 0 AND 50000),
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX step_hours_day_idx ON step_hours(day);
+  `,
 ];
 
 export interface MigratableDb {

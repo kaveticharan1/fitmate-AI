@@ -242,6 +242,11 @@ Phase 3 — AI coach (chat, personalities, Telugu, voice) — or in-app water/me
 - Face & Skin hub (You tab, Progress): daily face check-in, 14-day puffiness trend, possible patterns with sleep/water/salt/alcohol, encrypted private face photos with optional AI observations (separate consent), skin profile, beginner-safe routine builder with daily ticks, ingredient checker (paste or photograph the label; compare two), weekly report, and safety escalation (112 / doctor).
 - Coach receives face/skin context and short reference entries from the skincare library, clearly labelled as user-reported, AI estimate or reference.
 
+## Hourly step log (v1.7.0)
+- The step ledger now keeps steps per hour; days are the sum of their hours. Exact while the Steps card or Step log is open (a reading on every step); between background readings (about every 30 minutes) steps are spread over the gap; after a gap over 75 minutes they're placed just before the reading at 100 steps/min, so idle nights never show invented walks.
+- Hours are saved in the database (`step_hours`, migration v13; included in backups).
+- New Step log screen (Steps card → "View hour-by-hour log"): day picker (back 5 weeks), day total vs goal, busiest hour, active hours (≥ 250 steps), tappable 24-hour bar chart, and an hour-by-hour list. Today updates live.
+
 ## Own step counter + Groq AI (v1.6.0)
 - **FitMate's own step counter.** A small native module (`apps/mobile/modules/fitmate-steps`, Kotlin) reads Android's hardware step counter (TYPE_STEP_COUNTER) — the same low-power chip step apps use — with the "Physical activity" permission. No other app or sync involved.
   - Live: the Steps card updates on every step while it's on screen.

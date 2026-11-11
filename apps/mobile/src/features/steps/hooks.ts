@@ -3,8 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { FitmateSteps } from '../../../modules/fitmate-steps';
 import { setStepsTask } from '../health/background';
-import { localDay } from './ledger';
-import { getStepSource, hasActivityPermission, recordReading, requestActivityPermission, sensorAvailable, setStepSource, syncPhoneSteps, writeLedgerToDb, type StepSource } from './phoneSteps';
+import { stepHoursFor } from '../../db/stepsRepo';
+import { hoursOf, localDay } from './ledger';
+import { mergeHours } from './hourly';
+import { getStepSource, hasActivityPermission, loadLedger, recordReading, requestActivityPermission, sensorAvailable, setStepSource, syncPhoneSteps, writeLedgerToDb, type StepSource } from './phoneSteps';
 
 export const phoneKeys = {
   source: ['steps', 'source'] as const,
@@ -99,4 +101,20 @@ export function useLiveSteps(active: boolean): number | null {
     };
   }, [active, qc]);
   return active ? live : null;
+}
+
+/** Steps in each hour of `day`. Today also uses the phone's newest counts and refreshes every 15 seconds. */
+export function useStepHours(day: string) {
+  const [today] = useState(() => localDay(Date.now()));
+  const isToday = day === today;
+  return useQuery({
+    queryKey: ['steps', 'hours', day],
+    queryFn: async () => {
+      const saved = stepHoursFor(day);
+      if (!isToday) return saved;
+      const ledger = await loadLedger();
+      return mergeHours(saved, hoursOf(ledger.hours, day));
+    },
+    refetchInterval: isToday ? 15000 : false,
+  });
 }
