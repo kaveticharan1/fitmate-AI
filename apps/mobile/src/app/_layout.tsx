@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppText, TELUGU_FONT, TELUGU_FONT_BOLD } from '../components/AppText';
+import { BootLoader } from '../components/BootLoader';
 import { Button, Screen } from '../components/ui';
 import { NotificationBridge } from '../features/reminders/bridge';
 // Defines the background step check so Android can run it with the app closed.
@@ -16,6 +17,10 @@ import { LockScreen } from '../security/LockScreen';
 import { SessionProvider, useSession } from '../security/SessionProvider';
 import { ThemeProvider, useTheme } from '../theme/ThemeProvider';
 import { space } from '../theme/tokens';
+
+/** Keep the jogging opening animation up at least this long, so it doesn't just flash. */
+const MIN_LOADER_MS = 1200;
+const bootStartedAt = Date.now();
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: 5 * 60_000 } },
@@ -31,7 +36,7 @@ export default function RootLayout() {
     loadSavedLanguage().finally(() => setLangLoaded(true));
   }, []);
 
-  if (!fontsLoaded || !langLoaded) return null;
+  if (!fontsLoaded || !langLoaded) return <BootLoader />;
 
   return (
     <SafeAreaProvider>
@@ -49,9 +54,15 @@ export default function RootLayout() {
 function Root() {
   const { colors, isDark } = useTheme();
   const { status, hasProfile } = useSession();
+  const [introDone, setIntroDone] = useState(() => Date.now() - bootStartedAt >= MIN_LOADER_MS);
+  useEffect(() => {
+    if (introDone) return;
+    const timer = setTimeout(() => setIntroDone(true), Math.max(0, MIN_LOADER_MS - (Date.now() - bootStartedAt)));
+    return () => clearTimeout(timer);
+  }, [introDone]);
 
   let body: React.ReactNode;
-  if (status === 'loading') body = <View style={{ flex: 1, backgroundColor: colors.bg }} />;
+  if (status === 'loading' || !introDone) body = <BootLoader />;
   else if (status === 'error') body = <FatalError />;
   else if (status === 'wiped') body = <WipedNotice />;
   else if (status === 'locked') body = <LockScreen />;

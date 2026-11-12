@@ -3,21 +3,21 @@
     "name": "FitMate AI",
     "slug": "fitmate-ai",
     "scheme": "fitmate",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#0F1113",
+    "backgroundColor": "#0C0A1C",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kaveticharan.fitmate"
     },
     "android": {
       "package": "com.kaveticharan.fitmate",
-      "versionCode": 25,
+      "versionCode": 26,
       "allowBackup": false,
       "adaptiveIcon": {
-        "backgroundColor": "#0F1113",
+        "backgroundColor": "#2A1170",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -58,6 +58,7 @@
       "expo-localization",
       "expo-font",
       "./plugins/withReleaseSigning",
+      "./plugins/withFitmateSplash",
       "@react-native-community/datetimepicker",
       [
         "expo-speech-recognition",
